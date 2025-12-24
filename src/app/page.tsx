@@ -23,6 +23,8 @@ import { getPersonalizedInsights } from "@/ai/flows/personalized-health-insights
 import { recipeRecommendationsBasedOnLoggedFoods } from "@/ai/flows/recipe-recommendations-based-on-logged-foods";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { PageHeader } from "@/components/page-header";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Sparkles } from "lucide-react";
 
 const mockUserData = {
   calorieIntake: 1800,
@@ -39,24 +41,41 @@ const mockUserData = {
 };
 
 export default async function Dashboard() {
-  const insightsPromise = getPersonalizedInsights({
-    calorieIntake: mockUserData.calorieIntake,
-    activityLevel: mockUserData.activityLevel,
-    dietaryPreferences: mockUserData.dietaryPreferences,
-    loggedFoods: mockUserData.loggedFoods,
-  });
+  const apiKeySet = !!process.env.GEMINI_API_KEY;
 
-  const recipesPromise = recipeRecommendationsBasedOnLoggedFoods({
-    dietaryPreferences: mockUserData.dietaryPreferences,
-    loggedFoods: mockUserData.loggedFoods,
-  });
+  let insightsResult: { insights: string } | null = null;
+  let recipesResult: { recipeRecommendations: string } | null = null;
 
-  const [insightsResult, recipesResult] = await Promise.all([
-    insightsPromise,
-    recipesPromise,
-  ]);
+  if (apiKeySet) {
+    const insightsPromise = getPersonalizedInsights({
+      calorieIntake: mockUserData.calorieIntake,
+      activityLevel: mockUserData.activityLevel,
+      dietaryPreferences: mockUserData.dietaryPreferences,
+      loggedFoods: mockUserData.loggedFoods,
+    });
+
+    const recipesPromise = recipeRecommendationsBasedOnLoggedFoods({
+      dietaryPreferences: mockUserData.dietaryPreferences,
+      loggedFoods: mockUserData.loggedFoods,
+    });
+
+    [insightsResult, recipesResult] = await Promise.all([
+      insightsPromise,
+      recipesPromise,
+    ]);
+  }
   
   const recipeImage = PlaceHolderImages.find(p => p.id === 'recipe-1');
+
+  const AiInfoCard = () => (
+     <Alert>
+        <Sparkles className="h-4 w-4" />
+        <AlertTitle>AI Features Disabled</AlertTitle>
+        <AlertDescription>
+          Please set your GEMINI_API_KEY in the .env file to enable personalized insights and recipe recommendations.
+        </AlertDescription>
+      </Alert>
+  );
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -122,9 +141,13 @@ export default async function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {insightsResult.insights}
-              </p>
+              {apiKeySet && insightsResult ? (
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {insightsResult.insights}
+                </p>
+              ) : (
+                <AiInfoCard />
+              )}
             </CardContent>
             <CardFooter>
               <Button variant="outline" asChild>
@@ -151,9 +174,13 @@ export default async function Dashboard() {
                   />
                 </div>
               )}
-              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
-                {recipesResult.recipeRecommendations}
-              </p>
+              {apiKeySet && recipesResult ? (
+                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
+                  {recipesResult.recipeRecommendations}
+                </p>
+              ) : (
+                 <AiInfoCard />
+              )}
             </CardContent>
             <CardFooter>
               <Button asChild>
