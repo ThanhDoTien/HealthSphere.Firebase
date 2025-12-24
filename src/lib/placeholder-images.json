@@ -1,3 +1,52 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "recipe-1",
+      "description": "A vibrant and healthy salad in a white bowl.",
+      "imageUrl": "https://images.unsplash.com/photo-1692780941266-96892bb6c9df?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxoZWFsdGh5JTIwc2FsYWR8ZW58MHx8fHwxNzY2NTYwMTk4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "healthy salad"
+    },
+    {
+      "id": "recipe-2",
+      "description": "Grilled chicken breast with steamed asparagus.",
+      "imageUrl": "https://images.unsplash.com/photo-1643594462181-7667928d072e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxncmlsbGVkJTIwY2hpY2tlbnxlbnwwfHx8fDE3NjY1NjAxOTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "grilled chicken"
+    },
+    {
+      "id": "recipe-3",
+      "description": "A bowl of oatmeal with fresh berries and nuts.",
+      "imageUrl": "https://images.unsplash.com/photo-1639389756203-d1ae1b3c21ef?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxvYXRtZWFsJTIwYm93bHxlbnwwfHx8fDE3NjY0OTE4MDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "oatmeal bowl"
+    },
+    {
+      "id": "user-avatar-1",
+      "description": "A smiling person in workout gear.",
+      "imageUrl": "https://images.unsplash.com/photo-1623605931891-d5b95ee98459?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwZXJzb24lMjBzbWlsaW5nfGVufDB8fHx8MTc2NjUxNDQ4OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person smiling"
+    },
+    {
+      "id": "user-avatar-2",
+      "description": "A person preparing a healthy meal.",
+      "imageUrl": "https://images.unsplash.com/photo-1557755129-7f050818c32b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGVyc29uJTIwY29va2luZ3xlbnwwfHx8fDE3NjY1NTk4MDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person cooking"
+    },
+    {
+      "id": "community-1",
+      "description": "A group of people jogging in a park.",
+      "imageUrl": "https://images.unsplash.com/photo-1631405234894-f3224573c864?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGVvcGxlJTIwam9nZ2luZ3xlbnwwfHx8fDE3NjY1NjIzOTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "people jogging"
+    },
+    {
+      "id": "community-2",
+      "description": "A close-up of a person tracking their meal on a smartphone.",
+      "imageUrl": "https://images.unsplash.com/photo-1488509082528-cefbba5ad692?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGhvbmUlMjBhcHB8ZW58MHx8fHwxNzY2NTAxMDE4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "phone app"
+    },
+    {
+      "id": "meal-1",
+      "description": "A picture of a healthy and balanced meal.",
+      "imageUrl": "https://images.unsplash.com/photo-1611599537845-1c7aca0091c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxoZWFsdGh5JTIwbWVhbHxlbnwwfHx8fDE3NjY1NjIzOTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "healthy meal"
+    }
+  ]
 }

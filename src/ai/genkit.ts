@@ -1,7 +1,17 @@
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
+const plugins = [];
+
+if (process.env.GEMINI_API_KEY) {
+  plugins.push(googleAI());
+} else {
+  console.warn(
+    'GEMINI_API_KEY is not set. GenAI features will be disabled. Please add it to your .env file.'
+  );
+}
+
 export const ai = genkit({
-  plugins: [googleAI()],
-  model: 'googleai/gemini-2.5-flash',
+  plugins,
+  model: 'googleai/gemini-1.5-flash-latest',
 });
