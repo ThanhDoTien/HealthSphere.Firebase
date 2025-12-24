@@ -26,6 +26,7 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { PageHeader } from "@/components/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Sparkles } from "lucide-react";
+import { BmiChart } from "@/components/bmi-chart";
 
 const mockUserData = {
   calorieIntake: 1800,
@@ -48,9 +49,9 @@ function calculateBmi(weight: number, height: number) {
     if (weight > 0 && height > 0) {
         const heightInMeters = height / 100;
         const bmiValue = weight / (heightInMeters * heightInMeters);
-        return bmiValue.toFixed(1);
+        return parseFloat(bmiValue.toFixed(1));
     }
-    return "N/A";
+    return 0;
 }
 
 export default async function Dashboard() {
@@ -106,8 +107,12 @@ export default async function Dashboard() {
         description="Đây là ảnh chụp nhanh về sức khỏe và thể chất của bạn hôm nay."
       />
       <main className="grid gap-8">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+        <Card className="flex flex-col md:flex-row items-center justify-center p-6 gap-6">
+          <BmiChart bmi={bmi} />
+        </Card>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Lượng calo nạp vào
