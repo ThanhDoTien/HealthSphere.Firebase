@@ -19,8 +19,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { getPersonalizedInsights } from "@/ai/flows/personalized-health-insights";
-import { recipeRecommendationsBasedOnLoggedFoods } from "@/ai/flows/recipe-recommendations-based-on-logged-foods";
+import { getPersonalizedInsights, PersonalizedInsightsOutput } from "@/ai/flows/personalized-health-insights";
+import { recipeRecommendationsBasedOnLoggedFoods, RecipeRecommendationsBasedOnLoggedFoodsOutput } from "@/ai/flows/recipe-recommendations-based-on-logged-foods";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { PageHeader } from "@/components/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -43,26 +43,31 @@ const mockUserData = {
 export default async function Dashboard() {
   const apiKeySet = !!process.env.GEMINI_API_KEY;
 
-  let insightsResult: { insights: string } | null = null;
-  let recipesResult: { recipeRecommendations: string } | null = null;
+  let insightsResult: PersonalizedInsightsOutput | null = null;
+  let recipesResult: RecipeRecommendationsBasedOnLoggedFoodsOutput | null = null;
 
   if (apiKeySet) {
-    const insightsPromise = getPersonalizedInsights({
-      calorieIntake: mockUserData.calorieIntake,
-      activityLevel: mockUserData.activityLevel,
-      dietaryPreferences: mockUserData.dietaryPreferences,
-      loggedFoods: mockUserData.loggedFoods,
-    });
+    try {
+      const insightsPromise = getPersonalizedInsights({
+        calorieIntake: mockUserData.calorieIntake,
+        activityLevel: mockUserData.activityLevel,
+        dietaryPreferences: mockUserData.dietaryPreferences,
+        loggedFoods: mockUserData.loggedFoods,
+      });
 
-    const recipesPromise = recipeRecommendationsBasedOnLoggedFoods({
-      dietaryPreferences: mockUserData.dietaryPreferences,
-      loggedFoods: mockUserData.loggedFoods,
-    });
+      const recipesPromise = recipeRecommendationsBasedOnLoggedFoods({
+        dietaryPreferences: mockUserData.dietaryPreferences,
+        loggedFoods: mockUserData.loggedFoods,
+      });
 
-    [insightsResult, recipesResult] = await Promise.all([
-      insightsPromise,
-      recipesPromise,
-    ]);
+      [insightsResult, recipesResult] = await Promise.all([
+        insightsPromise,
+        recipesPromise,
+      ]);
+    } catch (error) {
+      console.error("An error occurred while fetching AI data:", error);
+      // Errors will be surfaced in the UI where the results are used
+    }
   }
   
   const recipeImage = PlaceHolderImages.find(p => p.id === 'recipe-1');
