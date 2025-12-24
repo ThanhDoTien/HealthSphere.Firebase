@@ -62,7 +62,7 @@ export default function ProfilePage() {
                   <Input id="email" type="email" defaultValue="alex.doe@example.com" />
                 </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="weight">Cân nặng (kg)</Label>
                   <Input id="weight" type="number" defaultValue="70" />
@@ -70,6 +70,19 @@ export default function ProfilePage() {
                 <div className="space-y-2">
                   <Label htmlFor="height">Chiều cao (cm)</Label>
                   <Input id="height" type="number" defaultValue="175" />
+                </div>
+                 <div className="space-y-2">
+                  <Label htmlFor="gender">Giới tính</Label>
+                  <Select defaultValue="male">
+                    <SelectTrigger id="gender">
+                      <SelectValue placeholder="Chọn giới tính" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Nam</SelectItem>
+                      <SelectItem value="female">Nữ</SelectItem>
+                      <SelectItem value="other">Khác</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="space-y-2">

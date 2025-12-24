@@ -5,6 +5,7 @@ import {
   GlassWater,
   Moon,
   Footprints,
+  HeartPulse,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -39,7 +40,18 @@ const mockUserData = {
   activityLevel: "moderate",
   dietaryPreferences: "Balanced diet",
   loggedFoods: "Chicken breast, broccoli, brown rice, apple, almonds",
+  weight: 70,
+  height: 175,
 };
+
+function calculateBmi(weight: number, height: number) {
+    if (weight > 0 && height > 0) {
+        const heightInMeters = height / 100;
+        const bmiValue = weight / (heightInMeters * heightInMeters);
+        return bmiValue.toFixed(1);
+    }
+    return "N/A";
+}
 
 export default async function Dashboard() {
   const apiKeySet = !!process.env.GEMINI_API_KEY;
@@ -73,6 +85,7 @@ export default async function Dashboard() {
   }
   
   const recipeImage = PlaceHolderImages.find(p => p.id === 'recipe-1');
+  const bmi = calculateBmi(mockUserData.weight, mockUserData.height);
 
   const AiInfoCard = () => (
      <Alert>
@@ -141,7 +154,7 @@ export default async function Dashboard() {
               <p className="text-xs text-muted-foreground">{mockUserData.waterGoal - mockUserData.waterIntake} ly nữa để đạt mục tiêu</p>
             </CardContent>
           </Card>
-          <Card>
+           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Giấc ngủ</CardTitle>
               <Moon className="h-4 w-4 text-muted-foreground" />
@@ -149,6 +162,16 @@ export default async function Dashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{mockUserData.sleep} giờ</div>
               <p className="text-xs text-muted-foreground">Đêm qua</p>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Chỉ số BMI</CardTitle>
+              <HeartPulse className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{bmi}</div>
+              <p className="text-xs text-muted-foreground">Chỉ số khối cơ thể</p>
             </CardContent>
           </Card>
         </div>
