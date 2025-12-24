@@ -19,9 +19,9 @@ const communityPosts = [
     id: 1,
     author: "Jane Doe",
     authorAvatarId: "user-avatar-1",
-    title: "My 30-Day Healthy Eating Challenge Results!",
-    snippet: "I can't believe the difference it made! I lost 5kg, my energy levels are through the roof, and I've never felt better. Here's what I did and what I learned along the way...",
-    tags: ["Success Story", "Healthy Eating"],
+    title: "Kết quả thử thách ăn uống lành mạnh 30 ngày của tôi!",
+    snippet: "Tôi không thể tin được sự khác biệt mà nó đã tạo ra! Tôi đã giảm 5kg, mức năng lượng của tôi tăng vọt, và tôi chưa bao giờ cảm thấy tốt hơn. Đây là những gì tôi đã làm và những gì tôi đã học được trên đường đi...",
+    tags: ["Câu chuyện thành công", "Ăn uống lành mạnh"],
     likes: 128,
     comments: 42,
     imageId: "community-1",
@@ -30,9 +30,9 @@ const communityPosts = [
     id: 2,
     author: "John Smith",
     authorAvatarId: "user-avatar-2",
-    title: "Tips for Staying Motivated to Exercise?",
-    snippet: "I always start strong, but after a week or two, I lose motivation. What are your tips and tricks for staying consistent with your workouts, especially on busy days?",
-    tags: ["Motivation", "Fitness", "Discussion"],
+    title: "Mẹo để duy trì động lực tập thể dục?",
+    snippet: "Tôi luôn bắt đầu mạnh mẽ, nhưng sau một hoặc hai tuần, tôi mất động lực. Mẹo và thủ thuật của bạn để duy trì sự nhất quán với các bài tập của bạn là gì, đặc biệt là vào những ngày bận rộn?",
+    tags: ["Động lực", "Thể hình", "Thảo luận"],
     likes: 76,
     comments: 89,
     imageId: "community-2",
@@ -43,8 +43,8 @@ export default function CommunityPage() {
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <PageHeader
-        title="Community Forums"
-        description="Connect with others, share your journey, and find support."
+        title="Diễn đàn cộng đồng"
+        description="Kết nối với những người khác, chia sẻ hành trình của bạn và tìm kiếm sự hỗ trợ."
       />
       <div className="space-y-8">
         {communityPosts.map((post) => {
@@ -96,7 +96,7 @@ export default function CommunityPage() {
                     <MessageCircle className="h-4 w-4" /> {post.comments}
                   </span>
                 </div>
-                <Button>Read More</Button>
+                <Button>Đọc thêm</Button>
               </CardFooter>
             </Card>
           );

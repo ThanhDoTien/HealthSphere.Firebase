@@ -26,16 +26,16 @@ export default function ProfilePage() {
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <PageHeader
-        title="Your Profile"
-        description="Manage your personal information and health preferences."
+        title="Hồ sơ của bạn"
+        description="Quản lý thông tin cá nhân và sở thích sức khỏe của bạn."
       />
       <div className="grid gap-8 md:grid-cols-3">
         <div className="md:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Personal Information</CardTitle>
+              <CardTitle>Thông tin cá nhân</CardTitle>
               <CardDescription>
-                Update your profile details here. This information helps in personalizing your experience.
+                Cập nhật chi tiết hồ sơ của bạn ở đây. Thông tin này giúp cá nhân hóa trải nghiệm của bạn.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -50,11 +50,11 @@ export default function ProfilePage() {
                   )}
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
-                <Button variant="outline">Change Photo</Button>
+                <Button variant="outline">Thay đổi ảnh</Button>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name">Họ và tên</Label>
                   <Input id="name" defaultValue="Alex Doe" />
                 </div>
                 <div className="space-y-2">
@@ -64,38 +64,38 @@ export default function ProfilePage() {
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="weight">Weight (kg)</Label>
+                  <Label htmlFor="weight">Cân nặng (kg)</Label>
                   <Input id="weight" type="number" defaultValue="70" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="height">Height (cm)</Label>
+                  <Label htmlFor="height">Chiều cao (cm)</Label>
                   <Input id="height" type="number" defaultValue="175" />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="activity-level">Activity Level</Label>
+                <Label htmlFor="activity-level">Mức độ hoạt động</Label>
                 <Select defaultValue="moderate">
                   <SelectTrigger id="activity-level">
-                    <SelectValue placeholder="Select your activity level" />
+                    <SelectValue placeholder="Chọn mức độ hoạt động của bạn" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="sedentary">Sedentary (little or no exercise)</SelectItem>
-                    <SelectItem value="light">Lightly active (light exercise/sports 1-3 days/week)</SelectItem>
-                    <SelectItem value="moderate">Moderately active (moderate exercise/sports 3-5 days/week)</SelectItem>
-                    <SelectItem value="very">Very active (hard exercise/sports 6-7 days a week)</SelectItem>
-                    <SelectItem value="extra">Extra active (very hard exercise & physical job)</SelectItem>
+                    <SelectItem value="sedentary">Ít vận động (ít hoặc không tập thể dục)</SelectItem>
+                    <SelectItem value="light">Hoạt động nhẹ (tập thể dục/thể thao nhẹ 1-3 ngày/tuần)</SelectItem>
+                    <SelectItem value="moderate">Hoạt động vừa phải (tập thể dục/thể thao vừa phải 3-5 ngày/tuần)</SelectItem>
+                    <SelectItem value="very">Rất năng động (tập thể dục/thể thao nặng 6-7 ngày một tuần)</SelectItem>
+                    <SelectItem value="extra">Cực kỳ năng động (tập thể dục rất nặng và công việc thể chất)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="dietary-preferences">Dietary Preferences & Allergies</Label>
+                <Label htmlFor="dietary-preferences">Sở thích ăn uống & Dị ứng</Label>
                 <Textarea
                   id="dietary-preferences"
-                  placeholder="e.g., Vegetarian, gluten-free, allergic to peanuts"
-                  defaultValue="Balanced diet, trying to reduce sugar."
+                  placeholder="ví dụ: Ăn chay, không chứa gluten, dị ứng với đậu phộng"
+                  defaultValue="Chế độ ăn uống cân bằng, đang cố gắng giảm đường."
                 />
               </div>
-              <Button>Save Changes</Button>
+              <Button>Lưu thay đổi</Button>
             </CardContent>
           </Card>
         </div>

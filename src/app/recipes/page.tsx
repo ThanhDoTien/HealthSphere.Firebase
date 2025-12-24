@@ -19,23 +19,23 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 const initialRecipes = [
   {
     id: 1,
-    title: "Quick & Healthy Chicken Stir-fry",
+    title: "Gà xào nhanh và tốt cho sức khỏe",
     description:
-      "A perfect weeknight dinner that's packed with protein and veggies. Ready in under 20 minutes!",
+      "Một bữa tối hoàn hảo cho các ngày trong tuần với nhiều protein và rau củ. Sẵn sàng trong vòng chưa đầy 20 phút!",
     imageId: "recipe-2",
   },
   {
     id: 2,
-    title: "Berry Blast Smoothie Bowl",
+    title: "Bát sinh tố Berry Blast",
     description:
-      "Start your day with this antioxidant-rich smoothie bowl. A delicious and energizing breakfast.",
+      "Bắt đầu ngày mới với bát sinh tố giàu chất chống oxy hóa này. Một bữa sáng ngon miệng và tràn đầy năng lượng.",
     imageId: "recipe-3",
   },
   {
     id: 3,
-    title: "Mediterranean Quinoa Salad",
+    title: "Salad Quinoa Địa Trung Hải",
     description:
-      "A light yet filling salad with fresh vegetables, feta cheese, and a lemon-herb vinaigrette.",
+      "Một món salad nhẹ nhàng nhưng đủ no với rau củ tươi, phô mai feta và sốt chanh-thảo mộc.",
     imageId: "recipe-1",
   },
 ];
@@ -47,8 +47,8 @@ export default function RecipesPage() {
   const handleGetRecommendation = () => {
     startTransition(async () => {
       const result = await recipeRecommendationsBasedOnLoggedFoods({
-        dietaryPreferences: "Balanced, high-protein",
-        loggedFoods: "Chicken, broccoli, rice, yogurt",
+        dietaryPreferences: "Cân bằng, giàu protein",
+        loggedFoods: "Gà, bông cải xanh, gạo, sữa chua",
       });
       setRecommendation(result.recipeRecommendations);
     });
@@ -57,17 +57,17 @@ export default function RecipesPage() {
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <PageHeader
-        title="Healthy Recipes"
-        description="Discover delicious and nutritious meals tailored for you."
+        title="Công thức nấu ăn lành mạnh"
+        description="Khám phá các bữa ăn ngon và bổ dưỡng phù hợp với bạn."
       />
       <div className="mb-8 flex flex-col items-center text-center">
         <Card className="max-w-2xl">
           <CardHeader>
             <CardTitle className="flex items-center justify-center gap-2 font-headline text-2xl">
-              <ChefHat /> Get a New AI Recommendation
+              <ChefHat /> Nhận đề xuất mới từ AI
             </CardTitle>
             <CardDescription>
-              Based on your preferences and logged foods, our AI can suggest something new for you to try.
+              Dựa trên sở thích và thực phẩm đã ghi lại, AI của chúng tôi có thể đề xuất món mới để bạn thử.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -85,11 +85,11 @@ export default function RecipesPage() {
             <Button onClick={handleGetRecommendation} disabled={isPending}>
               {isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Đang tạo...
                 </>
               ) : (
                 <>
-                  <Sparkles className="mr-2 h-4 w-4" /> Suggest a Recipe
+                  <Sparkles className="mr-2 h-4 w-4" /> Đề xuất công thức
                 </>
               )}
             </Button>
@@ -125,7 +125,7 @@ export default function RecipesPage() {
                 </CardDescription>
               </CardContent>
               <CardFooter>
-                <Button variant="outline">View Recipe</Button>
+                <Button variant="outline">Xem công thức</Button>
               </CardFooter>
             </Card>
           );

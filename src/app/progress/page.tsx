@@ -17,13 +17,13 @@ import {
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart } from "recharts";
 
 const calorieData = [
-  { date: "Mon", calories: 2100 },
-  { date: "Tue", calories: 1950 },
-  { date: "Wed", calories: 2250 },
-  { date: "Thu", calories: 1800 },
-  { date: "Fri", calories: 2400 },
-  { date: "Sat", calories: 2600 },
-  { date: "Sun", calories: 2300 },
+  { date: "T2", calories: 2100 },
+  { date: "T3", calories: 1950 },
+  { date: "T4", calories: 2250 },
+  { date: "T5", calories: 1800 },
+  { date: "T6", calories: 2400 },
+  { date: "T7", calories: 2600 },
+  { date: "CN", calories: 2300 },
 ];
 
 const weightData = [
@@ -39,14 +39,14 @@ const weightData = [
 
 const calorieChartConfig = {
   calories: {
-    label: "Calories",
+    label: "Lượng calo",
     color: "hsl(var(--chart-1))",
   },
 } satisfies ChartConfig;
 
 const weightChartConfig = {
     weight: {
-        label: "Weight (kg)",
+        label: "Cân nặng (kg)",
         color: "hsl(var(--chart-2))",
     }
 } satisfies ChartConfig;
@@ -55,15 +55,15 @@ export default function ProgressPage() {
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <PageHeader
-        title="Your Progress"
-        description="Visualize your journey with charts and graphs."
+        title="Tiến trình của bạn"
+        description="Trực quan hóa hành trình của bạn bằng biểu đồ và đồ thị."
       />
       <div className="grid gap-8">
         <Card>
           <CardHeader>
-            <CardTitle>Calorie Intake - Last 7 Days</CardTitle>
+            <CardTitle>Lượng calo nạp vào - 7 ngày qua</CardTitle>
             <CardDescription>
-              This chart shows your daily calorie consumption.
+              Biểu đồ này cho thấy lượng calo tiêu thụ hàng ngày của bạn.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -94,9 +94,9 @@ export default function ProgressPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Weight Change - Last 8 Weeks</CardTitle>
+            <CardTitle>Thay đổi cân nặng - 8 tuần qua</CardTitle>
             <CardDescription>
-              Track your weight trend over time.
+              Theo dõi xu hướng cân nặng của bạn theo thời gian.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -108,7 +108,7 @@ export default function ProgressPage() {
                   tickLine={false}
                   axisLine={false}
                   tickMargin={10}
-                  tickFormatter={(value) => `Week ${value}`}
+                  tickFormatter={(value) => `Tuần ${value}`}
                 />
                 <YAxis
                     tickLine={false}

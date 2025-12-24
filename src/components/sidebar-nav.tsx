@@ -22,12 +22,12 @@ import {
 import { Icons } from "@/components/icons";
 
 const links = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/log-meal", label: "Log Meal", icon: UtensilsCrossed },
-  { href: "/progress", label: "Progress", icon: BarChart3 },
-  { href: "/recipes", label: "Recipes", icon: BookHeart },
-  { href: "/community", label: "Community", icon: UsersRound },
-  { href: "/profile", label: "Profile", icon: CircleUserRound },
+  { href: "/", label: "Bảng điều khiển", icon: LayoutDashboard },
+  { href: "/log-meal", label: "Ghi lại bữa ăn", icon: UtensilsCrossed },
+  { href: "/progress", label: "Tiến độ", icon: BarChart3 },
+  { href: "/recipes", label: "Công thức", icon: BookHeart },
+  { href: "/community", label: "Cộng đồng", icon: UsersRound },
+  { href: "/profile", label: "Hồ sơ", icon: CircleUserRound },
 ];
 
 export function SidebarNav() {
@@ -62,10 +62,10 @@ export function SidebarNav() {
       <SidebarFooter className="p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Settings">
+            <SidebarMenuButton asChild tooltip="Cài đặt">
               <Link href="#">
                 <Settings />
-                <span>Settings</span>
+                <span>Cài đặt</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

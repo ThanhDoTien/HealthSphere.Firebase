@@ -36,8 +36,8 @@ export default function LogMealPage() {
   const [error, setError] = useState<string | null>(null);
   const [aiResult, setAiResult] = useState<NutritionLoggingOutput | null>(null);
   const [loggedFoods, setLoggedFoods] = useState<FoodItem[]>([
-    { name: "Oatmeal with berries", calories: 350 },
-    { name: "Grilled Chicken Salad", calories: 450 },
+    { name: "Bột yến mạch với quả mọng", calories: 350 },
+    { name: "Salad gà nướng", calories: 450 },
   ]);
   const [manualFood, setManualFood] = useState("");
   const [manualCalories, setManualCalories] = useState("");
@@ -67,7 +67,7 @@ export default function LogMealPage() {
       });
       setAiResult(result);
     } catch (err) {
-      setError("Failed to analyze image. Please try again.");
+      setError("Không thể phân tích hình ảnh. Vui lòng thử lại.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -91,18 +91,18 @@ export default function LogMealPage() {
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <PageHeader
-        title="Log Your Meal"
-        description="Add your meals to track your daily nutrition and calorie intake."
+        title="Ghi lại bữa ăn của bạn"
+        description="Thêm bữa ăn của bạn để theo dõi dinh dưỡng và lượng calo hàng ngày."
       />
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Camera /> Log with a Photo
+                <Camera /> Ghi lại bằng ảnh
               </CardTitle>
               <CardDescription>
-                Use AI to automatically identify your meal from a picture.
+                Sử dụng AI để tự động xác định bữa ăn của bạn từ một bức ảnh.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -135,11 +135,11 @@ export default function LogMealPage() {
               <Button onClick={handleImageRecognition} disabled={!image || loading}>
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Đang phân tích...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="mr-2 h-4 w-4" /> Analyze Meal
+                    <Sparkles className="mr-2 h-4 w-4" /> Phân tích bữa ăn
                   </>
                 )}
               </Button>
@@ -147,15 +147,15 @@ export default function LogMealPage() {
               {aiResult && (
                 <Alert>
                   <Sparkles className="h-4 w-4" />
-                  <AlertTitle>AI Analysis Complete!</AlertTitle>
+                  <AlertTitle>Phân tích AI hoàn tất!</AlertTitle>
                   <AlertDescription>
-                    <p className="font-semibold">Identified Items:</p>
+                    <p className="font-semibold">Các món đã xác định:</p>
                     <p>{aiResult.foodItems.join(', ')}</p>
-                    <p className="font-semibold mt-2">Estimated Nutrition:</p>
+                    <p className="font-semibold mt-2">Dinh dưỡng ước tính:</p>
                     <p>{aiResult.estimatedNutritionalContent}</p>
                     <Button size="sm" className="mt-4" onClick={() => {
                         setLoggedFoods([...loggedFoods, { name: aiResult.foodItems.join(', '), calories: parseInt(aiResult.estimatedNutritionalContent.match(/\d+/)?.[0] || '0') }])
-                    }}>Add to Log</Button>
+                    }}>Thêm vào nhật ký</Button>
                   </AlertDescription>
                 </Alert>
               )}
@@ -164,26 +164,26 @@ export default function LogMealPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Apple /> Log Manually
+                <Apple /> Ghi lại thủ công
               </CardTitle>
               <CardDescription>
-                Can't take a photo? Add your food items by name.
+                Không thể chụp ảnh? Thêm các món ăn của bạn theo tên.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="sm:col-span-2 space-y-2">
-                  <Label htmlFor="food-name">Food / Meal</Label>
-                  <Input id="food-name" placeholder="e.g. Apple" value={manualFood} onChange={e => setManualFood(e.target.value)} />
+                  <Label htmlFor="food-name">Thực phẩm / Bữa ăn</Label>
+                  <Input id="food-name" placeholder="ví dụ: Táo" value={manualFood} onChange={e => setManualFood(e.target.value)} />
                 </div>
                  <div className="space-y-2">
-                  <Label htmlFor="calories">Calories (kcal)</Label>
-                  <Input id="calories" type="number" placeholder="e.g. 95" value={manualCalories} onChange={e => setManualCalories(e.target.value)} />
+                  <Label htmlFor="calories">Lượng calo (kcal)</Label>
+                  <Input id="calories" type="number" placeholder="ví dụ: 95" value={manualCalories} onChange={e => setManualCalories(e.target.value)} />
                 </div>
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={handleManualAdd}>Add Food</Button>
+              <Button onClick={handleManualAdd}>Thêm thực phẩm</Button>
             </CardFooter>
           </Card>
         </div>
@@ -191,10 +191,10 @@ export default function LogMealPage() {
           <Card className="sticky top-20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <List /> Today's Log
+                <List /> Nhật ký hôm nay
               </CardTitle>
               <CardDescription>
-                A summary of the meals you've logged today.
+                Tóm tắt các bữa ăn bạn đã ghi lại hôm nay.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -208,7 +208,7 @@ export default function LogMealPage() {
               </ul>
               <Separator />
               <div className="flex justify-between items-center font-bold text-lg">
-                <span>Total</span>
+                <span>Tổng cộng</span>
                 <span>{totalCalories} kcal</span>
               </div>
             </CardContent>
