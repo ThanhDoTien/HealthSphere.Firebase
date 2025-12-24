@@ -45,6 +45,7 @@ export default async function Dashboard() {
 
   let insightsResult: PersonalizedInsightsOutput | null = null;
   let recipesResult: RecipeRecommendationsBasedOnLoggedFoodsOutput | null = null;
+  let errorState = false;
 
   if (apiKeySet) {
     try {
@@ -66,7 +67,7 @@ export default async function Dashboard() {
       ]);
     } catch (error) {
       console.error("An error occurred while fetching AI data:", error);
-      // Errors will be surfaced in the UI where the results are used
+      errorState = true;
     }
   }
   
@@ -77,7 +78,9 @@ export default async function Dashboard() {
         <Sparkles className="h-4 w-4" />
         <AlertTitle>AI Features Disabled</AlertTitle>
         <AlertDescription>
-          Please set your GEMINI_API_KEY in the .env file to enable personalized insights and recipe recommendations.
+          {errorState
+            ? "An error occurred while fetching AI data. Please check your API key and try again."
+            : "Please set your GEMINI_API_KEY in the .env file to enable personalized insights and recipe recommendations."}
         </AlertDescription>
       </Alert>
   );
@@ -146,7 +149,7 @@ export default async function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {apiKeySet && insightsResult ? (
+              {apiKeySet && insightsResult && !errorState ? (
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {insightsResult.insights}
                 </p>
@@ -179,7 +182,7 @@ export default async function Dashboard() {
                   />
                 </div>
               )}
-              {apiKeySet && recipesResult ? (
+              {apiKeySet && recipesResult && !errorState ? (
                 <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
                   {recipesResult.recipeRecommendations}
                 </p>
