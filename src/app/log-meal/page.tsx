@@ -23,11 +23,37 @@ import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartConfig,
+} from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+
 
 type FoodItem = {
   name: string;
   calories: number;
 };
+
+const calorieData = [
+  { date: "T2", calories: 2100 },
+  { date: "T3", calories: 1950 },
+  { date: "T4", calories: 2250 },
+  { date: "T5", calories: 1800 },
+  { date: "T6", calories: 2400 },
+  { date: "T7", calories: 2600 },
+  { date: "CN", calories: 2300 },
+];
+
+const calorieChartConfig = {
+  calories: {
+    label: "Lượng calo nạp vào",
+    color: "hsl(var(--chart-1))",
+  },
+} satisfies ChartConfig;
+
 
 export default function LogMealPage() {
   const [image, setImage] = useState<string | null>(null);
@@ -160,6 +186,38 @@ export default function LogMealPage() {
                 </Alert>
               )}
             </CardFooter>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Lượng calo nạp vào - 7 ngày qua</CardTitle>
+              <CardDescription>
+                Biểu đồ này cho thấy lượng calo tiêu thụ hàng ngày của bạn.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={calorieChartConfig} className="h-[300px] w-full">
+                <BarChart accessibilityLayer data={calorieData}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                  />
+                  <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={10}
+                      label={{ value: "kcal", position: "insideTopLeft", dy: -10, fill: "hsl(var(--muted-foreground))" }}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
+                  <Bar dataKey="calories" fill="var(--color-calories)" radius={8} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
           </Card>
           <Card>
             <CardHeader>
