@@ -26,6 +26,16 @@ const calorieData = [
   { date: "CN", calories: 2300 },
 ];
 
+const caloriesBurnedData = [
+  { date: "T2", calories: 300 },
+  { date: "T3", calories: 450 },
+  { date: "T4", calories: 250 },
+  { date: "T5", calories: 500 },
+  { date: "T6", calories: 600 },
+  { date: "T7", calories: 400 },
+  { date: "CN", calories: 350 },
+];
+
 const weightData = [
   { week: 1, weight: 70.5 },
   { week: 2, weight: 70.2 },
@@ -39,15 +49,22 @@ const weightData = [
 
 const calorieChartConfig = {
   calories: {
-    label: "Lượng calo",
+    label: "Lượng calo nạp vào",
     color: "hsl(var(--chart-1))",
+  },
+} satisfies ChartConfig;
+
+const caloriesBurnedChartConfig = {
+  calories: {
+    label: "Lượng calo tiêu hao",
+    color: "hsl(var(--chart-2))",
   },
 } satisfies ChartConfig;
 
 const weightChartConfig = {
     weight: {
         label: "Cân nặng (kg)",
-        color: "hsl(var(--chart-2))",
+        color: "hsl(var(--chart-5))",
     }
 } satisfies ChartConfig;
 
@@ -69,6 +86,39 @@ export default function ProgressPage() {
           <CardContent>
             <ChartContainer config={calorieChartConfig} className="h-[300px] w-full">
               <BarChart accessibilityLayer data={calorieData}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                />
+                <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={10}
+                    label={{ value: "kcal", position: "insideTopLeft", dy: -10, fill: "hsl(var(--muted-foreground))" }}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent />}
+                />
+                <Bar dataKey="calories" fill="var(--color-calories)" radius={8} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Lượng calo tiêu hao - 7 ngày qua</CardTitle>
+            <CardDescription>
+              Biểu đồ này cho thấy lượng calo bạn đã đốt cháy hàng ngày.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={caloriesBurnedChartConfig} className="h-[300px] w-full">
+              <BarChart accessibilityLayer data={caloriesBurnedData}>
                 <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="date"
