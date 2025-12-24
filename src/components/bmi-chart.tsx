@@ -1,3 +1,4 @@
+
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -14,72 +15,64 @@ const categories: BmiCategory[] = [
   { label: "Bình thường", min: 18.5, max: 25, color: "bg-green-500" },
   { label: "Thừa cân", min: 25, max: 30, color: "bg-yellow-500" },
   { label: "Béo phì", min: 30, max: 40, color: "bg-orange-500" },
-  { label: "Béo phì độ III", min: 40, max: 50, color: "bg-red-500" },
+  { label: "Béo phì độ III", min: 40, max: Infinity, color: "bg-red-500" },
 ];
 
 const getBmiCategory = (bmi: number): BmiCategory => {
   return categories.find((c) => bmi >= c.min && bmi < c.max) || categories[categories.length - 1];
 };
 
-const getNeedleRotation = (bmi: number): number => {
-  const minBmi = 10;
-  const maxBmi = 45;
+const getIndicatorPosition = (bmi: number): number => {
+  const minBmi = 15;
+  const maxBmi = 40;
   const clampedBmi = Math.max(minBmi, Math.min(bmi, maxBmi));
-  // Map BMI range (10-45) to angle range (-90 to 90 degrees)
-  return ((clampedBmi - minBmi) / (maxBmi - minBmi)) * 180 - 90;
+  // Map BMI range to percentage
+  return ((clampedBmi - minBmi) / (maxBmi - minBmi)) * 100;
 };
 
 export function BmiChart({ bmi }: { bmi: number }) {
   const category = getBmiCategory(bmi);
-  const rotation = getNeedleRotation(bmi);
+  const position = getIndicatorPosition(bmi);
+  
+  const categoryWidths = {
+      underweight: ((18.5 - 15) / 25) * 100, // 3.5 points
+      normal: ((25 - 18.5) / 25) * 100, // 6.5 points
+      overweight: ((30 - 25) / 25) * 100, // 5 points
+      obese1: ((40 - 30) / 25) * 100, // 10 points
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center text-center w-full max-w-md p-4">
-      <div className="relative w-full aspect-[2/1] overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full">
-          {/* Gauge Background Arcs */}
-          <div className="absolute w-full h-[200%] rounded-full left-0 top-0 border-box transform-gpu" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 50%, 0% 50%)' }}>
-            <div className={cn("absolute w-full h-full rounded-full", categories[0].color)} style={{ clipPath: 'polygon(0% 0%, 20% 0%, 20% 100%, 0% 100%)' }}></div>
-            <div className={cn("absolute w-full h-full rounded-full", categories[1].color)} style={{ clipPath: 'polygon(20% 0%, 40% 0%, 40% 100%, 20% 100%)' }}></div>
-            <div className={cn("absolute w-full h-full rounded-full", categories[2].color)} style={{ clipPath: 'polygon(40% 0%, 60% 0%, 60% 100%, 40% 100%)' }}></div>
-            <div className={cn("absolute w-full h-full rounded-full", categories[3].color)} style={{ clipPath: 'polygon(60% 0%, 80% 0%, 80% 100%, 60% 100%)' }}></div>
-            <div className={cn("absolute w-full h-full rounded-full", categories[4].color)} style={{ clipPath: 'polygon(80% 0%, 100% 0%, 100% 100%, 80% 100%)' }}></div>
-          </div>
-
-          {/* Inner white arc */}
-          <div className="absolute w-[80%] h-[160%] bg-card rounded-full left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 border-box">
-             <div className="absolute w-full h-[50%] top-0 left-0 bg-card" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' }}></div>
-          </div>
-          
-           {/* Labels */}
-          <div className="absolute inset-0 w-full h-full">
-            {categories.map((cat, i) => {
-                 const angle = -72 + i * 36;
-                 return (
-                    <div key={cat.label} className="absolute top-1/2 left-1/2" style={{ transform: `rotate(${angle}deg) translate(80px) rotate(${-angle}deg)` }}>
-                        <span className="text-xs font-medium text-foreground/80">{cat.label}</span>
-                    </div>
-                 )
-            })}
-          </div>
-
-          {/* Needle */}
-          <div
-            className="absolute bottom-0 left-1/2 w-1 h-1/2 bg-gray-800 dark:bg-gray-200 origin-bottom transition-transform duration-1000 ease-out"
-            style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }}
-          >
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-gray-800 dark:bg-gray-200"></div>
-          </div>
-           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gray-700 dark:bg-gray-300 border-4 border-card"></div>
-
+    <div className="flex flex-col items-center justify-center text-center w-full max-w-lg p-4">
+        <div className="mb-4">
+            <h2 className="text-5xl font-bold tracking-tighter">{bmi.toFixed(1)}</h2>
+            <p className={cn("text-lg font-semibold", category.color.replace('bg-', 'text-'))}>
+            {category.label}
+            </p>
+            <p className="text-sm text-muted-foreground">Chỉ số khối cơ thể (BMI)</p>
         </div>
-      </div>
-      <div className="mt-[-2rem] z-10">
-        <h2 className="text-5xl font-bold tracking-tighter">{bmi.toFixed(1)}</h2>
-        <p className="text-lg font-semibold" style={{ color: category.color.replace('bg-', 'text-') }}>
-          {category.label}
-        </p>
-        <p className="text-sm text-muted-foreground">Chỉ số khối cơ thể (BMI)</p>
+
+      <div className="w-full">
+        {/* Indicator Arrow */}
+        <div className="relative h-4 w-full" style={{ left: `${position}%`, transform: 'translateX(-50%)' }}>
+          <div className="absolute bottom-0 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-foreground" style={{ left: '50%', transform: 'translateX(-50%)' }} />
+        </div>
+        
+        {/* Horizontal Bar */}
+        <div className="flex h-4 w-full rounded-full overflow-hidden">
+          <div className={categories[0].color} style={{ width: `${categoryWidths.underweight}%` }}></div>
+          <div className={categories[1].color} style={{ width: `${categoryWidths.normal}%` }}></div>
+          <div className={categories[2].color} style={{ width: `${categoryWidths.overweight}%` }}></div>
+          <div className={cn(categories[3].color, "flex-grow")}></div>
+        </div>
+
+        {/* Labels */}
+        <div className="relative mt-2 flex w-full justify-between text-xs text-muted-foreground">
+           <span style={{ position: 'absolute', left: '0%'}}>15</span>
+           <span style={{ position: 'absolute', left: `${categoryWidths.underweight}%`, transform: 'translateX(-50%)' }}>18.5</span>
+           <span style={{ position: 'absolute', left: `${categoryWidths.underweight + categoryWidths.normal}%`, transform: 'translateX(-50%)' }}>25</span>
+           <span style={{ position: 'absolute', left: `${categoryWidths.underweight + categoryWidths.normal + categoryWidths.overweight}%`, transform: 'translateX(-50%)' }}>30</span>
+           <span style={{ position: 'absolute', right: '0%'}}>40+</span>
+        </div>
       </div>
     </div>
   );
