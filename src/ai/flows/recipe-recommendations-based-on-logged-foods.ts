@@ -8,12 +8,12 @@
  * - RecipeRecommendationsBasedOnLoggedFoodsOutput - The return type for the recipeRecommendationsBasedOnLoggedFoods function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, geminiModel} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const RecipeRecommendationsBasedOnLoggedFoodsInputSchema = z.object({
-  dietaryPreferences: z.string().describe('The user dietary preferences.'),
-  loggedFoods: z.string().describe('The foods the user has logged.'),
+  dietaryPreferences: z.string().describe("The user dietary preferences."),
+  loggedFoods: z.string().describe("The foods the user has logged."),
 });
 export type RecipeRecommendationsBasedOnLoggedFoodsInput = z.infer<
   typeof RecipeRecommendationsBasedOnLoggedFoodsInputSchema
@@ -36,6 +36,7 @@ export async function recipeRecommendationsBasedOnLoggedFoods(
 
 const prompt = ai.definePrompt({
   name: 'recipeRecommendationsBasedOnLoggedFoodsPrompt',
+  model: geminiModel,
   input: {schema: RecipeRecommendationsBasedOnLoggedFoodsInputSchema},
   output: {schema: RecipeRecommendationsBasedOnLoggedFoodsOutputSchema},
   prompt: `You are a recipe recommendation expert.

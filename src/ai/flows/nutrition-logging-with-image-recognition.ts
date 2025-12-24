@@ -10,14 +10,14 @@
  * @function nutritionLoggingWithImageRecognition - The main function to start the flow.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, geminiModel} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const NutritionLoggingInputSchema = z.object({
   photoDataUri: z
     .string()
     .describe(
-      'A photo of the meal, as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'
+      "A photo of the meal, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
 
@@ -40,6 +40,7 @@ export async function nutritionLoggingWithImageRecognition(
 
 const nutritionLoggingPrompt = ai.definePrompt({
   name: 'nutritionLoggingPrompt',
+  model: geminiModel,
   input: {schema: NutritionLoggingInputSchema},
   output: {schema: NutritionLoggingOutputSchema},
   prompt: `You are a nutrition expert. You will analyze the image of the meal and identify the food items. Then you will estimate the nutritional content of the meal.

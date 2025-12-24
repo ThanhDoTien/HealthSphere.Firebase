@@ -1,12 +1,18 @@
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/google-genai';
+import {genkit, GenerationCommon} from 'genkit';
+import {googleAI, GoogleAIGenerativeAI} from '@genkit-ai/google-genai';
 import {config} from 'dotenv';
 
-config();
+config({path: '.env'});
 
-const plugins = [];
+const plugins: any[] = [];
+let geminiModel: GenerationCommon<GoogleAIGenerativeAI, any> | undefined = undefined;
+
 if (process.env.GEMINI_API_KEY) {
-  plugins.push(googleAI());
+  const googleAiPlugin = googleAI({
+    apiKey: process.env.GEMINI_API_KEY,
+  });
+  plugins.push(googleAiPlugin);
+  geminiModel = googleAI.model('gemini-1.5-flash-latest');
 } else {
   console.warn(
     'GEMINI_API_KEY is not set. GenAI features will be disabled. Please add it to your .env file.'
@@ -16,3 +22,5 @@ if (process.env.GEMINI_API_KEY) {
 export const ai = genkit({
   plugins,
 });
+
+export {geminiModel};
