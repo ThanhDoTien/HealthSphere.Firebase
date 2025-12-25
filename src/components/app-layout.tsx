@@ -12,9 +12,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "./ui/button";
+import Link from "next/link";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const userAvatar = PlaceHolderImages.find((p) => p.id === "user-avatar-1");
+  // Assuming the logged-in user has this ID. In a real app, this would be dynamic.
+  const loggedInUserId = "alex-doe";
 
   return (
     <SidebarProvider>
@@ -45,7 +48,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Tài khoản của tôi</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Hồ sơ</DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/profile/${loggedInUserId}`}>Hồ sơ</Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem>Cài đặt</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Đăng xuất</DropdownMenuItem>

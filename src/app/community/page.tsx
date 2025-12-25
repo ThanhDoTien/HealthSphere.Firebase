@@ -20,6 +20,7 @@ const communityPosts = [
   {
     id: 1,
     author: "Jane Doe",
+    authorId: "jane-doe",
     authorAvatarId: "user-avatar-1",
     title: "Kết quả thử thách ăn uống lành mạnh 30 ngày của tôi!",
     snippet: "Tôi không thể tin được sự khác biệt mà nó đã tạo ra! Tôi đã giảm 5kg, mức năng lượng của tôi tăng vọt, và tôi chưa bao giờ cảm thấy tốt hơn. Đây là những gì tôi đã làm và những gì tôi đã học được trên đường đi...",
@@ -31,6 +32,7 @@ const communityPosts = [
   {
     id: 2,
     author: "John Smith",
+    authorId: "john-smith",
     authorAvatarId: "user-avatar-2",
     title: "Mẹo để duy trì động lực tập thể dục?",
     snippet: "Tôi luôn bắt đầu mạnh mẽ, nhưng sau một hoặc hai tuần, tôi mất động lực. Mẹo và thủ thuật của bạn để duy trì sự nhất quán với các bài tập của bạn là gì, đặc biệt là vào những ngày bận rộn?",
@@ -77,13 +79,13 @@ export default function CommunityPage() {
               )}
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <Link href="/profile">
+                  <Link href={`/profile/${post.authorId}`}>
                     <Avatar>
                       {authorAvatar && <AvatarImage src={authorAvatar.imageUrl} alt={post.author} data-ai-hint={authorAvatar.imageHint}/>}
                       <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
                     </Avatar>
                   </Link>
-                  <Link href="/profile" className="font-semibold hover:underline">
+                  <Link href={`/profile/${post.authorId}`} className="font-semibold hover:underline">
                     {post.author}
                   </Link>
                 </div>

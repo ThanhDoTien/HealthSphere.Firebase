@@ -35,11 +35,14 @@ const mainLinks = [
   { href: "/", label: "Bảng điều khiển", icon: LayoutDashboard },
 ];
 
+// Assuming the logged-in user has this ID. In a real app, this would be dynamic.
+const loggedInUserId = "alex-doe";
+
 const secondaryLinks = [
   { href: "/progress", label: "Tiến độ", icon: BarChart3 },
   { href: "/recipes", label: "Công thức", icon: BookHeart },
   { href: "/community", label: "Cộng đồng", icon: UsersRound },
-  { href: "/profile", label: "Hồ sơ", icon: CircleUserRound },
+  { href: `/profile/${loggedInUserId}`, label: "Hồ sơ", icon: CircleUserRound },
 ]
 
 const loggingLinks = [
@@ -104,7 +107,7 @@ export function SidebarNav() {
             <SidebarMenuItem key={link.href}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === link.href}
+                isActive={pathname.startsWith(link.href)}
                 tooltip={link.label}
               >
                 <Link href={link.href}>

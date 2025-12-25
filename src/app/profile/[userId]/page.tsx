@@ -21,15 +21,62 @@ import { PageHeader } from "@/components/page-header";
 import { BmiCalculator } from "@/components/bmi-calculator";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 
-export default function ProfilePage() {
-  const userAvatar = PlaceHolderImages.find((p) => p.id === "user-avatar-1");
-  const userUID = "user_1a2b3c4d5e";
+// Mock data store
+const users = {
+  "alex-doe": {
+    name: "Alex Doe",
+    email: "alex.doe@example.com",
+    weight: 70,
+    height: 175,
+    gender: "male",
+    activityLevel: "moderate",
+    preferences: "Chế độ ăn uống cân bằng, đang cố gắng giảm đường.",
+    avatarId: "user-avatar-1",
+    uid: "user_1a2b3c4d5e"
+  },
+  "jane-doe": {
+    name: "Jane Doe",
+    email: "jane.doe@example.com",
+    weight: 60,
+    height: 165,
+    gender: "female",
+    activityLevel: "light",
+    preferences: "Ăn uống lành mạnh.",
+    avatarId: "user-avatar-1",
+    uid: "user_6f7g8h9i0j"
+  },
+  "john-smith": {
+    name: "John Smith",
+    email: "john.smith@example.com",
+    weight: 85,
+    height: 180,
+    gender: "male",
+    activityLevel: "very",
+    preferences: "Động lực, Thể hình, Thảo luận",
+    avatarId: "user-avatar-2",
+    uid: "user_k1l2m3n4o5"
+  }
+};
+
+type UserProfile = typeof users[keyof typeof users];
+
+// In a real app, this would be a check to see if the profile
+// belongs to the currently authenticated user.
+const isCurrentUser = (userId: string) => userId === 'alex-doe';
+
+
+export default function ProfilePage({ params }: { params: { userId: string } }) {
+  const { userId } = params;
+  const userData = (users as Record<string, UserProfile>)[userId] || users['alex-doe']; // Fallback to default
+  
+  const userAvatar = PlaceHolderImages.find((p) => p.id === userData.avatarId);
+  const canEdit = isCurrentUser(userId);
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <PageHeader
-        title="Hồ sơ của bạn"
-        description="Quản lý thông tin cá nhân và sở thích sức khỏe của bạn."
+        title={canEdit ? "Hồ sơ của bạn" : `Hồ sơ của ${userData.name}`}
+        description={canEdit ? "Quản lý thông tin cá nhân và sở thích sức khỏe của bạn." : `Xem hồ sơ của ${userData.name}`}
       />
       <div className="grid gap-8 md:grid-cols-3">
         <div className="md:col-span-2">
@@ -37,7 +84,7 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle>Thông tin cá nhân</CardTitle>
               <CardDescription>
-                Cập nhật chi tiết hồ sơ của bạn ở đây. Thông tin này giúp cá nhân hóa trải nghiệm của bạn.
+                {canEdit ? "Cập nhật chi tiết hồ sơ của bạn ở đây. Thông tin này giúp cá nhân hóa trải nghiệm của bạn." : `Chi tiết hồ sơ của ${userData.name}.`}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -50,36 +97,36 @@ export default function ProfilePage() {
                       data-ai-hint={userAvatar.imageHint}
                     />
                   )}
-                  <AvatarFallback>U</AvatarFallback>
+                  <AvatarFallback>{userData.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                <Button variant="outline">Thay đổi ảnh</Button>
+                {canEdit && <Button variant="outline">Thay đổi ảnh</Button>}
               </div>
                <div className="space-y-2">
                   <Label htmlFor="uid">UID</Label>
-                  <Input id="uid" value={userUID} readOnly />
+                  <Input id="uid" value={userData.uid} readOnly />
                 </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">Họ và tên</Label>
-                  <Input id="name" defaultValue="Alex Doe" />
+                  <Input id="name" defaultValue={userData.name} readOnly={!canEdit} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue="alex.doe@example.com" />
+                  <Input id="email" type="email" defaultValue={userData.email} readOnly={!canEdit}/>
                 </div>
               </div>
                <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="weight">Cân nặng (kg)</Label>
-                  <Input id="weight" type="number" defaultValue="70" />
+                  <Input id="weight" type="number" defaultValue={userData.weight} readOnly={!canEdit} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="height">Chiều cao (cm)</Label>
-                  <Input id="height" type="number" defaultValue="175" />
+                  <Input id="height" type="number" defaultValue={userData.height} readOnly={!canEdit} />
                 </div>
                  <div className="space-y-2">
                   <Label htmlFor="gender">Giới tính</Label>
-                  <Select defaultValue="male">
+                  <Select defaultValue={userData.gender} disabled={!canEdit}>
                     <SelectTrigger id="gender">
                       <SelectValue placeholder="Chọn giới tính" />
                     </SelectTrigger>
@@ -93,7 +140,7 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="activity-level">Mức độ hoạt động</Label>
-                <Select defaultValue="moderate">
+                <Select defaultValue={userData.activityLevel} disabled={!canEdit}>
                   <SelectTrigger id="activity-level">
                     <SelectValue placeholder="Chọn mức độ hoạt động của bạn" />
                   </SelectTrigger>
@@ -111,10 +158,11 @@ export default function ProfilePage() {
                 <Textarea
                   id="dietary-preferences"
                   placeholder="ví dụ: Ăn chay, không chứa gluten, dị ứng với đậu phộng"
-                  defaultValue="Chế độ ăn uống cân bằng, đang cố gắng giảm đường."
+                  defaultValue={userData.preferences}
+                  readOnly={!canEdit}
                 />
               </div>
-              <Button>Lưu thay đổi</Button>
+              {canEdit && <Button>Lưu thay đổi</Button>}
             </CardContent>
           </Card>
         </div>
