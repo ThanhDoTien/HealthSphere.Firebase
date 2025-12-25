@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -76,11 +77,15 @@ export default function CommunityPage() {
               )}
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <Avatar>
-                    {authorAvatar && <AvatarImage src={authorAvatar.imageUrl} alt={post.author} data-ai-hint={authorAvatar.imageHint}/>}
-                    <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <span className="font-semibold">{post.author}</span>
+                  <Link href="/profile">
+                    <Avatar>
+                      {authorAvatar && <AvatarImage src={authorAvatar.imageUrl} alt={post.author} data-ai-hint={authorAvatar.imageHint}/>}
+                      <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                  </Link>
+                  <Link href="/profile" className="font-semibold hover:underline">
+                    {post.author}
+                  </Link>
                 </div>
                 <CardTitle className="pt-4 text-2xl font-headline">
                   {post.title}
