@@ -89,8 +89,8 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <Avatar className="h-24 w-24">
                   {userAvatar && (
                     <AvatarImage
                       src={userAvatar.imageUrl}
@@ -100,22 +100,18 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
                   )}
                   <AvatarFallback>{userData.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                {canEdit && <Button variant="outline">Thay đổi ảnh</Button>}
+                <div className="flex-grow w-full space-y-2">
+                   <Label htmlFor="name">Họ và tên</Label>
+                   <Input id="name" defaultValue={userData.name} readOnly={!canEdit} />
+                </div>
+                 {canEdit && <Button variant="outline">Thay đổi ảnh</Button>}
               </div>
+
                <div className="space-y-2">
                   <Label htmlFor="uid">UID</Label>
                   <Input id="uid" value={userData.uid} readOnly />
                 </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Họ và tên</Label>
-                  <Input id="name" defaultValue={userData.name} readOnly={!canEdit} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue={userData.email} readOnly={!canEdit}/>
-                </div>
-              </div>
+
                {canEdit && (
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
