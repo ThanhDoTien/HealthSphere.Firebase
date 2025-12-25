@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/page-header";
 import { BmiCalculator } from "@/components/bmi-calculator";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { MessageSquare } from "lucide-react";
 
 // Mock data store
 const users = {
@@ -79,7 +80,7 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
         description={canEdit ? "Quản lý thông tin cá nhân và sở thích sức khỏe của bạn." : `Xem hồ sơ của ${userData.name}`}
       />
       <div className="grid gap-8 md:grid-cols-3">
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 space-y-8">
           <Card>
             <CardHeader>
               <CardTitle>Thông tin cá nhân</CardTitle>
@@ -115,29 +116,31 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
                   <Input id="email" type="email" defaultValue={userData.email} readOnly={!canEdit}/>
                 </div>
               </div>
-               <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="weight">Cân nặng (kg)</Label>
-                  <Input id="weight" type="number" defaultValue={userData.weight} readOnly={!canEdit} />
+               {canEdit && (
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="weight">Cân nặng (kg)</Label>
+                    <Input id="weight" type="number" defaultValue={userData.weight} readOnly={!canEdit} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="height">Chiều cao (cm)</Label>
+                    <Input id="height" type="number" defaultValue={userData.height} readOnly={!canEdit} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Giới tính</Label>
+                    <Select defaultValue={userData.gender} disabled={!canEdit}>
+                      <SelectTrigger id="gender">
+                        <SelectValue placeholder="Chọn giới tính" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Nam</SelectItem>
+                        <SelectItem value="female">Nữ</SelectItem>
+                        <SelectItem value="other">Khác</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="height">Chiều cao (cm)</Label>
-                  <Input id="height" type="number" defaultValue={userData.height} readOnly={!canEdit} />
-                </div>
-                 <div className="space-y-2">
-                  <Label htmlFor="gender">Giới tính</Label>
-                  <Select defaultValue={userData.gender} disabled={!canEdit}>
-                    <SelectTrigger id="gender">
-                      <SelectValue placeholder="Chọn giới tính" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Nam</SelectItem>
-                      <SelectItem value="female">Nữ</SelectItem>
-                      <SelectItem value="other">Khác</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="activity-level">Mức độ hoạt động</Label>
                 <Select defaultValue={userData.activityLevel} disabled={!canEdit}>
@@ -165,9 +168,22 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
               {canEdit && <Button>Lưu thay đổi</Button>}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Bài viết của {userData.name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+               <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-40">
+                  <MessageSquare className="h-10 w-10 mb-4" />
+                  <p>Chưa có bài viết nào để hiển thị.</p>
+                  {canEdit && <p className="text-sm mt-2">Hãy chia sẻ hành trình của bạn trên trang Cộng đồng!</p>}
+              </div>
+            </CardContent>
+          </Card>
         </div>
         <div className="space-y-8 md:col-span-1">
-          <BmiCalculator />
+          {canEdit && <BmiCalculator />}
         </div>
       </div>
     </div>
