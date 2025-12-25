@@ -10,9 +10,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, ThumbsUp } from "lucide-react";
+import { MessageCircle, Search, ThumbsUp } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { Input } from "@/components/ui/input";
 
 const communityPosts = [
   {
@@ -46,6 +47,16 @@ export default function CommunityPage() {
         title="Diễn đàn cộng đồng"
         description="Kết nối với những người khác, chia sẻ hành trình của bạn và tìm kiếm sự hỗ trợ."
       />
+
+      <div className="mb-8">
+        <div className="flex w-full max-w-sm items-center space-x-2">
+          <Input type="text" placeholder="Tìm kiếm theo UID..." />
+          <Button type="submit">
+            <Search className="mr-2 h-4 w-4" /> Tìm kiếm
+          </Button>
+        </div>
+      </div>
+
       <div className="space-y-8">
         {communityPosts.map((post) => {
           const authorAvatar = PlaceHolderImages.find(p => p.id === post.authorAvatarId);

@@ -30,7 +30,7 @@ import { Sparkles } from "lucide-react";
 import { BmiChart } from "@/components/bmi-chart";
 
 const mockUserData = {
-  calorieIntake: 1800,
+  calorieIntake: 2000,
   calorieGoal: 2500,
   caloriesBurned: 400,
   waterIntake: 6,

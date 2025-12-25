@@ -23,6 +23,8 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export default function ProfilePage() {
   const userAvatar = PlaceHolderImages.find((p) => p.id === "user-avatar-1");
+  const userUID = "user_1a2b3c4d5e";
+
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <PageHeader
@@ -52,6 +54,10 @@ export default function ProfilePage() {
                 </Avatar>
                 <Button variant="outline">Thay đổi ảnh</Button>
               </div>
+               <div className="space-y-2">
+                  <Label htmlFor="uid">UID</Label>
+                  <Input id="uid" value={userUID} readOnly />
+                </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">Họ và tên</Label>
