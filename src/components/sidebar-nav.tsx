@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -9,6 +10,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import {
   BarChart3,
@@ -20,22 +24,35 @@ import {
   UtensilsCrossed,
   Dumbbell,
   Scale,
+  PlusCircle
 } from "lucide-react";
 import { Icons } from "@/components/icons";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
-const links = [
+const mainLinks = [
   { href: "/", label: "Bảng điều khiển", icon: LayoutDashboard },
-  { href: "/log-meal", label: "Ghi lại bữa ăn", icon: UtensilsCrossed },
-  { href: "/log-workout", label: "Ghi lại bài tập", icon: Dumbbell },
-  { href: "/weight", label: "Cân nặng", icon: Scale },
+];
+
+const secondaryLinks = [
   { href: "/progress", label: "Tiến độ", icon: BarChart3 },
   { href: "/recipes", label: "Công thức", icon: BookHeart },
   { href: "/community", label: "Cộng đồng", icon: UsersRound },
   { href: "/profile", label: "Hồ sơ", icon: CircleUserRound },
-];
+]
+
+const loggingLinks = [
+    { href: "/log-meal", label: "Ghi lại bữa ăn", icon: UtensilsCrossed },
+    { href: "/log-workout", label: "Ghi lại bài tập", icon: Dumbbell },
+    { href: "/weight", label: "Cân nặng", icon: Scale },
+]
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const [isLoggingOpen, setIsLoggingOpen] = useState(
+    loggingLinks.some(l => l.href === pathname)
+  );
 
   return (
     <>
@@ -47,7 +64,43 @@ export function SidebarNav() {
       </SidebarHeader>
       <SidebarContent className="p-2">
         <SidebarMenu>
-          {links.map((link) => (
+          {mainLinks.map((link) => (
+            <SidebarMenuItem key={link.href}>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === link.href}
+                tooltip={link.label}
+              >
+                <Link href={link.href}>
+                  <link.icon />
+                  <span>{link.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+            <Collapsible open={isLoggingOpen} onOpenChange={setIsLoggingOpen} className="w-full">
+                <CollapsibleTrigger asChild>
+                     <SidebarMenuButton variant="ghost" className="w-full justify-start" isActive={isLoggingOpen}>
+                        <PlusCircle />
+                        <span>Ghi lại dữ liệu</span>
+                     </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                    <SidebarMenuSub>
+                    {loggingLinks.map((link) => (
+                        <SidebarMenuItem key={link.href}>
+                            <SidebarMenuSubButton asChild isActive={pathname === link.href}>
+                                <Link href={link.href}>
+                                    <link.icon />
+                                    <span>{link.label}</span>
+                                </Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuItem>
+                    ))}
+                    </SidebarMenuSub>
+                </CollapsibleContent>
+            </Collapsible>
+           {secondaryLinks.map((link) => (
             <SidebarMenuItem key={link.href}>
               <SidebarMenuButton
                 asChild
