@@ -66,102 +66,99 @@ export default function WeightPage() {
         title="Theo dõi cân nặng"
         description="Theo dõi sự thay đổi cân nặng của bạn và ghi lại các mục mới."
       />
-      <div className="grid gap-8 md:grid-cols-3">
-        <div className="md:col-span-2">
-            <Card>
-            <CardHeader>
-                <CardTitle>Thay đổi cân nặng - 8 tuần qua</CardTitle>
-                <CardDescription>
-                Theo dõi xu hướng cân nặng của bạn theo thời gian.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ChartContainer config={weightChartConfig} className="h-[300px] w-full">
-                <LineChart accessibilityLayer data={weightData}>
-                    <CartesianGrid vertical={false} />
-                    <XAxis
-                    dataKey="week"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={10}
-                    tickFormatter={(value) => `Tuần ${value}`}
-                    />
-                    <YAxis
-                        tickLine={false}
-                        axisLine={false}
-                        tickMargin={10}
-                        domain={['dataMin - 1', 'dataMax + 1']}
-                        label={{ value: "kg", position: "insideTopLeft", dy: -10, fill: "hsl(var(--muted-foreground))" }}
-                    />
-                    <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent />}
-                    />
-                    <Line
-                    dataKey="weight"
-                    type="monotone"
-                    stroke="var(--color-weight)"
-                    strokeWidth={2}
-                    dot={{
-                        fill: "var(--color-weight)",
-                    }}
-                    activeDot={{
-                        r: 6,
-                    }}
-                    />
-                </LineChart>
-                </ChartContainer>
-            </CardContent>
-            </Card>
-        </div>
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Ghi lại cân nặng hôm nay</CardTitle>
+      <div className="grid gap-8">
+        <Card>
+          <CardHeader>
+              <CardTitle>Thay đổi cân nặng - 8 tuần qua</CardTitle>
               <CardDescription>
-                Nhập cân nặng hiện tại của bạn.
+              Theo dõi xu hướng cân nặng của bạn theo thời gian.
               </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="weight-input">Cân nặng (kg)</Label>
-                <Input 
-                  id="weight-input" 
-                  type="number" 
-                  placeholder="ví dụ: 70.5"
-                  value={newWeight}
-                  onChange={(e) => setNewWeight(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Ngày</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "PPP", { locale: vi }) : <span>Chọn ngày</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      initialFocus
-                      locale={vi}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleAddWeight}>Lưu cân nặng</Button>
-            </CardFooter>
-          </Card>
-        </div>
+          </CardHeader>
+          <CardContent>
+              <ChartContainer config={weightChartConfig} className="h-[300px] w-full">
+              <LineChart accessibilityLayer data={weightData}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                  dataKey="week"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={10}
+                  tickFormatter={(value) => `Tuần ${value}`}
+                  />
+                  <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={10}
+                      domain={['dataMin - 1', 'dataMax + 1']}
+                      label={{ value: "kg", position: "insideTopLeft", dy: -10, fill: "hsl(var(--muted-foreground))" }}
+                  />
+                  <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent />}
+                  />
+                  <Line
+                  dataKey="weight"
+                  type="monotone"
+                  stroke="var(--color-weight)"
+                  strokeWidth={2}
+                  dot={{
+                      fill: "var(--color-weight)",
+                  }}
+                  activeDot={{
+                      r: 6,
+                  }}
+                  />
+              </LineChart>
+              </ChartContainer>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Ghi lại cân nặng hôm nay</CardTitle>
+            <CardDescription>
+              Nhập cân nặng hiện tại của bạn.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="weight-input">Cân nặng (kg)</Label>
+              <Input 
+                id="weight-input" 
+                type="number" 
+                placeholder="ví dụ: 70.5"
+                value={newWeight}
+                onChange={(e) => setNewWeight(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Ngày</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, "PPP", { locale: vi }) : <span>Chọn ngày</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    initialFocus
+                    locale={vi}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={handleAddWeight}>Lưu cân nặng</Button>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );
