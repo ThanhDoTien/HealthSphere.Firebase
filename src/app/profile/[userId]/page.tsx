@@ -1,3 +1,7 @@
+
+"use client";
+
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/page-header";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Pencil } from "lucide-react";
 
 // Mock data store
 const users = {
@@ -66,8 +70,10 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
   const { userId } = params;
   const userData = (users as Record<string, UserProfile>)[userId] || users['alex-doe']; // Fallback to default
   
-  const userAvatar = PlaceHolderImages.find((p) => p.id === userData.avatarId);
   const canEdit = isCurrentUser(userId);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const userAvatar = PlaceHolderImages.find((p) => p.id === userData.avatarId);
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -75,14 +81,22 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
         title={canEdit ? "Hồ sơ của bạn" : `Hồ sơ của ${userData.name}`}
         description={canEdit ? "Quản lý thông tin cá nhân và sở thích sức khỏe của bạn." : `Xem hồ sơ của ${userData.name}`}
       />
-      <div className="grid gap-8">
-        <div className="space-y-8">
+      <div className="grid gap-8 md:grid-cols-3">
+        <div className={canEdit ? "md:col-span-3" : "md:col-span-3"}>
           <Card>
-            <CardHeader>
-              <CardTitle>Thông tin cá nhân</CardTitle>
-              <CardDescription>
-                {canEdit ? "Cập nhật chi tiết hồ sơ của bạn ở đây. Thông tin này giúp cá nhân hóa trải nghiệm của bạn." : `Chi tiết hồ sơ của ${userData.name}.`}
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Thông tin cá nhân</CardTitle>
+                    <CardDescription>
+                        {canEdit ? "Cập nhật chi tiết hồ sơ của bạn ở đây." : `Chi tiết hồ sơ của ${userData.name}.`}
+                    </CardDescription>
+                </div>
+                {canEdit && !isEditing && (
+                    <Button variant="outline" onClick={() => setIsEditing(true)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Cập nhật thông tin
+                    </Button>
+                )}
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex flex-col sm:flex-row items-center gap-6">
@@ -98,9 +112,9 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
                 </Avatar>
                 <div className="flex-grow w-full space-y-2">
                    <Label htmlFor="name">Họ và tên</Label>
-                   <Input id="name" defaultValue={userData.name} readOnly={!canEdit} />
+                   <Input id="name" defaultValue={userData.name} readOnly={!isEditing} />
                 </div>
-                 {canEdit && <Button variant="outline">Thay đổi ảnh</Button>}
+                 {isEditing && <Button variant="outline">Thay đổi ảnh</Button>}
               </div>
 
                <div className="space-y-2">
@@ -108,34 +122,32 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
                   <Input id="uid" value={userData.uid} readOnly />
                 </div>
 
-               {canEdit && (
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="weight">Cân nặng (kg)</Label>
-                    <Input id="weight" type="number" defaultValue={userData.weight} readOnly={!canEdit} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="height">Chiều cao (cm)</Label>
-                    <Input id="height" type="number" defaultValue={userData.height} readOnly={!canEdit} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="gender">Giới tính</Label>
-                    <Select defaultValue={userData.gender} disabled={!canEdit}>
-                      <SelectTrigger id="gender">
-                        <SelectValue placeholder="Chọn giới tính" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Nam</SelectItem>
-                        <SelectItem value="female">Nữ</SelectItem>
-                        <SelectItem value="other">Khác</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="weight">Cân nặng (kg)</Label>
+                  <Input id="weight" type="number" defaultValue={userData.weight} readOnly={!isEditing} />
                 </div>
-              )}
+                <div className="space-y-2">
+                  <Label htmlFor="height">Chiều cao (cm)</Label>
+                  <Input id="height" type="number" defaultValue={userData.height} readOnly={!isEditing} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Giới tính</Label>
+                  <Select defaultValue={userData.gender} disabled={!isEditing}>
+                    <SelectTrigger id="gender">
+                      <SelectValue placeholder="Chọn giới tính" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Nam</SelectItem>
+                      <SelectItem value="female">Nữ</SelectItem>
+                      <SelectItem value="other">Khác</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="activity-level">Mức độ hoạt động</Label>
-                <Select defaultValue={userData.activityLevel} disabled={!canEdit}>
+                <Select defaultValue={userData.activityLevel} disabled={!isEditing}>
                   <SelectTrigger id="activity-level">
                     <SelectValue placeholder="Chọn mức độ hoạt động của bạn" />
                   </SelectTrigger>
@@ -154,13 +166,20 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
                   id="dietary-preferences"
                   placeholder="ví dụ: Ăn chay, không chứa gluten, dị ứng với đậu phộng"
                   defaultValue={userData.preferences}
-                  readOnly={!canEdit}
+                  readOnly={!isEditing}
                 />
               </div>
-              {canEdit && <Button>Lưu thay đổi</Button>}
+              {isEditing && (
+                <div className="flex gap-2">
+                    <Button onClick={() => setIsEditing(false)}>Lưu thay đổi</Button>
+                    <Button variant="ghost" onClick={() => setIsEditing(false)}>Hủy</Button>
+                </div>
+              )}
             </CardContent>
           </Card>
+        </div>
 
+        <div className="md:col-span-3">
           <Card>
             <CardHeader>
               <CardTitle>Bài viết của {userData.name}</CardTitle>
