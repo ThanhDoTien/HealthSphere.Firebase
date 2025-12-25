@@ -120,39 +120,41 @@ export default function WeightPage() {
               Nhập cân nặng hiện tại của bạn.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="weight-input">Cân nặng (kg)</Label>
-              <Input 
-                id="weight-input" 
-                type="number" 
-                placeholder="ví dụ: 70.5"
-                value={newWeight}
-                onChange={(e) => setNewWeight(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Ngày</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP", { locale: vi }) : <span>Chọn ngày</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    initialFocus
-                    locale={vi}
-                  />
-                </PopoverContent>
-              </Popover>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                <Label htmlFor="weight-input">Cân nặng (kg)</Label>
+                <Input 
+                    id="weight-input" 
+                    type="number" 
+                    placeholder="ví dụ: 70.5"
+                    value={newWeight}
+                    onChange={(e) => setNewWeight(e.target.value)}
+                />
+                </div>
+                <div className="space-y-2">
+                <Label>Ngày</Label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button
+                        variant={"outline"}
+                        className="w-full justify-start text-left font-normal"
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, "PPP", { locale: vi }) : <span>Chọn ngày</span>}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                    <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        initialFocus
+                        locale={vi}
+                    />
+                    </PopoverContent>
+                </Popover>
+                </div>
             </div>
           </CardContent>
           <CardFooter>
