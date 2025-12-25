@@ -79,8 +79,8 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
         title={canEdit ? "Hồ sơ của bạn" : `Hồ sơ của ${userData.name}`}
         description={canEdit ? "Quản lý thông tin cá nhân và sở thích sức khỏe của bạn." : `Xem hồ sơ của ${userData.name}`}
       />
-      <div className="grid gap-8 md:grid-cols-3">
-        <div className="md:col-span-2 space-y-8">
+      <div className={canEdit ? "grid gap-8 md:grid-cols-3" : "grid gap-8"}>
+        <div className={canEdit ? "md:col-span-2 space-y-8" : "space-y-8"}>
           <Card>
             <CardHeader>
               <CardTitle>Thông tin cá nhân</CardTitle>
@@ -182,9 +182,11 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
             </CardContent>
           </Card>
         </div>
-        <div className="space-y-8 md:col-span-1">
-          {canEdit && <BmiCalculator />}
-        </div>
+        {canEdit && (
+          <div className="space-y-8 md:col-span-1">
+             <BmiCalculator />
+          </div>
+        )}
       </div>
     </div>
   );
