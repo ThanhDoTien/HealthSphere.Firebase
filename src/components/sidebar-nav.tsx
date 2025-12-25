@@ -20,7 +20,6 @@ import {
   CircleUserRound,
   LayoutDashboard,
   Settings,
-  UsersRound,
   UtensilsCrossed,
   Dumbbell,
   Scale,
@@ -41,7 +40,6 @@ const loggedInUserId = "alex-doe";
 const secondaryLinks = [
   { href: "/progress", label: "Tiến độ", icon: BarChart3 },
   { href: "/recipes", label: "Công thức", icon: BookHeart },
-  { href: "/community", label: "Cộng đồng", icon: UsersRound },
   { href: `/profile/${loggedInUserId}`, label: "Hồ sơ", icon: CircleUserRound },
 ]
 
