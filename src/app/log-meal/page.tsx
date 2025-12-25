@@ -189,6 +189,31 @@ export default function LogMealPage() {
           </Card>
           <Card>
             <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Apple /> Ghi lại thủ công
+              </CardTitle>
+              <CardDescription>
+                Không thể chụp ảnh? Thêm các món ăn của bạn theo tên.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="sm:col-span-2 space-y-2">
+                  <Label htmlFor="food-name">Thực phẩm / Bữa ăn</Label>
+                  <Input id="food-name" placeholder="ví dụ: Táo" value={manualFood} onChange={e => setManualFood(e.target.value)} />
+                </div>
+                 <div className="space-y-2">
+                  <Label htmlFor="calories">Lượng calo (kcal)</Label>
+                  <Input id="calories" type="number" placeholder="ví dụ: 95" value={manualCalories} onChange={e => setManualCalories(e.target.value)} />
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={handleManualAdd}>Thêm thực phẩm</Button>
+            </CardFooter>
+          </Card>
+          <Card>
+            <CardHeader>
               <CardTitle>Lượng calo nạp vào - 7 ngày qua</CardTitle>
               <CardDescription>
                 Biểu đồ này cho thấy lượng calo tiêu thụ hàng ngày của bạn.
@@ -218,31 +243,6 @@ export default function LogMealPage() {
                 </BarChart>
               </ChartContainer>
             </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Apple /> Ghi lại thủ công
-              </CardTitle>
-              <CardDescription>
-                Không thể chụp ảnh? Thêm các món ăn của bạn theo tên.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="sm:col-span-2 space-y-2">
-                  <Label htmlFor="food-name">Thực phẩm / Bữa ăn</Label>
-                  <Input id="food-name" placeholder="ví dụ: Táo" value={manualFood} onChange={e => setManualFood(e.target.value)} />
-                </div>
-                 <div className="space-y-2">
-                  <Label htmlFor="calories">Lượng calo (kcal)</Label>
-                  <Input id="calories" type="number" placeholder="ví dụ: 95" value={manualCalories} onChange={e => setManualCalories(e.target.value)} />
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleManualAdd}>Thêm thực phẩm</Button>
-            </CardFooter>
           </Card>
         </div>
         <div className="lg:col-span-1">

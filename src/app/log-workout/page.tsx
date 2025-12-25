@@ -162,39 +162,6 @@ export default function LogWorkoutPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Lượng calo tiêu hao - 7 ngày qua</CardTitle>
-              <CardDescription>
-                Biểu đồ này cho thấy lượng calo bạn đã đốt cháy hàng ngày.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={caloriesBurnedChartConfig} className="h-[300px] w-full">
-                <BarChart accessibilityLayer data={caloriesBurnedData}>
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    tickMargin={10}
-                    axisLine={false}
-                  />
-                  <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={10}
-                      label={{ value: "kcal", position: "insideTopLeft", dy: -10, fill: "hsl(var(--muted-foreground))" }}
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent />}
-                  />
-                  <Bar dataKey="calories" fill="var(--color-calories)" radius={8} />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus /> Thêm bài tập thủ công
               </CardTitle>
@@ -238,6 +205,39 @@ export default function LogWorkoutPage() {
             <CardFooter>
               <Button onClick={handleManualAdd}>Thêm bài tập</Button>
             </CardFooter>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Lượng calo tiêu hao - 7 ngày qua</CardTitle>
+              <CardDescription>
+                Biểu đồ này cho thấy lượng calo bạn đã đốt cháy hàng ngày.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={caloriesBurnedChartConfig} className="h-[300px] w-full">
+                <BarChart accessibilityLayer data={caloriesBurnedData}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                  />
+                  <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={10}
+                      label={{ value: "kcal", position: "insideTopLeft", dy: -10, fill: "hsl(var(--muted-foreground))" }}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
+                  <Bar dataKey="calories" fill="var(--color-calories)" radius={8} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
           </Card>
         </div>
 
