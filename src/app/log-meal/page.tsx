@@ -124,6 +124,38 @@ export default function LogMealPage() {
         <div className="space-y-8 lg:col-span-2">
           <Card>
             <CardHeader>
+              <CardTitle>Lượng calo nạp vào - 7 ngày qua</CardTitle>
+              <CardDescription>
+                Biểu đồ này cho thấy lượng calo tiêu thụ hàng ngày của bạn.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={calorieChartConfig} className="h-[300px] w-full">
+                <BarChart accessibilityLayer data={calorieData}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                  />
+                  <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={10}
+                      label={{ value: "kcal", position: "insideTopLeft", dy: -10, fill: "hsl(var(--muted-foreground))" }}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
+                  <Bar dataKey="calories" fill="var(--color-calories)" radius={8} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Camera /> Ghi lại bằng ảnh
               </CardTitle>
@@ -211,38 +243,6 @@ export default function LogMealPage() {
             <CardFooter>
               <Button onClick={handleManualAdd}>Thêm thực phẩm</Button>
             </CardFooter>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Lượng calo nạp vào - 7 ngày qua</CardTitle>
-              <CardDescription>
-                Biểu đồ này cho thấy lượng calo tiêu thụ hàng ngày của bạn.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={calorieChartConfig} className="h-[300px] w-full">
-                <BarChart accessibilityLayer data={calorieData}>
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    tickMargin={10}
-                    axisLine={false}
-                  />
-                  <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={10}
-                      label={{ value: "kcal", position: "insideTopLeft", dy: -10, fill: "hsl(var(--muted-foreground))" }}
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent />}
-                  />
-                  <Bar dataKey="calories" fill="var(--color-calories)" radius={8} />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
           </Card>
         </div>
         <div className="lg:col-span-1">
