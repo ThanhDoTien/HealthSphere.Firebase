@@ -19,6 +19,7 @@ import {
   UsersRound,
   UtensilsCrossed,
   Dumbbell,
+  Scale,
 } from "lucide-react";
 import { Icons } from "@/components/icons";
 
@@ -26,6 +27,7 @@ const links = [
   { href: "/", label: "Bảng điều khiển", icon: LayoutDashboard },
   { href: "/log-meal", label: "Ghi lại bữa ăn", icon: UtensilsCrossed },
   { href: "/log-workout", label: "Ghi lại bài tập", icon: Dumbbell },
+  { href: "/weight", label: "Cân nặng", icon: Scale },
   { href: "/progress", label: "Tiến độ", icon: BarChart3 },
   { href: "/recipes", label: "Công thức", icon: BookHeart },
   { href: "/community", label: "Cộng đồng", icon: UsersRound },
