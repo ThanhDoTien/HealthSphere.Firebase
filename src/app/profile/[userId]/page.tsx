@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/page-header";
-import { BmiCalculator } from "@/components/bmi-calculator";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { MessageSquare } from "lucide-react";
 
@@ -26,7 +25,6 @@ import { MessageSquare } from "lucide-react";
 const users = {
   "alex-doe": {
     name: "Alex Doe",
-    email: "alex.doe@example.com",
     weight: 70,
     height: 175,
     gender: "male",
@@ -37,7 +35,6 @@ const users = {
   },
   "jane-doe": {
     name: "Jane Doe",
-    email: "jane.doe@example.com",
     weight: 60,
     height: 165,
     gender: "female",
@@ -48,7 +45,6 @@ const users = {
   },
   "john-smith": {
     name: "John Smith",
-    email: "john.smith@example.com",
     weight: 85,
     height: 180,
     gender: "male",
@@ -79,8 +75,8 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
         title={canEdit ? "Hồ sơ của bạn" : `Hồ sơ của ${userData.name}`}
         description={canEdit ? "Quản lý thông tin cá nhân và sở thích sức khỏe của bạn." : `Xem hồ sơ của ${userData.name}`}
       />
-      <div className={canEdit ? "grid gap-8 md:grid-cols-3" : "grid gap-8"}>
-        <div className={canEdit ? "md:col-span-2 space-y-8" : "space-y-8"}>
+      <div className="grid gap-8">
+        <div className="space-y-8">
           <Card>
             <CardHeader>
               <CardTitle>Thông tin cá nhân</CardTitle>
@@ -178,11 +174,6 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
             </CardContent>
           </Card>
         </div>
-        {canEdit && (
-          <div className="space-y-8 md:col-span-1">
-             <BmiCalculator />
-          </div>
-        )}
       </div>
     </div>
   );
