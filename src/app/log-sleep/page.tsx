@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { PageHeader } from "@/components/page-header";
 import {
   Card,
@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Moon } from "lucide-react";
+import { CalendarIcon, Moon, Loader2, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import {
@@ -25,6 +25,8 @@ import {
   ChartConfig,
 } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { getSleepAnalysis, SleepAnalysisOutput } from "@/ai/flows/sleep-analysis";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 const sleepData = [
@@ -47,6 +49,10 @@ const sleepChartConfig = {
 export default function LogSleepPage() {
   const [sleepHours, setSleepHours] = useState("");
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [isPending, startTransition] = useTransition();
+  const [analysis, setAnalysis] = useState<SleepAnalysisOutput | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+
 
   const handleAddSleep = () => {
     if (sleepHours && date) {
@@ -56,6 +62,21 @@ export default function LogSleepPage() {
       alert("Đã ghi lại giấc ngủ!");
     }
   };
+
+  const handleGetAnalysis = () => {
+    startTransition(async () => {
+        setAnalysis(null);
+        setAnalysisError(null);
+        try {
+            const sleepDataString = sleepData.map(d => `${d.date}: ${d.hours} giờ`).join(', ');
+            const result = await getSleepAnalysis({ sleepData: sleepDataString });
+            setAnalysis(result);
+        } catch (error) {
+            setAnalysisError("Không thể phân tích giấc ngủ. Vui lòng thử lại.");
+            console.error(error);
+        }
+    });
+  }
 
 
   return (
@@ -148,6 +169,46 @@ export default function LogSleepPage() {
             <Button onClick={handleAddSleep}>Lưu giấc ngủ</Button>
           </CardFooter>
         </Card>
+
+        <Card className="w-full max-w-2xl justify-self-center">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Sparkles /> Phân tích giấc ngủ bằng AI
+                </CardTitle>
+                <CardDescription>
+                    Nhận thông tin chi tiết và đề xuất được cá nhân hóa dựa trên mô hình giấc ngủ của bạn.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isPending ? (
+                <div className="flex h-24 items-center justify-center rounded-lg border bg-muted/50">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : analysis ? (
+                <Alert>
+                  <Sparkles className="h-4 w-4" />
+                  <AlertTitle>Phân tích giấc ngủ của bạn</AlertTitle>
+                  <AlertDescription>
+                    <p className="whitespace-pre-wrap">{analysis.analysis}</p>
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+               {analysisError && <p className="text-sm text-destructive mt-2">{analysisError}</p>}
+            </CardContent>
+            <CardFooter>
+              <Button onClick={handleGetAnalysis} disabled={isPending}>
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Đang phân tích...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" /> Phân tích giấc ngủ của tôi
+                  </>
+                )}
+              </Button>
+            </CardFooter>
+          </Card>
       </div>
     </div>
   );
