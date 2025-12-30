@@ -23,7 +23,8 @@ import {
   UtensilsCrossed,
   Dumbbell,
   Scale,
-  PlusCircle
+  PlusCircle,
+  Moon
 } from "lucide-react";
 import { Icons } from "@/components/icons";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -47,6 +48,7 @@ const loggingLinks = [
     { href: "/log-meal", label: "Ghi lại bữa ăn", icon: UtensilsCrossed },
     { href: "/log-workout", label: "Ghi lại bài tập", icon: Dumbbell },
     { href: "/weight", label: "Cân nặng", icon: Scale },
+    { href: "/log-sleep", label: "Ghi lại giấc ngủ", icon: Moon },
 ]
 
 export function SidebarNav() {

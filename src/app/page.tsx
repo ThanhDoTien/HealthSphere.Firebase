@@ -166,26 +166,18 @@ export default async function Dashboard() {
               </CardContent>
             </Card>
           </Link>
-          <Card className="flex flex-col h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Nước</CardTitle>
-              <GlassWater className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <div className="text-2xl font-bold">{mockUserData.waterIntake} ly</div>
-              <p className="text-xs text-muted-foreground">{mockUserData.waterGoal - mockUserData.waterIntake} ly nữa để đạt mục tiêu</p>
-            </CardContent>
-          </Card>
-           <Card className="flex flex-col h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Giấc ngủ</CardTitle>
-              <Moon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <div className="text-2xl font-bold">{mockUserData.sleep} giờ</div>
-              <p className="text-xs text-muted-foreground">Đêm qua</p>
-            </CardContent>
-          </Card>
+           <Link href="/log-sleep">
+            <Card className="flex flex-col h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Giấc ngủ</CardTitle>
+                <Moon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <div className="text-2xl font-bold">{mockUserData.sleep} giờ</div>
+                <p className="text-xs text-muted-foreground">Đêm qua</p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
