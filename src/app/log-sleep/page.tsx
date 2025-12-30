@@ -18,6 +18,31 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Moon } from "lucide-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartConfig,
+} from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+
+
+const sleepData = [
+  { date: "T2", hours: 7.5 },
+  { date: "T3", hours: 6 },
+  { date: "T4", hours: 8 },
+  { date: "T5", hours: 7 },
+  { date: "T6", hours: 6.5 },
+  { date: "T7", hours: 8.5 },
+  { date: "CN", hours: 9 },
+];
+
+const sleepChartConfig = {
+  hours: {
+    label: "Giờ ngủ",
+    color: "hsl(var(--chart-3))",
+  },
+} satisfies ChartConfig;
 
 export default function LogSleepPage() {
   const [sleepHours, setSleepHours] = useState("");
@@ -40,7 +65,40 @@ export default function LogSleepPage() {
         description="Nhập thời gian ngủ của bạn để theo dõi mô hình nghỉ ngơi."
       />
       <div className="grid gap-8 justify-center">
-        <Card className="w-full max-w-lg">
+        <Card className="w-full max-w-2xl">
+            <CardHeader>
+                <CardTitle>Lịch sử giấc ngủ - 7 ngày qua</CardTitle>
+                <CardDescription>
+                Biểu đồ này cho thấy số giờ ngủ hàng đêm của bạn.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ChartContainer config={sleepChartConfig} className="h-[300px] w-full">
+                    <BarChart accessibilityLayer data={sleepData}>
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                        dataKey="date"
+                        tickLine={false}
+                        tickMargin={10}
+                        axisLine={false}
+                        />
+                        <YAxis
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={10}
+                            label={{ value: "giờ", position: "insideTopLeft", dy: -10, fill: "hsl(var(--muted-foreground))" }}
+                        />
+                        <ChartTooltip
+                        cursor={false}
+                        content={<ChartTooltipContent />}
+                        />
+                        <Bar dataKey="hours" fill="var(--color-hours)" radius={8} />
+                    </BarChart>
+                </ChartContainer>
+            </CardContent>
+        </Card>
+
+        <Card className="w-full max-w-lg justify-self-center">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Moon /> Ghi lại giấc ngủ
