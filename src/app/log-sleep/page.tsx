@@ -119,7 +119,7 @@ export default function LogSleepPage() {
             </CardContent>
         </Card>
 
-        <Card className="w-full max-w-lg justify-self-center">
+        <Card className="w-full max-w-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Moon /> Ghi lại giấc ngủ
@@ -170,7 +170,7 @@ export default function LogSleepPage() {
           </CardFooter>
         </Card>
 
-        <Card className="w-full max-w-2xl justify-self-center">
+        <Card className="w-full max-w-2xl">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Sparkles /> Phân tích giấc ngủ bằng AI
