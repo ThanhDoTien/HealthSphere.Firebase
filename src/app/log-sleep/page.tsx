@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useTransition } from "react";
@@ -85,7 +86,7 @@ export default function LogSleepPage() {
         title="Ghi lại giấc ngủ"
         description="Nhập thời gian ngủ của bạn để theo dõi mô hình nghỉ ngơi."
       />
-      <div className="grid gap-8 justify-center">
+      <div className="flex flex-col items-center gap-8">
         <Card className="w-full max-w-2xl">
             <CardHeader>
                 <CardTitle>Lịch sử giấc ngủ - 7 ngày qua</CardTitle>
