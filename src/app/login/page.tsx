@@ -50,7 +50,7 @@ export default function LoginPage() {
               <Input id="password" type="password" required />
             </div>
             <Button type="submit" className="w-full" asChild>
-                <Link href="/">Đăng nhập</Link>
+                <Link href="/dashboard">Đăng nhập</Link>
             </Button>
             <Button variant="outline" className="w-full">
               Đăng nhập bằng Google

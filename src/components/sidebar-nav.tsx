@@ -32,7 +32,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const mainLinks = [
-  { href: "/", label: "Bảng điều khiển", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
 ];
 
 // Assuming the logged-in user has this ID. In a real app, this would be dynamic.
