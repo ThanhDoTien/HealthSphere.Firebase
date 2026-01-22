@@ -141,24 +141,22 @@ export default function HomePage() {
               {visualJourney.map((item) => {
                 const image = PlaceHolderImages.find((p) => p.id === item.imageId);
                 return (
-                  <Card key={item.imageId} className="overflow-hidden">
-                    <CardContent className="p-0">
-                      {image && (
-                         <div className="aspect-w-4 aspect-h-3">
-                            <Image
-                                src={image.imageUrl}
-                                alt={image.description}
-                                width={600}
-                                height={450}
-                                className="object-cover w-full h-full"
-                                data-ai-hint={image.imageHint}
-                            />
-                        </div>
-                      )}
-                      <div className="p-6">
-                        <h3 className="text-xl font-semibold">{item.title}</h3>
-                        <p className="mt-2 text-muted-foreground">{item.description}</p>
+                  <Card key={item.imageId} className="overflow-hidden flex flex-col">
+                    {image && (
+                       <div className="aspect-[4/3]">
+                          <Image
+                              src={image.imageUrl}
+                              alt={image.description}
+                              width={600}
+                              height={450}
+                              className="object-cover w-full h-full"
+                              data-ai-hint={image.imageHint}
+                          />
                       </div>
+                    )}
+                    <CardContent className="p-6 flex-grow flex flex-col">
+                      <h3 className="text-xl font-semibold">{item.title}</h3>
+                      <p className="mt-2 text-muted-foreground">{item.description}</p>
                     </CardContent>
                   </Card>
                 )
