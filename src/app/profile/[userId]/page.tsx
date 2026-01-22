@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/page-header";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { MessageSquare, Pencil } from "lucide-react";
+import Link from "next/link";
 
 // Mock data store
 const users = {
@@ -188,7 +189,7 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
                <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-40">
                   <MessageSquare className="h-10 w-10 mb-4" />
                   <p>Chưa có bài viết nào để hiển thị.</p>
-                  {canEdit && <p className="text-sm mt-2">Hãy chia sẻ hành trình của bạn trên trang Cộng đồng!</p>}
+                  {canEdit && <p className="text-sm mt-2">Hãy chia sẻ hành trình của bạn trên trang <Link href="/community" className="underline hover:text-primary">Cộng đồng</Link>!</p>}
               </div>
             </CardContent>
           </Card>

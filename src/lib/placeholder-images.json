@@ -43,6 +43,18 @@
       "imageHint": "phone app"
     },
     {
+      "id": "community-post-2",
+      "description": "A person celebrating after a workout.",
+      "imageUrl": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmaXRuZXNzJTIwY2VsZWJyYXRpb258ZW58MHx8fHwxNjg5NTg0NTI3fDA&ixlib=rb-4.0.3&q=80&w=1080",
+      "imageHint": "fitness celebration"
+    },
+    {
+      "id": "community-post-3",
+      "description": "A plate of delicious and healthy tacos.",
+      "imageUrl": "https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxoZWFsdGh5JTIwdGFjb3N8ZW58MHx8fHwxNjg5NTg0NTU4fDA&ixlib=rb-4.0.3&q=80&w=1080",
+      "imageHint": "healthy tacos"
+    },
+    {
       "id": "meal-1",
       "description": "A picture of a healthy and balanced meal.",
       "imageUrl": "https://images.unsplash.com/photo-1611599537845-1c7aca0091c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxoZWFsdGh5JTIwbWVhbHxlbnwwfHx8fDE3NjY1NjIzOTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
