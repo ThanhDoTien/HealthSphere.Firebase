@@ -31,18 +31,6 @@
       "imageHint": "person cooking"
     },
     {
-      "id": "community-1",
-      "description": "A group of people jogging in a park.",
-      "imageUrl": "https://images.unsplash.com/photo-1631405234894-f3224573c864?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGVvcGxlJTIwam9nZ2luZ3xlbnwwfHx8fDE3NjY1NjIzOTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "people jogging"
-    },
-    {
-      "id": "community-2",
-      "description": "A close-up of a person tracking their meal on a smartphone.",
-      "imageUrl": "https://images.unsplash.com/photo-1488509082528-cefbba5ad692?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGhvbmUlMjBhcHB8ZW58MHx8fHwxNzY2NTAxMDE4fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "phone app"
-    },
-    {
       "id": "community-post-2",
       "description": "A person celebrating after a workout.",
       "imageUrl": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmaXRuZXNzJTIwY2VsZWJyYXRpb258ZW58MHx8fHwxNjg5NTg0NTI3fDA&ixlib=rb-4.0.3&q=80&w=1080",

@@ -23,7 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/page-header";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { MessageSquare, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import Link from "next/link";
 
 // Mock data store
@@ -82,8 +82,8 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
         title={canEdit ? "Hồ sơ của bạn" : `Hồ sơ của ${userData.name}`}
         description={canEdit ? "Quản lý thông tin cá nhân và sở thích sức khỏe của bạn." : `Xem hồ sơ của ${userData.name}`}
       />
-      <div className="grid gap-8 md:grid-cols-3">
-        <div className={canEdit ? "md:col-span-3" : "md:col-span-3"}>
+      <div className="grid gap-8">
+        <div className={"md:col-span-3"}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
@@ -176,21 +176,6 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
                     <Button variant="ghost" onClick={() => setIsEditing(false)}>Hủy</Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="md:col-span-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Bài viết của {userData.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-               <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-40">
-                  <MessageSquare className="h-10 w-10 mb-4" />
-                  <p>Chưa có bài viết nào để hiển thị.</p>
-                  {canEdit && <p className="text-sm mt-2">Hãy chia sẻ hành trình của bạn trên trang <Link href="/community" className="underline hover:text-primary">Cộng đồng</Link>!</p>}
-              </div>
             </CardContent>
           </Card>
         </div>

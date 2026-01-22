@@ -25,7 +25,6 @@ import {
   Scale,
   PlusCircle,
   Moon,
-  Users,
 } from "lucide-react";
 import { Icons } from "@/components/icons";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -42,7 +41,6 @@ const loggedInUserId = "alex-doe";
 const secondaryLinks = [
   { href: "/progress", label: "Tiến độ", icon: BarChart3 },
   { href: "/recipes", label: "Công thức", icon: BookHeart },
-  { href: "/community", label: "Cộng đồng", icon: Users },
   { href: `/profile/${loggedInUserId}`, label: "Hồ sơ", icon: CircleUserRound },
 ]
 

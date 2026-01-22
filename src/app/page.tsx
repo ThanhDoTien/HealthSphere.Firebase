@@ -29,6 +29,25 @@ const features = [
   },
 ];
 
+const visualJourney = [
+  {
+    title: "Chụp & Theo dõi bữa ăn của bạn",
+    description: "Dễ dàng ghi lại lượng thức ăn của bạn chỉ bằng cách chụp ảnh. AI của chúng tôi sẽ lo phần còn lại.",
+    imageId: "meal-1"
+  },
+  {
+    title: "Bài tập được cá nhân hóa",
+    description: "Nhận các đề xuất tập luyện phù hợp với mức độ thể chất và thiết bị có sẵn của bạn.",
+    imageId: "community-post-2"
+  },
+  {
+    title: "Khám phá các công thức nấu ăn ngon",
+    description: "Khám phá một thư viện các công thức nấu ăn lành mạnh phù hợp với nhu cầu và sở thích ăn uống của bạn.",
+    imageId: "recipe-1"
+  }
+];
+
+
 export default function HomePage() {
   const heroImage = PlaceHolderImages.find((p) => p.id === 'hero-1');
 
@@ -109,8 +128,48 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Visual Journey Section */}
+        <section id="gallery" className="py-16 md:py-24 bg-card">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold font-headline">Hành trình trực quan đến một bạn khỏe mạnh hơn</h2>
+              <p className="mt-2 text-muted-foreground">
+                Xem HealthSphere tích hợp vào cuộc sống hàng ngày của bạn như thế nào.
+              </p>
+            </div>
+            <div className="mt-12 grid gap-8 md:grid-cols-3">
+              {visualJourney.map((item) => {
+                const image = PlaceHolderImages.find((p) => p.id === item.imageId);
+                return (
+                  <Card key={item.imageId} className="overflow-hidden">
+                    <CardContent className="p-0">
+                      {image && (
+                         <div className="aspect-w-4 aspect-h-3">
+                            <Image
+                                src={image.imageUrl}
+                                alt={image.description}
+                                width={600}
+                                height={450}
+                                className="object-cover w-full h-full"
+                                data-ai-hint={image.imageHint}
+                            />
+                        </div>
+                      )}
+                      <div className="p-6">
+                        <h3 className="text-xl font-semibold">{item.title}</h3>
+                        <p className="mt-2 text-muted-foreground">{item.description}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
+
         {/* Quote Section */}
-         <section className="py-16 md:py-24 bg-card">
+         <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <blockquote className="max-w-3xl mx-auto">
               <p className="text-2xl md:text-3xl font-medium text-foreground">
