@@ -45,7 +45,7 @@
     {
       "id": "meal-1",
       "description": "A picture of a healthy and balanced meal.",
-      "imageUrl": "https://images.unsplash.com/photo-1611599537845-1c7aca0091c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxoZWFsdGh5JTIwbWVhbHxlbnwwfHx8fDE3NjY1NjIzOTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1606756790138-261d2b21cd75?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxoZWFsdGh5JTIwbWVhbHxlbnwwfHx8fDE3NjkwNTc3Mzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "healthy meal"
     },
     {
