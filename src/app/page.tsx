@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -154,7 +155,7 @@ export default function HomePage() {
                           />
                       </div>
                     )}
-                    <CardContent className="p-6 flex-grow flex flex-col">
+                    <CardContent className="p-6 flex-grow">
                       <h3 className="text-xl font-semibold">{item.title}</h3>
                       <p className="mt-2 text-muted-foreground">{item.description}</p>
                     </CardContent>
