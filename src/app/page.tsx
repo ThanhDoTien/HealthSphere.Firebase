@@ -142,7 +142,7 @@ export default function HomePage() {
               {visualJourney.map((item) => {
                 const image = PlaceHolderImages.find((p) => p.id === item.imageId);
                 return (
-                  <Card key={item.imageId} className="overflow-hidden flex flex-col">
+                  <Card key={item.imageId} className="overflow-hidden">
                     {image && (
                        <div className="aspect-[4/3]">
                           <Image
@@ -155,7 +155,7 @@ export default function HomePage() {
                           />
                       </div>
                     )}
-                    <CardContent className="p-6 flex-grow">
+                    <CardContent className="p-6">
                       <h3 className="text-xl font-semibold">{item.title}</h3>
                       <p className="mt-2 text-muted-foreground">{item.description}</p>
                     </CardContent>
