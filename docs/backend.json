@@ -1,0 +1,279 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile in the HealthSphere application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "User's username."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "description": "User's date of birth.",
+          "format": "date"
+        },
+        "gender": {
+          "type": "string",
+          "description": "User's gender."
+        },
+        "heightCm": {
+          "type": "number",
+          "description": "User's height in centimeters."
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email"
+      ]
+    },
+    "MealLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MealLog",
+      "type": "object",
+      "description": "Represents a user's logged meal or snack.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the MealLog entry."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N MealLog)"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of when the meal was logged.",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the meal."
+        },
+        "calorieCount": {
+          "type": "number",
+          "description": "Estimated calorie count of the meal."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "timestamp",
+        "calorieCount"
+      ]
+    },
+    "ForumPost": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ForumPost",
+      "type": "object",
+      "description": "Represents a post in the community forum.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ForumPost entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N ForumPost)"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the forum post."
+        },
+        "content": {
+          "type": "string",
+          "description": "Content of the forum post."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of when the post was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "content",
+        "timestamp"
+      ]
+    },
+    "Recipe": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Recipe",
+      "type": "object",
+      "description": "Represents a recipe recommendation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Recipe."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the recipe."
+        },
+        "ingredients": {
+          "type": "string",
+          "description": "Ingredients required for the recipe."
+        },
+        "instructions": {
+          "type": "string",
+          "description": "Instructions on how to prepare the recipe."
+        },
+        "calorieCount": {
+          "type": "number",
+          "description": "Calorie count of the recipe."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "ingredients",
+        "instructions",
+        "calorieCount"
+      ]
+    },
+    "WeightLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WeightLog",
+      "type": "object",
+      "description": "Represents a user's recorded weight.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the WeightLog entry."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N WeightLog)"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of when the weight was recorded.",
+          "format": "date-time"
+        },
+        "weightKg": {
+          "type": "number",
+          "description": "User's weight in kilograms."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "timestamp",
+        "weightKg"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information. Path-based ownership ensures only the authenticated user can access their own profile data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/meal_logs/{mealLogId}",
+        "definition": {
+          "entityName": "MealLog",
+          "schema": {
+            "$ref": "#/backend/entities/MealLog"
+          },
+          "description": "Stores meal logs for a specific user.  Path-based ownership ensures only the authenticated user can access their own meal log data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "mealLogId",
+              "description": "The unique identifier for the meal log entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/weight_logs/{weightLogId}",
+        "definition": {
+          "entityName": "WeightLog",
+          "schema": {
+            "$ref": "#/backend/entities/WeightLog"
+          },
+          "description": "Stores weight logs for a specific user.  Path-based ownership ensures only the authenticated user can access their own weight log data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "weightLogId",
+              "description": "The unique identifier for the weight log entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/forum_posts/{forumPostId}",
+        "definition": {
+          "entityName": "ForumPost",
+          "schema": {
+            "$ref": "#/backend/entities/ForumPost"
+          },
+          "description": "Stores forum posts. Includes 'userId' to identify the author for authorization purposes.  Denormalized 'userId' field for authorization independence.",
+          "params": [
+            {
+              "name": "forumPostId",
+              "description": "The unique identifier for the forum post."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/recipes/{recipeId}",
+        "definition": {
+          "entityName": "Recipe",
+          "schema": {
+            "$ref": "#/backend/entities/Recipe"
+          },
+          "description": "Stores recipe information. Could be made globally read accessible or restricted to admins for creation and modification.",
+          "params": [
+            {
+              "name": "recipeId",
+              "description": "The unique identifier for the recipe."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support HealthSphere's core features, including calorie tracking, nutrition logging, personalized health insights, community forums, recipe recommendations, progress tracking, and user profiles. The structure emphasizes authorization independence and supports secure list operations (QAPs) using structural segregation and path-based ownership.\n\n**Authorization Independence:** Authorization Independence is achieved primarily through path-based ownership for user-specific data. Data belonging to a specific user is stored under a path that includes the `userId`, eliminating the need for `get()` calls in security rules to verify ownership. Denormalization is used where data needs to be accessed outside the user's personal data, such as forum posts, where the `userId` is included in the document itself, even though the data is stored outside the user's root path.\n\n**Structural Segregation and QAPs:** Structural segregation is applied by storing data with different access requirements in separate collections. User-specific data (Meal Logs, Weight Logs) are stored under the `/users/{userId}` path, allowing for secure `list` operations based on `request.auth.uid`. Forum posts are stored in a separate collection, `/forum_posts`, and include the `userId`, allowing for listing of posts while ensuring that only the owner can modify or delete them.\n\n**User Profiles:** Stored at `/users/{userId}` to allow users to read and write their own profile data.\n\n**Meal Logs & Weight Logs:** Stored as subcollections under `/users/{userId}` to associate them directly with the user and enable efficient querying.\n\n**Forum Posts:** Stored in a top-level `/forum_posts` collection, including the `userId` to identify the post's author. This enables community access while maintaining individual ownership.\n\n**Recipes:** Stored in a top-level `/recipes` collection. These can be globally accessible (read-only), and managed by admins. If the intention is to allow users to create their own private recipes then a subcollection `/users/{userId}/recipes` should be created.\n"
+  }
+}
