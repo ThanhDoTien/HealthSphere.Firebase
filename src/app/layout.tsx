@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { ConditionalLayout } from "@/components/conditional-layout";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
+import { FirebaseClientProvider } from "@/firebase/client-provider";
+import { CommunityProvider } from "@/lib/community/provider";
 
 export const metadata: Metadata = {
   title: "HealthSphere",
@@ -24,8 +26,12 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <ConditionalLayout>{children}</ConditionalLayout>
-        <Toaster />
+        <FirebaseClientProvider>
+          <CommunityProvider>
+            <ConditionalLayout>{children}</ConditionalLayout>
+            <Toaster />
+          </CommunityProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );
