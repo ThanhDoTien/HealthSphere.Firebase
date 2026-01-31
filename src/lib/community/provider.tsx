@@ -1,14 +1,13 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useMemo } from "react";
+import { createContext, useContext, ReactNode } from "react";
 import {
   collection,
   query,
-  where,
   orderBy,
   limit,
 } from "firebase/firestore";
-import { useFirebase, useCollection } from "@/firebase";
+import { useFirebase, useCollection, useMemoFirebase } from "@/firebase";
 
 export function useCommunity() {
   const context = useContext(CommunityContext);
@@ -26,11 +25,11 @@ const CommunityContext = createContext<{
 export function CommunityProvider({ children }: { children: ReactNode }) {
   const { firestore: db } = useFirebase();
 
-  const forumPostsRef = useMemo(
+  const forumPostsRef = useMemoFirebase(
     () => (db ? collection(db, "forum_posts") : null),
     [db]
   );
-  const forumPostsQuery = useMemo(
+  const forumPostsQuery = useMemoFirebase(
     () => (forumPostsRef ? query(forumPostsRef, orderBy("timestamp", "desc"), limit(20)) : null),
     [forumPostsRef]
   );
