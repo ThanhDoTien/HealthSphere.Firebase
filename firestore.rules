@@ -13,7 +13,7 @@
  *
  * # Key Security Decisions
  * - User Privacy: All data under `/users/{userId}` is strictly accessible only to the authenticated user whose UID matches the `userId`. Listing of top-level user profiles is disabled to prevent user enumeration.
- * - Community Content: Forum posts are readable by any signed-in user, but can only be created, updated, or deleted by their original author. The author's identity is denormalized onto the post document for efficient and secure checks.
+ * - Community Content: Forum posts are publicly readable, but can only be created, updated, or deleted by their original author. The author's identity is denormalized onto the post document for efficient and secure checks.
  * - Read-Only Content: Recipes are globally readable by anyone, but all write operations are disabled. This makes the collection a secure, curated source of information that can only be managed from a trusted server environment (e.g., Admin SDK).
  * - Denormalization: Authorization relies heavily on denormalized ownership fields (`userId`) on documents in public collections (`forum_posts`). This avoids slow and costly `get()` calls in rules.
  * - Structural Segregation: Private user data (meal logs) and public data (forum posts) are kept in separate collections. This makes security rules for listing data simple, performant, and highly secure.
@@ -149,16 +149,16 @@ service cloud.firestore {
     // --------------------------------------------------------------------
 
     /**
-     * @description Controls access to public forum posts. Posts are readable by any authenticated user, but only the author can modify their own posts.
+     * @description Controls access to public forum posts. Posts are publicly readable, but only the author can modify their own posts.
      * @path /forum_posts/{forumPostId}
-     * @allow (get, list) Any authenticated user can read all forum posts.
+     * @allow (get, list) Any user can read all forum posts.
      * @allow (create) An authenticated user creates a new post, setting `userId` to their own UID.
      * @allow (update) An authenticated user updates a post they previously created.
      * @deny (update) An authenticated user tries to update another user's post.
      * @principle Implements "Public Read with Owner-Only Writes" using a denormalized `userId` field for authorization.
      */
     match /forum_posts/{forumPostId} {
-      allow get, list: if isSignedIn();
+      allow get, list: if true;
       allow create: if isSignedIn() && forumPostIsValidForCreate();
       allow update: if resource != null && isOwner(resource.data.userId) && forumPostIsValidForUpdate();
       allow delete: if resource != null && isOwner(resource.data.userId);
