@@ -12,8 +12,34 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/icons';
+import { useState, useEffect } from 'react';
+import { useAuth, useUser, initiateEmailSignUp } from '@/firebase';
+import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, isUserLoading, router]);
+
+  const handleSignUp = () => {
+    if (email && password) {
+      initiateEmailSignUp(auth, email, password);
+      // The auth listener will eventually redirect, but we can push to the dashboard
+      // to give the user immediate feedback.
+      router.push('/dashboard');
+    } else {
+      alert("Vui lòng nhập email và mật khẩu.");
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
@@ -39,14 +65,22 @@ export default function SignupPage() {
                 type="email"
                 placeholder="m@example.com"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Mật khẩu</Label>
-              <Input id="password" type="password" required />
+              <Input 
+                id="password" 
+                type="password" 
+                required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-            <Button type="submit" className="w-full" asChild>
-                <Link href="/dashboard">Tạo tài khoản</Link>
+            <Button onClick={handleSignUp} className="w-full">
+              Tạo tài khoản
             </Button>
           </div>
           <div className="mt-4 text-center text-sm">
