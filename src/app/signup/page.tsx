@@ -30,13 +30,14 @@ export default function SignupPage() {
   }, [user, isUserLoading, router]);
 
   const handleSignUp = () => {
-    if (email && password) {
-      initiateEmailSignUp(auth, email, password);
-      // The auth listener will eventually redirect, but we can push to the dashboard
-      // to give the user immediate feedback.
-      router.push('/dashboard');
-    } else {
+    if (!email || !password) {
       alert("Vui lòng nhập email và mật khẩu.");
+      return;
+    }
+    if (auth) {
+      initiateEmailSignUp(auth, email, password);
+    } else {
+      alert("Dịch vụ xác thực chưa sẵn sàng, vui lòng thử lại sau.");
     }
   };
 
