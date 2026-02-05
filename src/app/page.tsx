@@ -10,23 +10,23 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 const features = [
   {
     icon: <UtensilsCrossed className="h-8 w-8 text-primary" />,
-    title: "Ghi lại Dinh dưỡng",
-    description: "Dễ dàng ghi lại các bữa ăn của bạn bằng cách nhập liệu thủ công hoặc sử dụng tính năng nhận dạng hình ảnh do AI cung cấp.",
+    title: "Theo dõi Dinh dưỡng",
+    description: "Ghi lại bữa ăn dễ dàng — nhập thủ công hoặc chụp ảnh, AI tự động nhận dạng.",
   },
   {
     icon: <Dumbbell className="h-8 w-8 text-primary" />,
     title: "Theo dõi Luyện tập",
-    description: "Ghi lại các bài tập, theo dõi lượng calo đã đốt cháy và nhận các đề xuất tập luyện được cá nhân hóa.",
+    description: "Theo dõi hoạt động, calo đã đốt và nhận đề xuất luyện tập phù hợp với bạn.",
   },
   {
     icon: <Moon className="h-8 w-8 text-primary" />,
     title: "Phân tích Giấc ngủ",
-    description: "Theo dõi các kiểu ngủ của bạn và nhận thông tin chi tiết để cải thiện chất lượng giấc ngủ và sức khỏe tổng thể.",
+    description: "Hiểu rõ chu kỳ ngủ và cải thiện chất lượng giấc ngủ theo thời gian.",
   },
   {
     icon: <Sparkles className="h-8 w-8 text-primary" />,
-    title: "Thông tin chi tiết từ AI",
-    description: "Tận dụng sức mạnh của AI để nhận các đề xuất, công thức nấu ăn và thông tin chi tiết về sức khỏe được cá nhân hóa.",
+    title: "Thông tin từ AI",
+    description: "Nhận gợi ý công thức, kế hoạch luyện tập và mẹo dinh dưỡng được cá nhân hóa cho mục tiêu của bạn.",
   },
 ];
 
@@ -86,18 +86,21 @@ export default function HomePage() {
           </div>
           <div className="relative z-10 container mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold font-headline tracking-tight">
-              Người Bạn Đồng Hành Sức Khỏe Cá Nhân Của Bạn
+              HealthSphere – Người Bạn Đồng Hành Cho Sức Khỏe Toàn Diện
             </h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-              Theo dõi dinh dưỡng, luyện tập và giấc ngủ. Nhận thông tin chi tiết do AI cung cấp để đạt được mục tiêu của bạn.
+              Theo dõi dinh dưỡng, luyện tập và giấc ngủ chỉ trong một ứng dụng — với các thông tin và gợi ý cá nhân hóa từ AI để giúp bạn đạt mục tiêu sức khỏe mỗi ngày.
             </p>
-            <div className="mt-8 flex justify-center gap-4">
-              <Button size="lg" asChild>
-                <Link href="/signup">Bắt đầu ngay</Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/dashboard">Xem Bảng điều khiển</Link>
-              </Button>
+            <div className="mt-8 flex flex-col items-center gap-2">
+                <div className="flex flex-wrap justify-center gap-4">
+                    <Button size="lg" asChild>
+                        <Link href="/signup">Khởi đầu hành trình khỏe mạnh ngay hôm nay</Link>
+                    </Button>
+                    <Button size="lg" variant="outline" asChild>
+                        <Link href="/dashboard">Khám phá bảng điều khiển sức khỏe của bạn</Link>
+                    </Button>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">Đăng ký miễn phí và bắt đầu theo dõi</p>
             </div>
           </div>
         </section>
@@ -106,9 +109,9 @@ export default function HomePage() {
         <section id="features" className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="text-3xl font-bold font-headline">Mọi thứ bạn cần, ở cùng một nơi</h2>
+              <h2 className="text-3xl font-bold font-headline">Tất cả những gì bạn cần – ở một nơi</h2>
               <p className="mt-2 text-muted-foreground">
-                HealthSphere giúp việc theo dõi sức khỏe của bạn trở nên đơn giản và trực quan.
+                HealthSphere giúp việc quản lý sức khỏe trở nên đơn giản, trực quan và hiệu quả:
               </p>
             </div>
             <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
@@ -133,16 +136,16 @@ export default function HomePage() {
         <section id="gallery" className="py-16 md:py-24 bg-card">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="text-3xl font-bold font-headline">Hành trình trực quan đến một bạn khỏe mạnh hơn</h2>
+              <h2 className="text-3xl font-bold font-headline">Hành trình sức khỏe trực quan</h2>
               <p className="mt-2 text-muted-foreground">
-                Xem HealthSphere tích hợp vào cuộc sống hàng ngày của bạn như thế nào.
+                HealthSphere tích hợp dễ dàng vào cuộc sống hàng ngày, giúp bạn theo dõi tiến độ và cải thiện thói quen theo cách thông minh hơn.
               </p>
             </div>
             <div className="mt-12 grid gap-8 md:grid-cols-3">
               {visualJourney.map((item) => {
                 const image = PlaceHolderImages.find((p) => p.id === item.imageId);
                 return (
-                  <Card key={item.imageId} className="overflow-hidden">
+                  <Card key={item.imageId} className="overflow-hidden flex flex-col">
                     {image && (
                        <div className="aspect-[4/3]">
                           <Image
@@ -155,7 +158,7 @@ export default function HomePage() {
                           />
                       </div>
                     )}
-                    <CardContent className="p-6">
+                    <CardContent className="p-6 flex-grow">
                       <h3 className="text-xl font-semibold">{item.title}</h3>
                       <p className="mt-2 text-muted-foreground">{item.description}</p>
                     </CardContent>
@@ -172,9 +175,9 @@ export default function HomePage() {
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <blockquote className="max-w-3xl mx-auto">
               <p className="text-2xl md:text-3xl font-medium text-foreground">
-                "Tài sản lớn nhất là sức khỏe."
+                “Sức khỏe là tài sản lớn nhất.”
               </p>
-              <footer className="mt-4 text-lg text-muted-foreground">- Virgil</footer>
+              <footer className="mt-4 text-lg text-muted-foreground">– Virgil</footer>
             </blockquote>
           </div>
         </section>
@@ -183,7 +186,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="py-6 bg-background border-t">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-muted-foreground text-sm">
-          &copy; 2026 HealthSphere. Sản phẩm thuộc về Đỗ Tiến Thành, Nguyễn Hữu Vinh, Vũ Đức Thọ, Đặng Thị Mai.
+          &copy; 2024 HealthSphere. Sản phẩm thuộc về Đỗ Tiến Thành, Nguyễn Hữu Vinh, Vũ Đức Thọ, Đặng Thị Mai.
         </div>
       </footer>
     </div>
