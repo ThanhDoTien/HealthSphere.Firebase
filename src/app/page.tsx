@@ -183,7 +183,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="py-6 bg-background border-t">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-muted-foreground text-sm">
-          &copy; {new Date().getFullYear()} HealthSphere. Mọi quyền được bảo lưu.
+          &copy; 2024 HealthSphere. Mọi quyền được bảo lưu.
         </div>
       </footer>
     </div>
