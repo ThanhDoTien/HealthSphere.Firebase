@@ -30,19 +30,11 @@ import { Icons } from "@/components/icons";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/firebase";
 
 const mainLinks = [
   { href: "/dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
 ];
-
-// Assuming the logged-in user has this ID. In a real app, this would be dynamic.
-const loggedInUserId = "alex-doe";
-
-const secondaryLinks = [
-  { href: "/progress", label: "Tiến độ", icon: BarChart3 },
-  { href: "/recipes", label: "Công thức", icon: BookHeart },
-  { href: `/profile/${loggedInUserId}`, label: "Hồ sơ", icon: CircleUserRound },
-]
 
 const loggingLinks = [
     { href: "/log-meal", label: "Ghi lại bữa ăn", icon: UtensilsCrossed },
@@ -53,9 +45,16 @@ const loggingLinks = [
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const { user } = useUser();
   const [isLoggingOpen, setIsLoggingOpen] = useState(
     loggingLinks.some(l => l.href === pathname)
   );
+
+  const secondaryLinks = [
+    { href: "/progress", label: "Tiến độ", icon: BarChart3 },
+    { href: "/recipes", label: "Công thức", icon: BookHeart },
+    { href: user ? `/profile/${user.uid}` : '/login', label: "Hồ sơ", icon: CircleUserRound },
+  ]
 
   return (
     <>

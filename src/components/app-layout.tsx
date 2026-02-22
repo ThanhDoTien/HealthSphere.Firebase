@@ -1,7 +1,6 @@
 import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Icons } from "@/components/icons";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import {
   DropdownMenu,
@@ -13,11 +12,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "./ui/button";
 import Link from "next/link";
+import { useAuth, useUser } from "@/firebase";
+import { signOut } from "firebase/auth";
+import { useRouter } from 'next/navigation';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  const { user } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleSignOut = () => {
+    if (auth) {
+      signOut(auth).then(() => {
+        router.push('/');
+      });
+    }
+  };
+
   const userAvatar = PlaceHolderImages.find((p) => p.id === "user-avatar-1");
-  // Assuming the logged-in user has this ID. In a real app, this would be dynamic.
-  const loggedInUserId = "alex-doe";
 
   return (
     <SidebarProvider>
@@ -34,26 +46,30 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-9 w-9">
-                    {userAvatar && (
+                    {user?.photoURL ? (
+                       <AvatarImage src={user.photoURL} alt="User avatar" />
+                    ) : userAvatar ? (
                       <AvatarImage
                         src={userAvatar.imageUrl}
                         alt={userAvatar.description}
                         data-ai-hint={userAvatar.imageHint}
                       />
-                    )}
-                    <AvatarFallback>U</AvatarFallback>
+                    ) : null}
+                    <AvatarFallback>{user?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Tài khoản của tôi</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href={`/profile/${loggedInUserId}`}>Hồ sơ</Link>
-                </DropdownMenuItem>
+                {user && (
+                    <DropdownMenuItem asChild>
+                    <Link href={`/profile/${user.uid}`}>Hồ sơ</Link>
+                    </DropdownMenuItem>
+                )}
                 <DropdownMenuItem>Cài đặt</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Đăng xuất</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>Đăng xuất</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
