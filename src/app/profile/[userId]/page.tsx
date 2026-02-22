@@ -24,8 +24,8 @@ import { PageHeader } from "@/components/page-header";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Pencil, Loader2 } from "lucide-react";
 import { useParams } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
-import { doc } from "firebase/firestore";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, setDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -73,18 +73,27 @@ export default function ProfilePage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (userProfileRef) {
       const dataToSave = { ...formData };
       if (dataToSave.heightCm) dataToSave.heightCm = Number(dataToSave.heightCm);
       if (dataToSave.weightKg) dataToSave.weightKg = Number(dataToSave.weightKg);
 
-      setDocumentNonBlocking(userProfileRef, dataToSave, { merge: true });
-      toast({
-        title: "Thành công!",
-        description: "Hồ sơ của bạn đã được cập nhật.",
-      });
-      setIsEditing(false);
+      try {
+        await setDoc(userProfileRef, dataToSave, { merge: true });
+        toast({
+          title: "Thành công!",
+          description: "Hồ sơ của bạn đã được cập nhật.",
+        });
+        setIsEditing(false);
+      } catch (e: any) {
+        console.error("Lỗi cập nhật hồ sơ:", e);
+        toast({
+          variant: "destructive",
+          title: "Ôi, đã có lỗi xảy ra.",
+          description: e.message || "Không thể cập nhật hồ sơ của bạn.",
+        });
+      }
     }
   };
 
