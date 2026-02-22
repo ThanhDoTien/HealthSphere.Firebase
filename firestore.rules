@@ -48,7 +48,7 @@ service cloud.firestore {
      * Ensures the document ID is consistent with the user's auth UID.
      */
     function userProfileIsValidForCreate(userId) {
-      return request.resource.data.id == userId;
+      return request.resource.data.id == userId && request.resource.data.email != null;
     }
 
     /**
@@ -110,7 +110,7 @@ service cloud.firestore {
       allow get: if isSignedIn();
       allow list: if false;
       allow create: if isOwner(userId) && userProfileIsValidForCreate(userId);
-      allow update: if isOwner(userId) && userProfileIsValidForUpdate();
+      allow update: if isOwner(userId);
       allow delete: if isOwner(userId);
     }
 
