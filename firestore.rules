@@ -63,7 +63,10 @@ service cloud.firestore {
      * Ensures the ownership ID of a UserProfile is immutable on update.
      */
     function userProfileIsValidForUpdate() {
-      return request.resource.data.id == resource.data.id;
+      // The user ID should not be mutable.
+      // Allow the update if the `id` field is not present in the new data,
+      // or if it is present but has not changed.
+      return !('id' in request.resource.data) || request.resource.data.id == resource.data.id;
     }
 
     /**
@@ -78,7 +81,8 @@ service cloud.firestore {
      * Ensures the denormalized `userId` on a subcollection document is immutable.
      */
     function userSubcollectionDataIsValidForUpdate() {
-      return request.resource.data.userId == resource.data.userId;
+      // The owning userId should not be mutable.
+      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
     }
 
     /**
@@ -92,7 +96,8 @@ service cloud.firestore {
      * Ensures the author (`userId`) of a forum post cannot be changed.
      */
     function forumPostIsValidForUpdate() {
-      return request.resource.data.userId == resource.data.userId;
+      // The author's userId should not be mutable.
+      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
     }
 
     // --------------------------------------------------------------------
