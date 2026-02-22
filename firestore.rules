@@ -44,14 +44,6 @@ service cloud.firestore {
     }
 
     /**
-     * Checks for ownership on an existing resource.
-     * Used for safe update and delete operations.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
      * Validates required ownership fields for a new UserProfile document.
      * Ensures the document ID is consistent with the user's auth UID.
      */
@@ -60,13 +52,13 @@ service cloud.firestore {
     }
 
     /**
-     * Ensures the ownership ID of a UserProfile is immutable on update.
+     * Ensures the ownership ID and email of a UserProfile are immutable on update.
+     * All other fields can be changed.
      */
     function userProfileIsValidForUpdate() {
-      // The user ID should not be mutable.
-      // Allow the update if the `id` field is not present in the new data,
-      // or if it is present but has not changed.
-      return !('id' in request.resource.data) || request.resource.data.id == resource.data.id;
+      // The `id` and `email` fields must not change.
+      return request.resource.data.id == resource.data.id
+          && request.resource.data.email == resource.data.email;
     }
 
     /**
@@ -79,10 +71,11 @@ service cloud.firestore {
 
     /**
      * Ensures the denormalized `userId` on a subcollection document is immutable.
+     * All other fields can be changed.
      */
     function userSubcollectionDataIsValidForUpdate() {
-      // The owning userId should not be mutable.
-      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
+      // The owning userId must not change.
+      return request.resource.data.userId == resource.data.userId;
     }
 
     /**
@@ -96,8 +89,8 @@ service cloud.firestore {
      * Ensures the author (`userId`) of a forum post cannot be changed.
      */
     function forumPostIsValidForUpdate() {
-      // The author's userId should not be mutable.
-      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
+      // The author's userId must not change.
+      return request.resource.data.userId == resource.data.userId;
     }
 
     // --------------------------------------------------------------------
@@ -117,8 +110,8 @@ service cloud.firestore {
       allow get: if isSignedIn();
       allow list: if false;
       allow create: if isOwner(userId) && userProfileIsValidForCreate(userId);
-      allow update: if isExistingOwner(userId) && userProfileIsValidForUpdate();
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) && userProfileIsValidForUpdate();
+      allow delete: if isOwner(userId);
     }
 
     /**
@@ -132,8 +125,8 @@ service cloud.firestore {
     match /users/{userId}/meal_logs/{mealLogId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && userSubcollectionDataIsValidForCreate(userId);
-      allow update: if isExistingOwner(userId) && userSubcollectionDataIsValidForUpdate();
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) && userSubcollectionDataIsValidForUpdate();
+      allow delete: if isOwner(userId);
     }
 
     /**
@@ -147,8 +140,8 @@ service cloud.firestore {
     match /users/{userId}/weight_logs/{weightLogId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && userSubcollectionDataIsValidForCreate(userId);
-      allow update: if isExistingOwner(userId) && userSubcollectionDataIsValidForUpdate();
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) && userSubcollectionDataIsValidForUpdate();
+      allow delete: if isOwner(userId);
     }
 
     /**
@@ -162,8 +155,8 @@ service cloud.firestore {
     match /users/{userId}/sleep_logs/{sleepLogId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && userSubcollectionDataIsValidForCreate(userId);
-      allow update: if isExistingOwner(userId) && userSubcollectionDataIsValidForUpdate();
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) && userSubcollectionDataIsValidForUpdate();
+      allow delete: if isOwner(userId);
     }
 
     /**
@@ -177,8 +170,8 @@ service cloud.firestore {
     match /users/{userId}/workout_logs/{workoutLogId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && userSubcollectionDataIsValidForCreate(userId);
-      allow update: if isExistingOwner(userId) && userSubcollectionDataIsValidForUpdate();
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) && userSubcollectionDataIsValidForUpdate();
+      allow delete: if isOwner(userId);
     }
 
     // --------------------------------------------------------------------
