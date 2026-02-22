@@ -1,9 +1,13 @@
+'use client';
+
 import {
   Activity,
   Flame,
   Moon,
   Footprints,
   Scale,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -22,25 +26,29 @@ import { recipeRecommendationsBasedOnLoggedFoods, RecipeRecommendationsBasedOnLo
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { PageHeader } from "@/components/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Sparkles } from "lucide-react";
 import { BmiChart } from "@/components/bmi-chart";
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
+import { doc, collection, query, where, Timestamp, orderBy, limit } from 'firebase/firestore';
+import { useState, useEffect, useMemo } from "react";
 
-const mockUserData = {
-  calorieIntake: 2000,
-  calorieGoal: 2500,
-  caloriesBurned: 400,
-  waterIntake: 6,
-  waterGoal: 8,
-  sleep: 7.5,
-  sleepGoal: 8,
-  steps: 8500,
-  stepsGoal: 10000,
-  activityLevel: "moderate",
-  dietaryPreferences: "Balanced diet",
-  loggedFoods: "Chicken breast, broccoli, brown rice, apple, almonds",
-  weight: 70,
-  height: 175,
+// Firestore document types
+type MealLog = { description: string; calorieCount: number; timestamp: Timestamp; };
+type WorkoutLog = { name: string; caloriesBurned: number; timestamp: Timestamp; };
+type SleepLog = { durationHours: number; timestamp: Timestamp; };
+type WeightLog = { weightKg: number; timestamp: Timestamp; };
+type UserProfile = {
+  id: string;
+  username: string;
+  email: string;
+  heightCm?: number;
+  weightKg?: number;
+  calorieGoal?: number;
+  stepsGoal?: number;
+  sleepGoal?: number;
+  activityLevel?: string;
+  dietaryPreferences?: string;
 };
+
 
 function calculateBmi(weight: number, height: number) {
     if (weight > 0 && height > 0) {
@@ -51,48 +59,164 @@ function calculateBmi(weight: number, height: number) {
     return 0;
 }
 
-export default async function DashboardPage() {
-  const apiKeySet = !!process.env.GEMINI_API_KEY;
+export default function DashboardPage() {
+  const { user, isUserLoading } = useUser();
+  const db = useFirestore();
 
-  let insightsResult: PersonalizedInsightsOutput | null = null;
-  let recipesResult: RecipeRecommendationsBasedOnLoggedFoodsOutput | null = null;
-  let errorState = false;
+  const [insightsResult, setInsightsResult] = useState<PersonalizedInsightsOutput | null>(null);
+  const [recipesResult, setRecipesResult] = useState<RecipeRecommendationsBasedOnLoggedFoodsOutput | null>(null);
+  const [aiError, setAiError] = useState(false);
 
-  if (apiKeySet) {
-    try {
+  // --- Data Fetching ---
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayStartTimestamp = Timestamp.fromDate(todayStart);
+
+  // User Profile
+  const userProfileRef = useMemoFirebase(
+    () => (db && user ? doc(db, "users", user.uid) : null),
+    [db, user]
+  );
+  const { data: userProfile, isLoading: profileLoading } = useDoc<UserProfile>(userProfileRef);
+
+  // Meal Logs for today
+  const mealLogsQuery = useMemoFirebase(
+    () => (db && user ? query(
+      collection(db, "users", user.uid, "meal_logs"),
+      where("timestamp", ">=", todayStartTimestamp)
+    ) : null),
+    [db, user]
+  );
+  const { data: mealLogs, isLoading: mealLogsLoading } = useCollection<MealLog>(mealLogsQuery);
+
+  // Workout Logs for today
+  const workoutLogsQuery = useMemoFirebase(
+    () => (db && user ? query(
+      collection(db, "users", user.uid, "workout_logs"),
+      where("timestamp", ">=", todayStartTimestamp)
+    ) : null),
+    [db, user]
+  );
+  const { data: workoutLogs, isLoading: workoutLogsLoading } = useCollection<WorkoutLog>(workoutLogsQuery);
+
+  // Latest Sleep Log
+  const sleepLogQuery = useMemoFirebase(
+    () => (db && user ? query(
+      collection(db, "users", user.uid, "sleep_logs"),
+      orderBy("timestamp", "desc"),
+      limit(1)
+    ) : null),
+    [db, user]
+  );
+  const { data: sleepLogs, isLoading: sleepLogsLoading } = useCollection<SleepLog>(sleepLogQuery);
+
+  // Latest Weight Log
+  const weightLogQuery = useMemoFirebase(
+    () => (db && user ? query(
+      collection(db, "users", user.uid, "weight_logs"),
+      orderBy("timestamp", "desc"),
+      limit(1)
+    ) : null),
+    [db, user]
+  );
+  const { data: weightLogs, isLoading: weightLogsLoading } = useCollection<WeightLog>(weightLogQuery);
+  
+  // --- Auto-create User Profile ---
+  useEffect(() => {
+    if (db && user && !userProfile && !profileLoading) {
+      const defaultProfile: UserProfile = {
+        id: user.uid,
+        username: user.displayName || user.email?.split('@')[0] || 'New User',
+        email: user.email || "",
+        heightCm: 170,
+        weightKg: 70,
+        calorieGoal: 2000,
+        stepsGoal: 10000,
+        sleepGoal: 8,
+        activityLevel: 'sedentary',
+        dietaryPreferences: 'None'
+      };
+      if (userProfileRef) {
+        setDocumentNonBlocking(userProfileRef, defaultProfile, { merge: true });
+      }
+    }
+  }, [db, user, userProfile, profileLoading, userProfileRef]);
+
+  // --- AI Insights Generation ---
+  useEffect(() => {
+    if (userProfile && mealLogs) {
+      setAiError(false);
+      const loggedFoods = mealLogs.map(log => log.description).join(', ');
+
       const insightsPromise = getPersonalizedInsights({
-        calorieIntake: mockUserData.calorieIntake,
-        activityLevel: mockUserData.activityLevel,
-        dietaryPreferences: mockUserData.dietaryPreferences,
-        loggedFoods: mockUserData.loggedFoods,
+        calorieIntake: mealLogs.reduce((sum, log) => sum + log.calorieCount, 0),
+        activityLevel: userProfile.activityLevel || 'sedentary',
+        dietaryPreferences: userProfile.dietaryPreferences || 'None',
+        loggedFoods: loggedFoods,
       });
 
       const recipesPromise = recipeRecommendationsBasedOnLoggedFoods({
-        dietaryPreferences: mockUserData.dietaryPreferences,
-        loggedFoods: mockUserData.loggedFoods,
+        dietaryPreferences: userProfile.dietaryPreferences || 'None',
+        loggedFoods: loggedFoods,
       });
 
-      [insightsResult, recipesResult] = await Promise.all([
-        insightsPromise,
-        recipesPromise,
-      ]);
-    } catch (error) {
-      console.error("Đã xảy ra lỗi khi tìm nạp dữ liệu AI:", error);
-      errorState = true;
+      Promise.all([insightsPromise, recipesPromise])
+        .then(([insights, recipes]) => {
+          setInsightsResult(insights);
+          setRecipesResult(recipes);
+        })
+        .catch((error) => {
+          console.error("Đã xảy ra lỗi khi tìm nạp dữ liệu AI:", error);
+          setAiError(true);
+        });
     }
-  }
+  }, [userProfile, mealLogs]);
+
+
+  // --- Data Processing & Display ---
+  const isLoading = isUserLoading || profileLoading || mealLogsLoading || workoutLogsLoading || sleepLogsLoading || weightLogsLoading;
+
+  const calorieIntake = useMemo(() => mealLogs?.reduce((sum, log) => sum + log.calorieCount, 0) || 0, [mealLogs]);
+  const caloriesBurned = useMemo(() => workoutLogs?.reduce((sum, log) => sum + log.caloriesBurned, 0) || 0, [workoutLogs]);
+  const latestSleep = useMemo(() => sleepLogs?.[0]?.durationHours || 0, [sleepLogs]);
+  const latestWeight = useMemo(() => weightLogs?.[0]?.weightKg || userProfile?.weightKg || 0, [weightLogs, userProfile]);
+  const height = useMemo(() => userProfile?.heightCm || 0, [userProfile]);
+  
+  const calorieGoal = userProfile?.calorieGoal || 2000;
+  // Steps are not tracked yet, using mock
+  const steps = 8500;
+  const stepsGoal = userProfile?.stepsGoal || 10000;
+
+  const bmi = useMemo(() => calculateBmi(latestWeight, height), [latestWeight, height]);
   
   const recipeImage = PlaceHolderImages.find(p => p.id === 'recipe-1');
-  const bmi = calculateBmi(mockUserData.weight, mockUserData.height);
+  
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // Fallback for when user is not logged in but tries to access dashboard
+  if (!user) {
+    return (
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <PageHeader title="Chào mừng!" description="Vui lòng đăng nhập để xem bảng điều khiển của bạn." />
+        <Button asChild><Link href="/login">Đi đến trang đăng nhập</Link></Button>
+      </div>
+    );
+  }
 
   const AiInfoCard = () => (
      <Alert>
         <Sparkles className="h-4 w-4" />
-        <AlertTitle>Tính năng AI đã bị vô hiệu hóa</AlertTitle>
+        <AlertTitle>Tính năng AI đang gặp sự cố</AlertTitle>
         <AlertDescription>
-          {errorState
+          {aiError
             ? "Đã xảy ra lỗi khi tìm nạp dữ liệu AI. Vui lòng kiểm tra khóa API của bạn và thử lại."
-            : "Vui lòng đặt GEMINI_API_KEY của bạn trong tệp .env để bật thông tin chi tiết được cá nhân hóa và đề xuất công thức."}
+            : "Không thể tải các đề xuất do AI tạo. Vui lòng thử lại sau."}
         </AlertDescription>
       </Alert>
   );
@@ -100,7 +224,7 @@ export default async function DashboardPage() {
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <PageHeader
-        title="Chào mừng trở lại!"
+        title={`Chào mừng trở lại, ${userProfile?.username || user.email}!`}
         description="Đây là ảnh chụp nhanh về sức khỏe và thể chất của bạn hôm nay."
       />
       <main className="grid gap-8">
@@ -118,11 +242,11 @@ export default async function DashboardPage() {
                 <Flame className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent className="flex-grow">
-                <div className="text-2xl font-bold">{mockUserData.calorieIntake.toLocaleString()} / {mockUserData.calorieGoal.toLocaleString()}</div>
+                <div className="text-2xl font-bold">{calorieIntake.toLocaleString()} / {calorieGoal.toLocaleString()}</div>
                 <p className="text-xs text-muted-foreground">kcal đã tiêu thụ</p>
               </CardContent>
               <CardFooter>
-                <Progress value={(mockUserData.calorieIntake / mockUserData.calorieGoal) * 100} className="h-2" />
+                <Progress value={(calorieIntake / calorieGoal) * 100} className="h-2" />
               </CardFooter>
             </Card>
           </Link>
@@ -135,7 +259,7 @@ export default async function DashboardPage() {
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent className="flex-grow">
-                <div className="text-2xl font-bold">{mockUserData.caloriesBurned.toLocaleString()}</div>
+                <div className="text-2xl font-bold">{caloriesBurned.toLocaleString()}</div>
                 <p className="text-xs text-muted-foreground">kcal đã đốt cháy</p>
               </CardContent>
             </Card>
@@ -146,8 +270,8 @@ export default async function DashboardPage() {
               <Footprints className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="flex-grow">
-              <div className="text-2xl font-bold">{mockUserData.steps.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">trong tổng số {mockUserData.stepsGoal.toLocaleString()} mục tiêu</p>
+              <div className="text-2xl font-bold">{steps.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">trong tổng số {stepsGoal.toLocaleString()} mục tiêu</p>
             </CardContent>
           </Card>
            <Link href="/weight">
@@ -157,7 +281,7 @@ export default async function DashboardPage() {
                 <Scale className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent className="flex-grow">
-                <div className="text-2xl font-bold">{mockUserData.weight} kg</div>
+                <div className="text-2xl font-bold">{latestWeight} kg</div>
                 <p className="text-xs text-muted-foreground">Cập nhật lần cuối hôm nay</p>
               </CardContent>
             </Card>
@@ -169,7 +293,7 @@ export default async function DashboardPage() {
                 <Moon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent className="flex-grow">
-                <div className="text-2xl font-bold">{mockUserData.sleep} giờ</div>
+                <div className="text-2xl font-bold">{latestSleep} giờ</div>
                 <p className="text-xs text-muted-foreground">Đêm qua</p>
               </CardContent>
             </Card>
@@ -185,12 +309,17 @@ export default async function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {apiKeySet && insightsResult && !errorState ? (
+              {aiError ? (
+                <AiInfoCard />
+              ) : insightsResult ? (
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {insightsResult.insights}
                 </p>
               ) : (
-                <AiInfoCard />
+                <div className="flex h-24 items-center justify-center rounded-lg border bg-muted/50">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <p className="ml-2 text-muted-foreground">Đang tạo thông tin chi tiết...</p>
+                </div>
               )}
             </CardContent>
             <CardFooter>
@@ -218,12 +347,17 @@ export default async function DashboardPage() {
                   />
                 </div>
               )}
-              {apiKeySet && recipesResult && !errorState ? (
+              {aiError ? (
+                 <AiInfoCard />
+              ) : recipesResult ? (
                 <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
                   {recipesResult.recipeRecommendations}
                 </p>
               ) : (
-                 <AiInfoCard />
+                <div className="flex h-24 items-center justify-center rounded-lg border bg-muted/50">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                   <p className="ml-2 text-muted-foreground">Đang tìm công thức...</p>
+                </div>
               )}
             </CardContent>
             <CardFooter>

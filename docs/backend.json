@@ -31,6 +31,30 @@
         "heightCm": {
           "type": "number",
           "description": "User's height in centimeters."
+        },
+        "weightKg": {
+          "type": "number",
+          "description": "User's most recent weight in kilograms."
+        },
+        "calorieGoal": {
+          "type": "number",
+          "description": "User's daily calorie goal."
+        },
+        "stepsGoal": {
+          "type": "number",
+          "description": "User's daily steps goal."
+        },
+        "sleepGoal": {
+          "type": "number",
+          "description": "User's daily sleep goal in hours."
+        },
+        "activityLevel": {
+          "type": "string",
+          "description": "User's activity level (e.g., sedentary, moderate, active)."
+        },
+        "dietaryPreferences": {
+          "type": "string",
+          "description": "User's dietary preferences and allergies."
         }
       },
       "required": [
