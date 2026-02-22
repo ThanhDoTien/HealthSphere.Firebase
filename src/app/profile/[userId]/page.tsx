@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -25,7 +26,7 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Pencil, Loader2 } from "lucide-react";
 import { useParams } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -39,6 +40,9 @@ type UserProfile = {
   gender?: string;
   activityLevel?: string;
   dietaryPreferences?: string;
+  calorieGoal?: number;
+  stepsGoal?: number;
+  sleepGoal?: number;
 };
 
 
@@ -75,25 +79,42 @@ export default function ProfilePage() {
 
   const handleSaveChanges = async () => {
     if (userProfileRef) {
-      const dataToSave = { ...formData };
-      if (dataToSave.heightCm) dataToSave.heightCm = Number(dataToSave.heightCm);
-      if (dataToSave.weightKg) dataToSave.weightKg = Number(dataToSave.weightKg);
+        const payload: { [key: string]: any } = {
+            username: formData.username,
+            gender: formData.gender,
+            activityLevel: formData.activityLevel,
+            dietaryPreferences: formData.dietaryPreferences,
+        };
 
-      try {
-        await setDoc(userProfileRef, dataToSave, { merge: true });
-        toast({
-          title: "Thành công!",
-          description: "Hồ sơ của bạn đã được cập nhật.",
-        });
-        setIsEditing(false);
-      } catch (e: any) {
-        console.error("Lỗi cập nhật hồ sơ:", e);
-        toast({
-          variant: "destructive",
-          title: "Ôi, đã có lỗi xảy ra.",
-          description: e.message || "Không thể cập nhật hồ sơ của bạn.",
-        });
-      }
+        const height = parseFloat(String(formData.heightCm));
+        if (!isNaN(height)) {
+            payload.heightCm = height;
+        } else {
+            payload.heightCm = null;
+        }
+
+        const weight = parseFloat(String(formData.weightKg));
+        if (!isNaN(weight)) {
+            payload.weightKg = weight;
+        } else {
+            payload.weightKg = null;
+        }
+
+        try {
+            await updateDoc(userProfileRef, payload);
+            toast({
+                title: 'Thành công!',
+                description: 'Hồ sơ của bạn đã được cập nhật.',
+            });
+            setIsEditing(false);
+        } catch (e: any) {
+            console.error('Lỗi cập nhật hồ sơ:', e);
+            toast({
+                variant: 'destructive',
+                title: 'Ôi, đã có lỗi xảy ra.',
+                description: e.message || 'Không thể cập nhật hồ sơ của bạn.',
+            });
+        }
     }
   };
 
@@ -245,3 +266,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
