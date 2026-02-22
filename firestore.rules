@@ -8,6 +8,8 @@
  * - `/users/{userId}`: A user's private root document and subcollections for personal data.
  *   - `/users/{userId}/meal_logs/{mealLogId}`: Private meal tracking data.
  *   - `/users/{userId}/weight_logs/{weightLogId}`: Private weight tracking data.
+ *   - `/users/{userId}/sleep_logs/{sleepLogId}`: Private sleep tracking data.
+ *   - `/users/{userId}/workout_logs/{workoutLogId}`: Private workout tracking data.
  * - `/forum_posts/{forumPostId}`: A top-level collection for community posts, which are publicly readable.
  * - `/recipes/{recipeId}`: A top-level collection for recipes, which are publicly readable.
  *
@@ -138,6 +140,36 @@ service cloud.firestore {
      * @principle Enforces strict data ownership within a user's private subcollection.
      */
     match /users/{userId}/weight_logs/{weightLogId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && userSubcollectionDataIsValidForCreate(userId);
+      allow update: if isExistingOwner(userId) && userSubcollectionDataIsValidForUpdate();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to a user's private sleep logs.
+     * @path /users/{userId}/sleep_logs/{sleepLogId}
+     * @allow (get, list) An authenticated user reads their own sleep logs: `auth.uid == 'user_abc'`, path `/users/user_abc/sleep_logs/...`
+     * @allow (create) An authenticated user creates a new sleep log for themselves.
+     * @deny (get) An authenticated user tries to read another user's sleep logs: `auth.uid == 'user_123'`, path `/users/user_abc/sleep_logs/...`
+     * @principle Enforces strict data ownership within a user's private subcollection.
+     */
+    match /users/{userId}/sleep_logs/{sleepLogId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && userSubcollectionDataIsValidForCreate(userId);
+      allow update: if isExistingOwner(userId) && userSubcollectionDataIsValidForUpdate();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to a user's private workout logs.
+     * @path /users/{userId}/workout_logs/{workoutLogId}
+     * @allow (get, list) An authenticated user reads their own workout logs: `auth.uid == 'user_abc'`, path `/users/user_abc/workout_logs/...`
+     * @allow (create) An authenticated user creates a new workout log for themselves.
+     * @deny (get) An authenticated user tries to read another user's workout logs: `auth.uid == 'user_123'`, path `/users/user_abc/workout_logs/...`
+     * @principle Enforces strict data ownership within a user's private subcollection.
+     */
+    match /users/{userId}/workout_logs/{workoutLogId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && userSubcollectionDataIsValidForCreate(userId);
       allow update: if isExistingOwner(userId) && userSubcollectionDataIsValidForUpdate();

@@ -175,6 +175,78 @@
         "timestamp",
         "weightKg"
       ]
+    },
+    "SleepLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SleepLog",
+      "type": "object",
+      "description": "Represents a user's recorded sleep.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the SleepLog entry."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The date and time the sleep was logged.",
+          "format": "date-time"
+        },
+        "durationHours": {
+          "type": "number",
+          "description": "Duration of sleep in hours."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "timestamp",
+        "durationHours"
+      ]
+    },
+    "WorkoutLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WorkoutLog",
+      "type": "object",
+      "description": "Represents a user's logged workout.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the WorkoutLog entry."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of when the workout was logged.",
+          "format": "date-time"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name or description of the workout."
+        },
+        "durationMinutes": {
+          "type": "number",
+          "description": "Duration of the workout in minutes."
+        },
+        "caloriesBurned": {
+          "type": "number",
+          "description": "Estimated calories burned."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "timestamp",
+        "name",
+        "durationMinutes",
+        "caloriesBurned"
+      ]
     }
   },
   "auth": {
@@ -242,6 +314,46 @@
         }
       },
       {
+        "path": "/users/{userId}/sleep_logs/{sleepLogId}",
+        "definition": {
+          "entityName": "SleepLog",
+          "schema": {
+            "$ref": "#/backend/entities/SleepLog"
+          },
+          "description": "Stores sleep logs for a specific user. Path-based ownership ensures only the authenticated user can access their own sleep log data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "sleepLogId",
+              "description": "The unique identifier for the sleep log entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/workout_logs/{workoutLogId}",
+        "definition": {
+          "entityName": "WorkoutLog",
+          "schema": {
+            "$ref": "#/backend/entities/WorkoutLog"
+          },
+          "description": "Stores workout logs for a specific user. Path-based ownership ensures only the authenticated user can access their own workout log data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "workoutLogId",
+              "description": "The unique identifier for the workout log entry."
+            }
+          ]
+        }
+      },
+      {
         "path": "/forum_posts/{forumPostId}",
         "definition": {
           "entityName": "ForumPost",
@@ -274,6 +386,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support HealthSphere's core features, including calorie tracking, nutrition logging, personalized health insights, community forums, recipe recommendations, progress tracking, and user profiles. The structure emphasizes authorization independence and supports secure list operations (QAPs) using structural segregation and path-based ownership.\n\n**Authorization Independence:** Authorization Independence is achieved primarily through path-based ownership for user-specific data. Data belonging to a specific user is stored under a path that includes the `userId`, eliminating the need for `get()` calls in security rules to verify ownership. Denormalization is used where data needs to be accessed outside the user's personal data, such as forum posts, where the `userId` is included in the document itself, even though the data is stored outside the user's root path.\n\n**Structural Segregation and QAPs:** Structural segregation is applied by storing data with different access requirements in separate collections. User-specific data (Meal Logs, Weight Logs) are stored under the `/users/{userId}` path, allowing for secure `list` operations based on `request.auth.uid`. Forum posts are stored in a separate collection, `/forum_posts`, and include the `userId`, allowing for listing of posts while ensuring that only the owner can modify or delete them.\n\n**User Profiles:** Stored at `/users/{userId}` to allow users to read and write their own profile data.\n\n**Meal Logs & Weight Logs:** Stored as subcollections under `/users/{userId}` to associate them directly with the user and enable efficient querying.\n\n**Forum Posts:** Stored in a top-level `/forum_posts` collection, including the `userId` to identify the post's author. This enables community access while maintaining individual ownership.\n\n**Recipes:** Stored in a top-level `/recipes` collection. These can be globally accessible (read-only), and managed by admins. If the intention is to allow users to create their own private recipes then a subcollection `/users/{userId}/recipes` should be created.\n"
+    "reasoning": "The Firestore data structure is designed to support HealthSphere's core features, including calorie tracking, nutrition logging, personalized health insights, community forums, recipe recommendations, progress tracking, and user profiles. The structure emphasizes authorization independence and supports secure list operations (QAPs) using structural segregation and path-based ownership.\n\n**Authorization Independence:** Authorization Independence is achieved primarily through path-based ownership for user-specific data. Data belonging to a specific user is stored under a path that includes the `userId`, eliminating the need for `get()` calls in security rules to verify ownership. Denormalization is used where data needs to be accessed outside the user's personal data, such as forum posts, where the `userId` is included in the document itself, even though the data is stored outside the user's root path.\n\n**Structural Segregation and QAPs:** Structural segregation is applied by storing data with different access requirements in separate collections. User-specific data (Meal Logs, Weight Logs, Sleep Logs, Workout Logs) are stored under the `/users/{userId}` path, allowing for secure `list` operations based on `request.auth.uid`. Forum posts are stored in a separate collection, `/forum_posts`, and include the `userId`, allowing for listing of posts while ensuring that only the owner can modify or delete them.\n\n**User Profiles:** Stored at `/users/{userId}` to allow users to read and write their own profile data.\n\n**Meal Logs, Weight Logs, Sleep Logs, & Workout Logs:** Stored as subcollections under `/users/{userId}` to associate them directly with the user and enable efficient querying.\n\n**Forum Posts:** Stored in a top-level `/forum_posts` collection, including the `userId` to identify the post's author. This enables community access while maintaining individual ownership.\n\n**Recipes:** Stored in a top-level `/recipes` collection. These can be globally accessible (read-only), and managed by admins. If the intention is to allow users to create their own private recipes then a subcollection `/users/{userId}/recipes` should be created.\n"
   }
 }

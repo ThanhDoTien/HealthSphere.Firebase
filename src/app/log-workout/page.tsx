@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { getWorkoutSuggestion, WorkoutSuggestionOutput } from "@/ai/flows/workout-suggestions";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,16 +14,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/page-header";
-import { Dumbbell, List, Loader2, Sparkles, Plus, Activity } from "lucide-react";
+import { List, Loader2, Sparkles, Plus } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   ChartContainer,
   ChartTooltip,
@@ -31,22 +24,19 @@ import {
   ChartConfig,
 } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { useToast } from "@/hooks/use-toast";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, addDoc, query, orderBy, serverTimestamp, Timestamp, limit } from 'firebase/firestore';
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 
-type Workout = {
+type WorkoutLog = {
+  id: string;
   name: string;
-  duration: number;
-  calories: number;
+  durationMinutes: number;
+  caloriesBurned: number;
+  timestamp: Timestamp;
 };
-
-const caloriesBurnedData = [
-  { date: "T2", calories: 300 },
-  { date: "T3", calories: 450 },
-  { date: "T4", calories: 250 },
-  { date: "T5", calories: 500 },
-  { date: "T6", calories: 600 },
-  { date: "T7", calories: 400 },
-  { date: "CN", calories: 350 },
-];
 
 const caloriesBurnedChartConfig = {
   calories: {
@@ -55,7 +45,6 @@ const caloriesBurnedChartConfig = {
   },
 } satisfies ChartConfig;
 
-
 export default function LogWorkoutPage() {
   const [isPending, startTransition] = useTransition();
   const [suggestion, setSuggestion] = useState<WorkoutSuggestionOutput | null>(
@@ -63,14 +52,36 @@ export default function LogWorkoutPage() {
   );
   const [suggestionError, setSuggestionError] = useState<string | null>(null);
 
-  const [loggedWorkouts, setLoggedWorkouts] = useState<Workout[]>([
-    { name: "Chạy bộ", duration: 30, calories: 300 },
-    { name: "Nâng tạ", duration: 45, calories: 250 },
-  ]);
-
   const [manualWorkout, setManualWorkout] = useState("");
   const [manualDuration, setManualDuration] = useState("");
   const [manualCalories, setManualCalories] = useState("");
+
+  const { toast } = useToast();
+  const { user, isUserLoading } = useUser();
+  const db = useFirestore();
+
+  const workoutLogsCollectionRef = useMemoFirebase(
+    () => (db && user ? collection(db, "users", user.uid, "workout_logs") : null),
+    [db, user]
+  );
+  
+  const workoutLogsQuery = useMemoFirebase(
+    () => (workoutLogsCollectionRef ? query(workoutLogsCollectionRef, orderBy("timestamp", "desc")) : null),
+    [workoutLogsCollectionRef]
+  );
+  
+  const { data: workoutLogs, isLoading: workoutLogsLoading } = useCollection<WorkoutLog>(workoutLogsQuery);
+
+  const caloriesBurnedDataForChart = useMemo(() => {
+    if (!workoutLogs) return [];
+    // This logic is simplified: it should aggregate calories per day for the last 7 days.
+    // For now, we'll just show the last 7 entries.
+    const recentLogs = workoutLogs.slice(0, 7);
+    return recentLogs.map(log => ({
+      date: format(log.timestamp.toDate(), 'eee', { locale: vi }),
+      calories: log.caloriesBurned,
+    })).reverse();
+  }, [workoutLogs]);
 
   const handleGetSuggestion = () => {
     startTransition(async () => {
@@ -91,25 +102,57 @@ export default function LogWorkoutPage() {
   };
 
   const handleManualAdd = () => {
-    if (manualWorkout && manualDuration && manualCalories) {
-      setLoggedWorkouts([
-        ...loggedWorkouts,
-        {
-          name: manualWorkout,
-          duration: Number(manualDuration),
-          calories: Number(manualCalories),
-        },
-      ]);
-      setManualWorkout("");
-      setManualDuration("");
-      setManualCalories("");
+    if (manualWorkout && manualDuration && manualCalories && user && workoutLogsCollectionRef) {
+      addDoc(workoutLogsCollectionRef, {
+        userId: user.uid,
+        name: manualWorkout,
+        durationMinutes: Number(manualDuration),
+        caloriesBurned: Number(manualCalories),
+        timestamp: serverTimestamp(),
+      }).then(() => {
+        toast({ title: "Thành công!", description: "Đã ghi lại bài tập." });
+        setManualWorkout("");
+        setManualDuration("");
+        setManualCalories("");
+      }).catch(err => {
+        console.error(err);
+        toast({ variant: "destructive", title: "Lỗi!", description: "Không thể ghi lại bài tập." });
+      });
     }
   };
 
-  const totalCaloriesBurned = loggedWorkouts.reduce(
-    (sum, workout) => sum + workout.calories,
-    0
-  );
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const todaysLogs = workoutLogs?.filter(log => log.timestamp && log.timestamp.toDate() > today);
+  const totalCaloriesBurned = todaysLogs?.reduce((sum, workout) => sum + workout.caloriesBurned, 0) || 0;
+  
+  const isLoading = isUserLoading || workoutLogsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <PageHeader
+          title="Ghi lại bài tập"
+          description="Thêm các buổi tập của bạn để theo dõi hoạt động và lượng calo đã đốt cháy."
+        />
+        <Alert>
+          <AlertTitle>Vui lòng đăng nhập</AlertTitle>
+          <AlertDescription>
+            Bạn cần đăng nhập để ghi lại bài tập và xem lịch sử của mình.
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -128,28 +171,34 @@ export default function LogWorkoutPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ChartContainer config={caloriesBurnedChartConfig} className="h-[300px] w-full">
-                <BarChart accessibilityLayer data={caloriesBurnedData}>
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    tickMargin={10}
-                    axisLine={false}
-                  />
-                  <YAxis
+              {caloriesBurnedDataForChart.length > 0 ? (
+                <ChartContainer config={caloriesBurnedChartConfig} className="h-[300px] w-full">
+                  <BarChart accessibilityLayer data={caloriesBurnedDataForChart}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                      dataKey="date"
                       tickLine={false}
-                      axisLine={false}
                       tickMargin={10}
-                      label={{ value: "kcal", position: "insideTopLeft", dy: -10, fill: "hsl(var(--muted-foreground))" }}
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent />}
-                  />
-                  <Bar dataKey="calories" fill="var(--color-calories)" radius={8} />
-                </BarChart>
-              </ChartContainer>
+                      axisLine={false}
+                    />
+                    <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={10}
+                        label={{ value: "kcal", position: "insideTopLeft", dy: -10, fill: "hsl(var(--muted-foreground))" }}
+                    />
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent />}
+                    />
+                    <Bar dataKey="calories" fill="var(--color-calories)" radius={8} />
+                  </BarChart>
+                </ChartContainer>
+              ) : (
+                <div className="flex h-[300px] items-center justify-center rounded-lg border bg-muted/50">
+                    <p className="text-muted-foreground">Không có dữ liệu bài tập để hiển thị.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -251,17 +300,21 @@ export default function LogWorkoutPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <ul className="space-y-3">
-                {loggedWorkouts.map((workout, index) => (
-                  <li
-                    key={index}
-                    className="flex justify-between items-center text-sm"
-                  >
-                    <span>{workout.name} ({workout.duration} phút)</span>
-                    <span className="font-medium">{workout.calories} kcal</span>
-                  </li>
-                ))}
-              </ul>
+              {todaysLogs && todaysLogs.length > 0 ? (
+                <ul className="space-y-3">
+                  {todaysLogs.map((workout) => (
+                    <li
+                      key={workout.id}
+                      className="flex justify-between items-center text-sm"
+                    >
+                      <span>{workout.name} ({workout.durationMinutes} phút)</span>
+                      <span className="font-medium">{workout.caloriesBurned} kcal</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">Chưa có bài tập nào được ghi lại hôm nay.</p>
+              )}
               <Separator />
               <div className="flex justify-between items-center font-bold text-lg">
                 <span>Tổng cộng đã đốt cháy</span>

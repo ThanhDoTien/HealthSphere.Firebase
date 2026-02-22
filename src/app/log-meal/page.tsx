@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/page-header";
 import { Camera, Apple, Loader2, List, Sparkles } from "lucide-react";
 import Image from "next/image";
@@ -30,11 +29,15 @@ import {
   ChartConfig,
 } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { useToast } from "@/hooks/use-toast";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, addDoc, query, orderBy, serverTimestamp, Timestamp } from 'firebase/firestore';
 
-
-type FoodItem = {
-  name: string;
-  calories: number;
+type MealLog = {
+  id: string;
+  description: string;
+  calorieCount: number;
+  timestamp: Timestamp;
 };
 
 const calorieData = [
@@ -54,24 +57,33 @@ const calorieChartConfig = {
   },
 } satisfies ChartConfig;
 
-
 export default function LogMealPage() {
   const [image, setImage] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aiResult, setAiResult] = useState<NutritionLoggingOutput | null>(null);
-  const [loggedFoods, setLoggedFoods] = useState<FoodItem[]>([
-    { name: "Bột yến mạch với quả mọng", calories: 350 },
-    { name: "Salad gà nướng", calories: 450 },
-  ]);
   const [manualFood, setManualFood] = useState("");
   const [manualCalories, setManualCalories] = useState("");
+
+  const { toast } = useToast();
+  const { user, isUserLoading } = useUser();
+  const db = useFirestore();
+
+  const mealLogsCollectionRef = useMemoFirebase(
+    () => (db && user ? collection(db, "users", user.uid, "meal_logs") : null),
+    [db, user]
+  );
+  
+  const mealLogsQuery = useMemoFirebase(
+    () => (mealLogsCollectionRef ? query(mealLogsCollectionRef, orderBy("timestamp", "desc")) : null),
+    [mealLogsCollectionRef]
+  );
+  
+  const { data: mealLogs, isLoading: mealLogsLoading } = useCollection<MealLog>(mealLogsQuery);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result as string);
@@ -101,18 +113,75 @@ export default function LogMealPage() {
   };
   
   const handleManualAdd = () => {
-    if (manualFood && manualCalories) {
-      setLoggedFoods([
-        ...loggedFoods,
-        { name: manualFood, calories: Number(manualCalories) },
-      ]);
-      setManualFood("");
-      setManualCalories("");
+    if (manualFood && manualCalories && user && mealLogsCollectionRef) {
+      addDoc(mealLogsCollectionRef, {
+        userId: user.uid,
+        description: manualFood,
+        calorieCount: Number(manualCalories),
+        timestamp: serverTimestamp(),
+      }).then(() => {
+        toast({ title: "Thành công!", description: "Đã ghi lại bữa ăn." });
+        setManualFood("");
+        setManualCalories("");
+      }).catch(err => {
+        console.error(err);
+        toast({ variant: "destructive", title: "Lỗi!", description: "Không thể ghi lại bữa ăn." });
+      });
     }
   };
 
-  const totalCalories = loggedFoods.reduce((sum, food) => sum + food.calories, 0);
+  const handleAddAiResultToLog = () => {
+    if (aiResult && user && mealLogsCollectionRef) {
+        const calories = parseInt(aiResult.estimatedNutritionalContent.match(/\d+/)?.[0] || '0');
+        addDoc(mealLogsCollectionRef, {
+            userId: user.uid,
+            description: aiResult.foodItems.join(', '),
+            calorieCount: calories,
+            timestamp: serverTimestamp(),
+        }).then(() => {
+            toast({ title: "Thành công!", description: "Đã thêm bữa ăn từ ảnh vào nhật ký." });
+            setAiResult(null); 
+        }).catch(err => {
+            console.error(err);
+            toast({ variant: "destructive", title: "Lỗi!", description: "Không thể thêm bữa ăn từ ảnh." });
+        });
+    }
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const todaysLogs = mealLogs?.filter(log => log.timestamp && log.timestamp.toDate() > today);
+  const totalCalories = todaysLogs?.reduce((sum, food) => sum + food.calorieCount, 0) || 0;
+
   const defaultMealImage = PlaceHolderImages.find((p) => p.id === "meal-1");
+
+  const isLoading = isUserLoading || mealLogsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+         <PageHeader
+            title="Ghi lại bữa ăn của bạn"
+            description="Thêm bữa ăn của bạn để theo dõi dinh dưỡng và lượng calo hàng ngày."
+          />
+        <Alert>
+          <AlertTitle>Vui lòng đăng nhập</AlertTitle>
+          <AlertDescription>
+            Bạn cần đăng nhập để ghi lại bữa ăn và xem lịch sử của mình.
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -211,9 +280,7 @@ export default function LogMealPage() {
                     <p>{aiResult.foodItems.join(', ')}</p>
                     <p className="font-semibold mt-2">Dinh dưỡng ước tính:</p>
                     <p>{aiResult.estimatedNutritionalContent}</p>
-                    <Button size="sm" className="mt-4" onClick={() => {
-                        setLoggedFoods([...loggedFoods, { name: aiResult.foodItems.join(', '), calories: parseInt(aiResult.estimatedNutritionalContent.match(/\d+/)?.[0] || '0') }])
-                    }}>Thêm vào nhật ký</Button>
+                    <Button size="sm" className="mt-4" onClick={handleAddAiResultToLog}>Thêm vào nhật ký</Button>
                   </AlertDescription>
                 </Alert>
               )}
@@ -256,14 +323,18 @@ export default function LogMealPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <ul className="space-y-3">
-                {loggedFoods.map((food, index) => (
-                  <li key={index} className="flex justify-between items-center text-sm">
-                    <span>{food.name}</span>
-                    <span className="font-medium">{food.calories} kcal</span>
-                  </li>
-                ))}
-              </ul>
+              {todaysLogs && todaysLogs.length > 0 ? (
+                <ul className="space-y-3">
+                  {todaysLogs.map((food) => (
+                    <li key={food.id} className="flex justify-between items-center text-sm">
+                      <span>{food.description}</span>
+                      <span className="font-medium">{food.calorieCount} kcal</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">Chưa có bữa ăn nào được ghi lại hôm nay.</p>
+              )}
               <Separator />
               <div className="flex justify-between items-center font-bold text-lg">
                 <span>Tổng cộng</span>

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { PageHeader } from "@/components/page-header";
 import {
   Card,
@@ -28,17 +28,15 @@ import {
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { getSleepAnalysis, SleepAnalysisOutput } from "@/ai/flows/sleep-analysis";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, addDoc, query, orderBy, limit, Timestamp } from 'firebase/firestore';
 
-
-const sleepData = [
-  { date: "T2", hours: 7.5 },
-  { date: "T3", hours: 6 },
-  { date: "T4", hours: 8 },
-  { date: "T5", hours: 7 },
-  { date: "T6", hours: 6.5 },
-  { date: "T7", hours: 8.5 },
-  { date: "CN", hours: 9 },
-];
+type SleepLog = {
+  id: string;
+  durationHours: number;
+  timestamp: Timestamp;
+};
 
 const sleepChartConfig = {
   hours: {
@@ -54,13 +52,44 @@ export default function LogSleepPage() {
   const [analysis, setAnalysis] = useState<SleepAnalysisOutput | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
+  const { toast } = useToast();
+  const { user, isUserLoading } = useUser();
+  const db = useFirestore();
+
+  const sleepLogsCollectionRef = useMemoFirebase(
+    () => (db && user ? collection(db, "users", user.uid, "sleep_logs") : null),
+    [db, user]
+  );
+  
+  const sleepLogsQuery = useMemoFirebase(
+    () => (sleepLogsCollectionRef ? query(sleepLogsCollectionRef, orderBy("timestamp", "desc"), limit(7)) : null),
+    [sleepLogsCollectionRef]
+  );
+  
+  const { data: sleepLogs, isLoading: sleepLogsLoading } = useCollection<SleepLog>(sleepLogsQuery);
+
+  const sleepDataForChart = useMemo(() => {
+    if (!sleepLogs) return [];
+    return sleepLogs.map(log => ({
+      date: format(log.timestamp.toDate(), 'eee', { locale: vi }),
+      hours: log.durationHours,
+    })).reverse(); // reverse to show oldest first
+  }, [sleepLogs]);
+
 
   const handleAddSleep = () => {
-    if (sleepHours && date) {
-      // In a real app, you would process and save this data.
-      console.log(`Sleep: ${sleepHours} hours on ${format(date, "PPP", { locale: vi })}`);
-      setSleepHours("");
-      alert("Đã ghi lại giấc ngủ!");
+    if (sleepHours && date && user && sleepLogsCollectionRef) {
+       addDoc(sleepLogsCollectionRef, {
+        userId: user.uid,
+        durationHours: Number(sleepHours),
+        timestamp: date,
+      }).then(() => {
+        toast({ title: "Thành công!", description: "Đã ghi lại giấc ngủ." });
+        setSleepHours("");
+      }).catch(err => {
+        console.error(err);
+        toast({ variant: "destructive", title: "Lỗi!", description: "Không thể ghi lại giấc ngủ." });
+      });
     }
   };
 
@@ -68,8 +97,12 @@ export default function LogSleepPage() {
     startTransition(async () => {
         setAnalysis(null);
         setAnalysisError(null);
+        if (!sleepDataForChart || sleepDataForChart.length === 0) {
+            setAnalysisError("Không có dữ liệu giấc ngủ để phân tích.");
+            return;
+        }
         try {
-            const sleepDataString = sleepData.map(d => `${d.date}: ${d.hours} giờ`).join(', ');
+            const sleepDataString = sleepDataForChart.map(d => `${d.date}: ${d.hours} giờ`).join(', ');
             const result = await getSleepAnalysis({ sleepData: sleepDataString });
             setAnalysis(result);
         } catch (error) {
@@ -79,6 +112,32 @@ export default function LogSleepPage() {
     });
   }
 
+  const isLoading = isUserLoading || sleepLogsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+         <PageHeader
+            title="Ghi lại giấc ngủ"
+            description="Nhập thời gian ngủ của bạn để theo dõi mô hình nghỉ ngơi."
+          />
+        <Alert>
+          <AlertTitle>Vui lòng đăng nhập</AlertTitle>
+          <AlertDescription>
+            Bạn cần đăng nhập để ghi lại giấc ngủ và xem lịch sử của mình.
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -95,8 +154,9 @@ export default function LogSleepPage() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
+              {sleepDataForChart.length > 0 ? (
                 <ChartContainer config={sleepChartConfig} className="h-[300px] w-full">
-                    <BarChart accessibilityLayer data={sleepData}>
+                    <BarChart accessibilityLayer data={sleepDataForChart}>
                         <CartesianGrid vertical={false} />
                         <XAxis
                         dataKey="date"
@@ -117,6 +177,11 @@ export default function LogSleepPage() {
                         <Bar dataKey="hours" fill="var(--color-hours)" radius={8} />
                     </BarChart>
                 </ChartContainer>
+              ) : (
+                <div className="flex h-[300px] items-center justify-center rounded-lg border bg-muted/50">
+                    <p className="text-muted-foreground">Không có dữ liệu giấc ngủ để hiển thị.</p>
+                </div>
+              )}
             </CardContent>
         </Card>
 
