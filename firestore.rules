@@ -1,211 +1,31 @@
-/**
- * # Core Philosophy
- * This ruleset enforces a strict user-ownership model for all personal health data,
- * combined with a public-access model for community-driven content. The primary goal is to
- * protect user privacy while fostering an open community.
- *
- * # Data Structure
- * - `/users/{userId}`: A user's private root document and subcollections for personal data.
- *   - `/users/{userId}/meal_logs/{mealLogId}`: Private meal tracking data.
- *   - `/users/{userId}/weight_logs/{weightLogId}`: Private weight tracking data.
- *   - `/users/{userId}/sleep_logs/{sleepLogId}`: Private sleep tracking data.
- *   - `/users/{userId}/workout_logs/{workoutLogId}`: Private workout tracking data.
- * - `/forum_posts/{forumPostId}`: A top-level collection for community posts, which are publicly readable.
- * - `/recipes/{recipeId}`: A top-level collection for recipes, which are publicly readable.
- *
- * # Key Security Decisions
- * - User Privacy: All data under `/users/{userId}` is strictly accessible only to the authenticated user whose UID matches the `userId`. Listing of top-level user profiles is disabled to prevent user enumeration.
- * - Community Content: Forum posts are publicly readable, but can only be created, updated, or deleted by their original author. The author's identity is denormalized onto the post document for efficient and secure checks.
- * - Read-Only Content: Recipes are globally readable by anyone, but all write operations are disabled. This makes the collection a secure, curated source of information that can only be managed from a trusted server environment (e.g., Admin SDK).
- * - Denormalization: Authorization relies heavily on denormalized ownership fields (`userId`) on documents in public collections (`forum_posts`). This avoids slow and costly `get()` calls in rules.
- * - Structural Segregation: Private user data (meal logs) and public data (forum posts) are kept in separate collections. This makes security rules for listing data simple, performant, and highly secure.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --------------------------------------------------------------------
-    // Helper Functions
-    // --------------------------------------------------------------------
-
-    /**
-     * Checks if a user is authenticated.
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * Checks if the currently signed-in user's UID matches the provided userId.
-     * This is the foundation of the user ownership model.
-     */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    /**
-     * Validates required ownership fields for a new UserProfile document.
-     * Ensures the document ID is consistent with the user's auth UID.
-     */
-    function userProfileIsValidForCreate(userId) {
-      return request.resource.data.id == userId && request.resource.data.email != null;
-    }
-
-    /**
-     * Ensures the ownership ID and email of a UserProfile are immutable on update.
-     * All other fields can be changed.
-     */
-    function userProfileIsValidForUpdate() {
-      // The `id` and `email` fields must not change.
-      return request.resource.data.id == resource.data.id
-          && request.resource.data.email == resource.data.email;
-    }
-
-    /**
-     * Validates the denormalized `userId` field when a subcollection document is created.
-     * Ensures data is correctly linked to its parent user path.
-     */
-    function userSubcollectionDataIsValidForCreate(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    /**
-     * Ensures the denormalized `userId` on a subcollection document is immutable.
-     * All other fields can be changed.
-     */
-    function userSubcollectionDataIsValidForUpdate() {
-      // The owning userId must not change.
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    /**
-     * Validates that the creator of a new forum post is the authenticated user.
-     */
-    function forumPostIsValidForCreate() {
-      return request.resource.data.userId == request.auth.uid;
-    }
-    
-    /**
-     * Ensures the author (`userId`) of a forum post cannot be changed.
-     */
-    function forumPostIsValidForUpdate() {
-      // The author's userId must not change.
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    // --------------------------------------------------------------------
-    // User Data
-    // --------------------------------------------------------------------
-
-    /**
-     * @description Controls access to a user's own profile document.
-     * @path /users/{userId}
-     * @allow (get) An authenticated user reads their own profile: `auth.uid == 'user_abc'`, path `/users/user_abc`
-     * @allow (create) An authenticated user creates their own profile for the first time: `auth.uid == 'user_abc'`, path `/users/user_abc`
-     * @deny (get) An authenticated user tries to read another user's profile: `auth.uid == 'user_123'`, path `/users/user_abc`
-     * @deny (list) Any user tries to list all user profiles.
-     * @principle Restricts access to a user's own data tree and prevents user enumeration.
-     */
+    // Users can only read, create, update, and delete their own profile.
+    // Listing all users is not allowed to prevent user enumeration.
     match /users/{userId} {
-      allow get: if isSignedIn();
+      allow get, create, update, delete: if request.auth != null && request.auth.uid == userId;
       allow list: if false;
-      allow create: if isOwner(userId) && userProfileIsValidForCreate(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
     }
 
-    /**
-     * @description Controls access to a user's private meal logs.
-     * @path /users/{userId}/meal_logs/{mealLogId}
-     * @allow (get, list) An authenticated user reads their own meal logs: `auth.uid == 'user_abc'`, path `/users/user_abc/meal_logs/...`
-     * @allow (create) An authenticated user creates a new meal log for themselves.
-     * @deny (get) An authenticated user tries to read another user's meal logs: `auth.uid == 'user_123'`, path `/users/user_abc/meal_logs/...`
-     * @principle Enforces strict data ownership within a user's private subcollection.
-     */
-    match /users/{userId}/meal_logs/{mealLogId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && userSubcollectionDataIsValidForCreate(userId);
-      allow update: if isOwner(userId) && userSubcollectionDataIsValidForUpdate();
-      allow delete: if isOwner(userId);
+    // A user can manage their own subcollections (meal logs, weight logs, etc.)
+    match /users/{userId}/{collection}/{docId} {
+       allow read, list, create, update, delete: if request.auth != null && request.auth.uid == userId;
     }
 
-    /**
-     * @description Controls access to a user's private weight logs.
-     * @path /users/{userId}/weight_logs/{weightLogId}
-     * @allow (get, list) An authenticated user reads their own weight logs: `auth.uid == 'user_abc'`, path `/users/user_abc/weight_logs/...`
-     * @allow (create) An authenticated user creates a new weight log for themselves.
-     * @deny (get) An authenticated user tries to read another user's weight logs: `auth.uid == 'user_123'`, path `/users/user_abc/weight_logs/...`
-     * @principle Enforces strict data ownership within a user's private subcollection.
-     */
-    match /users/{userId}/weight_logs/{weightLogId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && userSubcollectionDataIsValidForCreate(userId);
-      allow update: if isOwner(userId) && userSubcollectionDataIsValidForUpdate();
-      allow delete: if isOwner(userId);
+    // Forum posts are public to read for any authenticated user.
+    // Only the owner can create, update, or delete their own posts.
+    match /forum_posts/{postId} {
+      allow get, list: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
-    /**
-     * @description Controls access to a user's private sleep logs.
-     * @path /users/{userId}/sleep_logs/{sleepLogId}
-     * @allow (get, list) An authenticated user reads their own sleep logs: `auth.uid == 'user_abc'`, path `/users/user_abc/sleep_logs/...`
-     * @allow (create) An authenticated user creates a new sleep log for themselves.
-     * @deny (get) An authenticated user tries to read another user's sleep logs: `auth.uid == 'user_123'`, path `/users/user_abc/sleep_logs/...`
-     * @principle Enforces strict data ownership within a user's private subcollection.
-     */
-    match /users/{userId}/sleep_logs/{sleepLogId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && userSubcollectionDataIsValidForCreate(userId);
-      allow update: if isOwner(userId) && userSubcollectionDataIsValidForUpdate();
-      allow delete: if isOwner(userId);
-    }
-
-    /**
-     * @description Controls access to a user's private workout logs.
-     * @path /users/{userId}/workout_logs/{workoutLogId}
-     * @allow (get, list) An authenticated user reads their own workout logs: `auth.uid == 'user_abc'`, path `/users/user_abc/workout_logs/...`
-     * @allow (create) An authenticated user creates a new workout log for themselves.
-     * @deny (get) An authenticated user tries to read another user's workout logs: `auth.uid == 'user_123'`, path `/users/user_abc/workout_logs/...`
-     * @principle Enforces strict data ownership within a user's private subcollection.
-     */
-    match /users/{userId}/workout_logs/{workoutLogId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && userSubcollectionDataIsValidForCreate(userId);
-      allow update: if isOwner(userId) && userSubcollectionDataIsValidForUpdate();
-      allow delete: if isOwner(userId);
-    }
-
-    // --------------------------------------------------------------------
-    // Community & Public Data
-    // --------------------------------------------------------------------
-
-    /**
-     * @description Controls access to public forum posts. Posts are publicly readable, but only the author can modify their own posts.
-     * @path /forum_posts/{forumPostId}
-     * @allow (get, list) Any user can read all forum posts.
-     * @allow (create) An authenticated user creates a new post, setting `userId` to their own UID.
-     * @allow (update) An authenticated user updates a post they previously created.
-     * @deny (update) An authenticated user tries to update another user's post.
-     * @principle Implements "Public Read with Owner-Only Writes" using a denormalized `userId` field for authorization.
-     */
-    match /forum_posts/{forumPostId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && forumPostIsValidForCreate();
-      allow update: if resource != null && isOwner(resource.data.userId) && forumPostIsValidForUpdate();
-      allow delete: if resource != null && isOwner(resource.data.userId);
-    }
-
-    /**
-     * @description Controls access to globally available recipes. This data is read-only for all clients.
-     * @path /recipes/{recipeId}
-     * @allow (get, list) Any user (authenticated or not) can read recipes.
-     * @deny (create, update, delete) No user can modify recipes from the client.
-     * @principle Secures a collection as public and read-only, assuming content is managed by a trusted backend (e.g., Admin SDK).
-     */
+    // Recipes are public and read-only for all clients.
     match /recipes/{recipeId} {
       allow get, list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow write: if false; // No one can write from the client
     }
   }
 }
