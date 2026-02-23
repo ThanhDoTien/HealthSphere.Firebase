@@ -22,7 +22,7 @@ import AddWeightForm from '@/components/dashboard/AddWeightForm';
 const weightChartConfig = {
   weight: {
     label: 'Weight (kg)',
-    color: 'hsl(var(--accent))',
+    color: 'hsl(var(--primary))',
   },
 } satisfies ChartConfig;
 
