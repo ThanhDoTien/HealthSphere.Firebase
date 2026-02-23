@@ -13,7 +13,7 @@ import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
 import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
-import { LineChart as LineChartComponent } from '@/components/ui/line-chart';
+import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
 import AddMealForm from '@/components/dashboard/AddMealForm';
 import { Loader2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
@@ -177,7 +177,7 @@ export default function CaloriesPage() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <LineChartComponent
+            <BarChart
               data={chartData}
               config={calorieChartConfig}
               yAxisWidth={40}
