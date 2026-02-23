@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -78,7 +77,7 @@ export default function ProfilePage() {
   };
 
   const handleSaveChanges = async () => {
-    if (!canEdit || !userProfileRef || !userProfile) {
+    if (!canEdit || !userProfileRef) {
       toast({
         variant: 'destructive',
         title: 'Lỗi',
@@ -87,48 +86,15 @@ export default function ProfilePage() {
       return;
     }
 
-    const payload: { [key: string]: any } = {};
-
-    // Compare form data with original profile data to build the payload
-    if (formData.username !== userProfile.username) {
-      payload.username = formData.username || '';
-    }
-    
-    const newWeight = (formData.weightKg === '' || formData.weightKg === undefined || formData.weightKg === null) ? null : Number(formData.weightKg);
-    const oldWeight = userProfile.weightKg ?? null;
-    if (newWeight !== oldWeight) {
-      payload.weightKg = newWeight;
-    }
-
-    const newHeight = (formData.heightCm === '' || formData.heightCm === undefined || formData.heightCm === null) ? null : Number(formData.heightCm);
-    const oldHeight = userProfile.heightCm ?? null;
-    if (newHeight !== oldHeight) {
-        payload.heightCm = newHeight;
-    }
-
-    const newGender = formData.gender || null;
-    const oldGender = userProfile.gender || null;
-    if (newGender !== oldGender) {
-        payload.gender = newGender;
-    }
-
-    const newActivityLevel = formData.activityLevel || null;
-    const oldActivityLevel = userProfile.activityLevel || null;
-    if (newActivityLevel !== oldActivityLevel) {
-        payload.activityLevel = newActivityLevel;
-    }
-    
-    const newDietaryPrefs = formData.dietaryPreferences || '';
-    const oldDietaryPrefs = userProfile.dietaryPreferences || '';
-    if (newDietaryPrefs !== oldDietaryPrefs) {
-        payload.dietaryPreferences = newDietaryPrefs;
-    }
-
-    if (Object.keys(payload).length === 0) {
-        toast({ title: "Thông tin không thay đổi." });
-        setIsEditing(false);
-        return;
-    }
+    // Build the payload with correct data types, converting empty strings to null for numeric fields.
+    const payload = {
+      username: formData.username || '',
+      weightKg: formData.weightKg ? Number(formData.weightKg) : null,
+      heightCm: formData.heightCm ? Number(formData.heightCm) : null,
+      gender: formData.gender || null,
+      activityLevel: formData.activityLevel || null,
+      dietaryPreferences: formData.dietaryPreferences || '',
+    };
 
     try {
       await updateDoc(userProfileRef, payload);
