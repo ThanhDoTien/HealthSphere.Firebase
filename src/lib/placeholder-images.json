@@ -20,9 +20,9 @@
     },
     {
       "id": "hero-workout",
-      "description": "A person in a gym, mid-workout, showing strength and determination.",
-      "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxmaXRuZXNzfGVufDB8fHx8MTcxODQzMjc0Nnww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "fitness workout"
+      "description": "A woman in athletic wear doing crunches on a yoga mat.",
+      "imageUrl": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHx3b21hbiUyMGZpdG5lc3N8ZW58MHx8fHwxNzE4NDMzMTE5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman fitness"
     }
   ]
 }
