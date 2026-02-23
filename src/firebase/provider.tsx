@@ -10,7 +10,7 @@ import React, {
   useEffect,
 } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore, doc, onSnapshot, DocumentData } from 'firebase/firestore';
+import { Firestore, doc, onSnapshot, DocumentData, setDoc } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
@@ -61,12 +61,34 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         profileUnsubscribe?.();
 
         if (authUser) {
+          setLoading(true);
           const profileRef = doc(firestore, 'users', authUser.uid);
           profileUnsubscribe = onSnapshot(
             profileRef,
             (snapshot) => {
-              setUserProfile(snapshot.data() ?? null);
-              setLoading(false);
+              if (snapshot.exists()) {
+                setUserProfile(snapshot.data());
+                setLoading(false);
+              } else {
+                // Profile does not exist, so we create it with default values.
+                const newProfile = {
+                  name: authUser.displayName || 'New User',
+                  email: authUser.email || '',
+                  age: 0,
+                  height: 0,
+                  weight: 0,
+                  gender: 'other',
+                  goal: 'Get started!',
+                };
+                setDoc(profileRef, newProfile).catch((err) => {
+                  console.error("Failed to create user profile:", err);
+                  setError(err);
+                  // Still set loading to false on error to not block UI
+                  setLoading(false);
+                });
+                // The snapshot listener will be re-triggered by setDoc,
+                // which will then populate the profile and set loading to false.
+              }
             },
             (err) => {
               console.error('Profile listener error:', err);
@@ -75,6 +97,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
             }
           );
         } else {
+          // No authenticated user
           setUserProfile(null);
           setLoading(false);
         }
