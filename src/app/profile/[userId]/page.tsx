@@ -69,6 +69,7 @@ export default function ProfilePage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
+    // For numeric inputs, allow empty string but handle it during save
     setFormData(prev => ({ ...prev, [id]: value }));
   };
 
@@ -77,27 +78,64 @@ export default function ProfilePage() {
   };
 
   const handleSaveChanges = async () => {
-    if (!canEdit || !userProfileRef) {
+    if (!canEdit || !userProfileRef || !userProfile) {
       toast({
         variant: 'destructive',
         title: 'Lỗi',
-        description: 'Không thể cập nhật hồ sơ ngay lúc này.',
+        description: 'Không thể cập nhật hồ sơ.',
       });
       return;
     }
 
-    // Build the payload with correct data types, converting empty strings to null for numeric fields.
-    const payload = {
-      username: formData.username || '',
-      weightKg: formData.weightKg ? Number(formData.weightKg) : null,
-      heightCm: formData.heightCm ? Number(formData.heightCm) : null,
-      gender: formData.gender || null,
-      activityLevel: formData.activityLevel || null,
-      dietaryPreferences: formData.dietaryPreferences || '',
-    };
+    const changes: {[key: string]: any} = {};
+
+    // Carefully build the payload with only changed and valid data
+    
+    // Username (string)
+    if (formData.username !== userProfile.username) {
+      changes.username = formData.username || '';
+    }
+
+    // Weight (number or null)
+    const newWeight = formData.weightKg === '' || formData.weightKg === null || formData.weightKg === undefined ? null : Number(formData.weightKg);
+    if (newWeight !== (userProfile.weightKg ?? null)) {
+      changes.weightKg = newWeight;
+    }
+    
+    // Height (number or null)
+    const newHeight = formData.heightCm === '' || formData.heightCm === null || formData.heightCm === undefined ? null : Number(formData.heightCm);
+    if (newHeight !== (userProfile.heightCm ?? null)) {
+      changes.heightCm = newHeight;
+    }
+
+    // Gender (string or null)
+    const newGender = formData.gender || null;
+    if (newGender !== (userProfile.gender ?? null)) {
+      changes.gender = newGender;
+    }
+
+    // Activity Level (string or null)
+    const newActivityLevel = formData.activityLevel || null;
+    if (newActivityLevel !== (userProfile.activityLevel ?? null)) {
+      changes.activityLevel = newActivityLevel;
+    }
+
+    // Dietary Preferences (string)
+    if (formData.dietaryPreferences !== (userProfile.dietaryPreferences ?? '')) {
+      changes.dietaryPreferences = formData.dietaryPreferences || '';
+    }
+
+    if (Object.keys(changes).length === 0) {
+      toast({
+        title: 'Không có thay đổi',
+        description: 'Bạn chưa thay đổi thông tin nào.',
+      });
+      setIsEditing(false);
+      return;
+    }
 
     try {
-      await updateDoc(userProfileRef, payload);
+      await updateDoc(userProfileRef, changes);
       toast({
         title: 'Thành công!',
         description: 'Hồ sơ của bạn đã được cập nhật.',
@@ -204,11 +242,11 @@ export default function ProfilePage() {
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="weightKg">Cân nặng (kg)</Label>
-                  <Input id="weightKg" type="number" value={formData.weightKg || ''} onChange={handleInputChange} readOnly={!isEditing} />
+                  <Input id="weightKg" type="number" value={formData.weightKg ?? ''} onChange={handleInputChange} readOnly={!isEditing} placeholder="ví dụ: 70" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="heightCm">Chiều cao (cm)</Label>
-                  <Input id="heightCm" type="number" value={formData.heightCm || ''} onChange={handleInputChange} readOnly={!isEditing} />
+                  <Input id="heightCm" type="number" value={formData.heightCm ?? ''} onChange={handleInputChange} readOnly={!isEditing} placeholder="ví dụ: 175" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="gender">Giới tính</Label>
@@ -252,7 +290,10 @@ export default function ProfilePage() {
               {isEditing && (
                 <div className="flex gap-2">
                     <Button onClick={handleSaveChanges}>Lưu thay đổi</Button>
-                    <Button variant="ghost" onClick={() => setIsEditing(false)}>Hủy</Button>
+                    <Button variant="ghost" onClick={() => {
+                        setIsEditing(false);
+                        if (userProfile) setFormData(userProfile); // Reset form data on cancel
+                    }}>Hủy</Button>
                 </div>
               )}
             </CardContent>
@@ -262,3 +303,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+    
