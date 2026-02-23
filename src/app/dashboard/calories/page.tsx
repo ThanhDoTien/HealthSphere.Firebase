@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -12,11 +12,39 @@ import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { LineChart as LineChartComponent } from '@/components/ui/line-chart';
 import { type ChartConfig } from '@/components/ui/chart';
 import AddMealForm from '@/components/dashboard/AddMealForm';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { WithId } from '@/firebase/firestore/use-collection';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import EditMealForm from '@/components/dashboard/EditMealForm';
+import { useToast } from '@/components/ui/toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const calorieChartConfig = {
   calories: {
@@ -25,9 +53,22 @@ const calorieChartConfig = {
   },
 } satisfies ChartConfig;
 
+type Meal = {
+  name: string;
+  calories: number;
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  date: string;
+  userId: string;
+};
+
 export default function CaloriesPage() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
+
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedMeal, setSelectedMeal] = useState<WithId<Meal> | null>(null);
 
   const mealQuery = useMemoFirebase(() => {
     if (!user) return null;
@@ -37,7 +78,9 @@ export default function CaloriesPage() {
     );
   }, [firestore, user]);
 
-  const { data: mealData, isLoading: mealLoading } = useCollection(mealQuery);
+  const { data: mealData, isLoading: mealLoading } = useCollection<Meal>(
+    mealQuery
+  );
 
   const chartData = useMemo(() => {
     if (!mealData) return [];
@@ -60,15 +103,17 @@ export default function CaloriesPage() {
           day: 'numeric',
         }),
         calories: dailyCalories[date],
-        fullDate: date, // for sorting
+        fullDate: date,
       }))
-      .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
-      .slice(-30); // show last 30 days
+      .sort(
+        (a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime()
+      )
+      .slice(-30);
   }, [mealData]);
 
   const dailyMeals = useMemo(() => {
     if (!mealData) return {};
-    const groupedMeals: { [date: string]: typeof mealData } = {};
+    const groupedMeals: { [date: string]: WithId<Meal>[] } = {};
 
     mealData.forEach((meal) => {
       const date = meal.date;
@@ -81,6 +126,39 @@ export default function CaloriesPage() {
     return groupedMeals;
   }, [mealData]);
 
+  const handleDeleteMeal = () => {
+    if (!selectedMeal || !user) return;
+    const mealDocRef = doc(
+      firestore,
+      `users/${user.uid}/meals/${selectedMeal.id}`
+    );
+
+    deleteDoc(mealDocRef)
+      .then(() => {
+        toast({
+          title: 'Success',
+          description: 'Meal deleted successfully.',
+        });
+      })
+      .catch((error) => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: mealDocRef.path,
+            operation: 'delete',
+          })
+        );
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Could not delete meal. Please try again.',
+        });
+      })
+      .finally(() => {
+        setIsDeleteDialogOpen(false);
+        setSelectedMeal(null);
+      });
+  };
 
   const isLoading = userLoading || mealLoading;
 
@@ -89,11 +167,13 @@ export default function CaloriesPage() {
       <Card>
         <CardHeader>
           <CardTitle>Calorie Intake</CardTitle>
-          <CardDescription>Log your meals and track your daily calorie consumption.</CardDescription>
+          <CardDescription>
+            Log your meals and track your daily calorie consumption.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-64">
+          {isLoading && !mealData ? (
+            <div className="flex h-64 items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : (
@@ -106,21 +186,21 @@ export default function CaloriesPage() {
             />
           )}
           <div>
-            <h3 className="text-lg font-medium mb-4">Log a Meal</h3>
+            <h3 className="mb-4 text-lg font-medium">Log a Meal</h3>
             {user && <AddMealForm userId={user.uid} />}
           </div>
 
           <div className="space-y-6 border-t pt-6">
             <h3 className="text-lg font-medium">Daily Meal Log</h3>
             {isLoading ? (
-               <div className="flex items-center justify-center py-8">
+              <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-               </div>
+              </div>
             ) : Object.keys(dailyMeals).length > 0 ? (
-              <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+              <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
                 {Object.entries(dailyMeals).map(([date, meals]) => (
                   <div key={date}>
-                    <h4 className="font-semibold mb-2 text-md sticky top-0 bg-card py-2 border-b">
+                    <h4 className="sticky top-0 mb-2 border-b bg-card py-2 font-semibold text-md">
                       {new Date(date + 'T00:00').toLocaleDateString('en-US', {
                         weekday: 'long',
                         month: 'long',
@@ -129,12 +209,50 @@ export default function CaloriesPage() {
                     </h4>
                     <ul className="space-y-2 pt-2">
                       {meals.map((meal) => (
-                        <li key={meal.id} className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
+                        <li
+                          key={meal.id}
+                          className="flex items-center justify-between rounded-lg bg-muted/50 p-3"
+                        >
                           <div>
                             <p className="font-medium">{meal.name}</p>
-                            <p className="text-sm text-muted-foreground capitalize">{meal.mealType}</p>
+                            <p className="text-sm capitalize text-muted-foreground">
+                              {meal.mealType}
+                            </p>
                           </div>
-                          <p className="font-semibold">{meal.calories} kcal</p>
+                          <div className="flex items-center gap-4">
+                            <p className="font-semibold">
+                              {meal.calories} kcal
+                            </p>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <span className="sr-only">Open menu</span>
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedMeal(meal);
+                                    setIsEditDialogOpen(true);
+                                  }}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={() => {
+                                    setSelectedMeal(meal);
+                                    setIsDeleteDialogOpen(true);
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </li>
                       ))}
                     </ul>
@@ -142,11 +260,54 @@ export default function CaloriesPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-muted-foreground text-center py-8">No meals logged yet. Add one above to get started!</p>
+              <p className="py-8 text-center text-muted-foreground">
+                No meals logged yet. Add one above to get started!
+              </p>
             )}
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Meal</DialogTitle>
+          </DialogHeader>
+          {selectedMeal && user && (
+            <EditMealForm
+              userId={user.uid}
+              meal={selectedMeal}
+              onSuccess={() => setIsEditDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Alert Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              meal log for &quot;{selectedMeal?.name}&quot;.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMeal}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
