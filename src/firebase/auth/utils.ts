@@ -1,11 +1,12 @@
+'use client';
 
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
-  signOut,
   UserCredential,
+  signOut,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, firestore } from "../index";
@@ -59,11 +60,16 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
   const userDocRef = doc(firestore, `users/${userCredential.user.uid}`);
   const userDoc = await getDoc(userDocRef);
   if (!userDoc.exists()) {
+    // Create a complete profile with default values
     const profileData = {
       name: userCredential.user.displayName || "Google User",
       email: userCredential.user.email!,
+      age: 0,
+      height: 0,
+      weight: 0,
+      gender: "other",
     };
-    await setDoc(userDocRef, profileData, { merge: true });
+    await createUserProfile(userCredential.user.uid, profileData);
   }
 
   return userCredential;

@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/toast";
 import { signUp } from "@/firebase/auth/utils";
 import useMustBeLoggedOut from "@/lib/hooks/use-must-be-logged-out";
 

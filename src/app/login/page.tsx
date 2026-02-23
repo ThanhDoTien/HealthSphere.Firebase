@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/toast";
 import { GoogleIcon } from "@/components/icons";
 import { signIn, signInWithGoogle } from "@/firebase/auth/utils";
 import useMustBeLoggedOut from "@/lib/hooks/use-must-be-logged-out";
