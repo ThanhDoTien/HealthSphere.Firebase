@@ -2,27 +2,24 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
-export function initializeFirebase() {
-  if (getApps().length) {
-    return getSdks(getApp());
-  }
-  
-  const firebaseApp = initializeApp(firebaseConfig);
-  return getSdks(firebaseApp);
+// --- Direct Initialization ---
+let app: FirebaseApp;
+
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp();
 }
 
-export function getSdks(firebaseApp: FirebaseApp) {
-  return {
-    firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
-  };
-}
+export const firebaseApp: FirebaseApp = app;
+export const auth: Auth = getAuth(app);
+export const firestore: Firestore = getFirestore(app);
+// --- End Direct Initialization ---
 
+// --- Re-export everything else ---
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';
