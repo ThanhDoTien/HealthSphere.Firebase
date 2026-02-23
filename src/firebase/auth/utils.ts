@@ -9,7 +9,9 @@ import {
   signOut,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import { auth, firestore } from "../index";
+import { initializeFirebase } from "..";
+
+const { auth, firestore } = initializeFirebase();
 
 interface SignUpData {
   name: string;
