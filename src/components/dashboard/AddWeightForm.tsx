@@ -20,6 +20,9 @@ const FormSchema = z.object({
   weight: z.coerce
     .number({ invalid_type_error: 'Please enter a number.' })
     .min(20, { message: 'Weight must be a realistic number.' }),
+  date: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: "Please enter a valid date.",
+  }),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
@@ -39,23 +42,27 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
+    defaultValues: {
+      date: new Date().toISOString().split('T')[0],
+      weight: undefined,
+    }
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = (data: FormValues) => {
     const weightLogRef = collection(firestore, `users/${userId}/weights`);
     const weightLogData = {
       userId: userId,
       weight: data.weight,
-      date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+      date: data.date,
     };
 
     addDoc(weightLogRef, weightLogData)
       .then(() => {
         toast({
           title: 'Success',
-          description: 'Your weight has been logged.',
+          description: `Weight for ${data.date} has been logged.`,
         });
-        reset({ weight: undefined });
+        reset();
       })
       .catch((error) => {
         errorEmitter.emit(
@@ -75,9 +82,20 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex items-end gap-2">
-      <div className="grid flex-1 gap-1.5">
-        <Label htmlFor="weight">Log Today&apos;s Weight (kg)</Label>
+    <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 sm:grid-cols-3 sm:items-end">
+      <div className="grid gap-1.5">
+        <Label htmlFor="date">Date</Label>
+        <Input
+          id="date"
+          type="date"
+          {...register('date')}
+        />
+        {errors.date && (
+          <p className="mt-1 text-sm text-destructive">{errors.date.message}</p>
+        )}
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="weight">Weight (kg)</Label>
         <Input
           id="weight"
           type="number"
@@ -85,13 +103,13 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
           placeholder="e.g. 75.5"
           {...register('weight')}
         />
+        {errors.weight && (
+          <p className="mt-1 text-sm text-destructive">{errors.weight.message}</p>
+        )}
       </div>
-      <Button type="submit" disabled={isSubmitting}>
+      <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
         {isSubmitting ? 'Saving...' : 'Save'}
       </Button>
-      {errors.weight && (
-        <p className="mt-1 text-sm text-destructive">{errors.weight.message}</p>
-      )}
     </form>
   );
 }
