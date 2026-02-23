@@ -78,43 +78,61 @@ export default function ProfilePage() {
   };
 
   const handleSaveChanges = async () => {
-    if (userProfileRef) {
-        const payload: { [key: string]: any } = {
-            username: formData.username,
-            gender: formData.gender,
-            activityLevel: formData.activityLevel,
-            dietaryPreferences: formData.dietaryPreferences,
-        };
+    if (!userProfileRef) return;
 
-        const height = parseFloat(String(formData.heightCm));
-        if (!isNaN(height)) {
-            payload.heightCm = height;
-        } else {
-            payload.heightCm = null;
-        }
+    // Create a payload with only the fields that are actually defined in the form state.
+    const payload: { [key: string]: any } = {};
+    
+    // List of editable fields
+    const editableFields: (keyof Partial<UserProfile>)[] = [
+        'username', 
+        'gender', 
+        'activityLevel', 
+        'dietaryPreferences', 
+        'heightCm', 
+        'weightKg'
+    ];
 
-        const weight = parseFloat(String(formData.weightKg));
-        if (!isNaN(weight)) {
-            payload.weightKg = weight;
-        } else {
-            payload.weightKg = null;
+    editableFields.forEach(field => {
+        if (formData[field] !== undefined) {
+            if (field === 'heightCm' || field === 'weightKg') {
+                // For numeric fields, parse them, allowing empty string to become null
+                const valueStr = String(formData[field]).trim();
+                if (valueStr === '' || formData[field] === null) {
+                    payload[field] = null;
+                } else {
+                    const numValue = parseFloat(valueStr);
+                    if (!isNaN(numValue)) {
+                        payload[field] = numValue;
+                    }
+                }
+            } else {
+                // For other fields, just assign the value
+                payload[field] = formData[field];
+            }
         }
+    });
 
-        try {
-            await updateDoc(userProfileRef, payload);
-            toast({
-                title: 'Thành công!',
-                description: 'Hồ sơ của bạn đã được cập nhật.',
-            });
-            setIsEditing(false);
-        } catch (e: any) {
-            console.error('Lỗi cập nhật hồ sơ:', e);
-            toast({
-                variant: 'destructive',
-                title: 'Ôi, đã có lỗi xảy ra.',
-                description: e.message || 'Không thể cập nhật hồ sơ của bạn.',
-            });
-        }
+    if (Object.keys(payload).length === 0) {
+        toast({ title: "Không có gì thay đổi." });
+        setIsEditing(false);
+        return;
+    }
+
+    try {
+        await updateDoc(userProfileRef, payload);
+        toast({
+            title: 'Thành công!',
+            description: 'Hồ sơ của bạn đã được cập nhật.',
+        });
+        setIsEditing(false);
+    } catch (e: any) {
+        console.error('Lỗi cập nhật hồ sơ:', e);
+        toast({
+            variant: 'destructive',
+            title: 'Ôi, đã có lỗi xảy ra.',
+            description: e.message || 'Không thể cập nhật hồ sơ của bạn.',
+        });
     }
   };
 
@@ -266,5 +284,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
