@@ -17,8 +17,8 @@ service cloud.firestore {
     // --- Forum Posts ---
     // Path: /forum_posts/{postId}
     match /forum_posts/{postId} {
-      // ANY authenticated user can read forum posts.
-      allow read: if request.auth != null;
+      // ANYONE can read forum posts.
+      allow read: if true;
       
       // You can ONLY create a post with your own userId.
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
