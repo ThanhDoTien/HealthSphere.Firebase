@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "recipe-1",
+      "description": "A vibrant and healthy salad.",
+      "imageUrl": "https://images.unsplash.com/photo-1540420773420-3366772f4999?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxoZWFsdGh5JTIwc2FsYWR8ZW58MHx8fHwxNzcxODQwODAzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "healthy salad"
+    },
+    {
+      "id": "recipe-2",
+      "description": "Grilled chicken with asparagus.",
+      "imageUrl": "https://images.unsplash.com/photo-1643594462181-7667928d072e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxncmlsbGVkJTIwY2hpY2tlbnxlbnwwfHx8fDE3NzE3NTI2NjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "grilled chicken"
+    },
+    {
+      "id": "recipe-3",
+      "description": "A bowl of oatmeal with fresh berries.",
+      "imageUrl": "https://images.unsplash.com/photo-1686344234276-dc3ac6f284ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxvYXRtZWFsJTIwYmVycmllc3xlbnwwfHx8fDE3NzE4NDg2MDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "oatmeal berries"
+    }
+  ]
 }
