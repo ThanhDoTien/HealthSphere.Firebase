@@ -12,7 +12,7 @@ import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { LineChart as LineChartComponent } from '@/components/ui/line-chart';
 import { type ChartConfig } from '@/components/ui/chart';
 import AddMealForm from '@/components/dashboard/AddMealForm';
@@ -29,13 +29,11 @@ export default function CaloriesPage() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
 
-  // Fetch last 30 days of meal data
   const mealQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
       collection(firestore, 'users', user.uid, 'meals'),
-      orderBy('date', 'desc'),
-      limit(200) // limit to recent meals to avoid pulling too much data
+      orderBy('date', 'desc')
     );
   }, [firestore, user]);
 
@@ -57,7 +55,7 @@ export default function CaloriesPage() {
 
     return Object.keys(dailyCalories)
       .map((date) => ({
-        date: new Date(date).toLocaleDateString('en-US', {
+        date: new Date(date + 'T00:00').toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
         }),
@@ -67,6 +65,22 @@ export default function CaloriesPage() {
       .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
       .slice(-30); // show last 30 days
   }, [mealData]);
+
+  const dailyMeals = useMemo(() => {
+    if (!mealData) return {};
+    const groupedMeals: { [date: string]: typeof mealData } = {};
+
+    mealData.forEach((meal) => {
+      const date = meal.date;
+      if (groupedMeals[date]) {
+        groupedMeals[date].push(meal);
+      } else {
+        groupedMeals[date] = [meal];
+      }
+    });
+    return groupedMeals;
+  }, [mealData]);
+
 
   const isLoading = userLoading || mealLoading;
 
@@ -94,6 +108,42 @@ export default function CaloriesPage() {
           <div>
             <h3 className="text-lg font-medium mb-4">Log a Meal</h3>
             {user && <AddMealForm userId={user.uid} />}
+          </div>
+
+          <div className="space-y-6 border-t pt-6">
+            <h3 className="text-lg font-medium">Daily Meal Log</h3>
+            {isLoading ? (
+               <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+               </div>
+            ) : Object.keys(dailyMeals).length > 0 ? (
+              <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                {Object.entries(dailyMeals).map(([date, meals]) => (
+                  <div key={date}>
+                    <h4 className="font-semibold mb-2 text-md sticky top-0 bg-card py-2 border-b">
+                      {new Date(date + 'T00:00').toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </h4>
+                    <ul className="space-y-2 pt-2">
+                      {meals.map((meal) => (
+                        <li key={meal.id} className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
+                          <div>
+                            <p className="font-medium">{meal.name}</p>
+                            <p className="text-sm text-muted-foreground capitalize">{meal.mealType}</p>
+                          </div>
+                          <p className="font-semibold">{meal.calories} kcal</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">No meals logged yet. Add one above to get started!</p>
+            )}
           </div>
         </CardContent>
       </Card>
