@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useDoc, useUser, useFirestore } from '@/firebase';
+import { useParams } from 'next/navigation';
+import { useDoc, useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,27 +11,30 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 type UserProfile = {
-  displayName?: string;
+  username?: string;
   email?: string;
-  photoURL?: string;
-  // Add other profile fields here as needed
 };
 
-export default function ProfilePage({ params }: { params: { userId: string } }) {
+export default function ProfilePage() {
+  const params = useParams<{ userId: string }>();
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  const userRef = user ? doc(firestore, 'users', user.uid) : null;
+  const userRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [user, firestore]);
+  
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userRef);
 
-  const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (userProfile) {
-      setDisplayName(userProfile.displayName || '');
+      setUsername(userProfile.username || '');
       setEmail(userProfile.email || '');
     }
   }, [userProfile]);
@@ -40,7 +44,7 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
 
     setIsSaving(true);
     const payload: Partial<UserProfile> = {
-      displayName,
+      username,
     };
 
     try {
@@ -78,11 +82,11 @@ export default function ProfilePage({ params }: { params: { userId: string } }) 
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="displayName">Họ và tên</Label>
+            <Label htmlFor="username">Họ và tên</Label>
             <Input
-              id="displayName"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </div>
           <div className="space-y-2">
