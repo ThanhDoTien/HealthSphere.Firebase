@@ -1,8 +1,257 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model for all personal health data,
+ * ensuring that a user's sensitive information (profiles, logs, custom items) can only be accessed
+ * or modified by the user themselves. It also provides a clear separation between private, user-owned
+ * data and public, community-focused or global application data.
+ *
+ * Data Structure:
+ * - All private, user-specific data is nested under the `/users/{userId}` path. This includes profiles,
+ *   weight logs, activity logs, meal logs, custom food items, and personal recipes.
+ * - Publicly accessible data, such as predefined food items, global recipes, and community content,
+ *   is stored in top-level collections (e.g., /globalFoodItems, /communityPosts).
+ * - This structural segregation simplifies security rules and makes client-side queries for private
+ *   or public data efficient and secure by design.
+ *
+ * Key Security Decisions:
+ * - Default Deny: All operations are denied unless explicitly permitted by a rule.
+ * - User Enumeration Disabled: The top-level `/users` collection cannot be listed, preventing attackers
+ *   from discovering all user IDs in the system.
+ * - Strict Path-Based Authorization: The `{userId}` wildcard in the path is the primary mechanism for
+ *   securing all user-owned data and their subcollections. This avoids costly and slow `get()` calls.
+ * - Public Content Ownership: For public collections like `/communityPosts`, any signed-in user can
+ *   read, but only the original author (verified via a `userId` field on the document) can modify or delete their own content.
+ * - Global Data is Read-Only: Collections like `/globalFoodItems` and `/globalRecipes` are intended to be
+ *   read by any user but are not writable from the client-side to protect application integrity.
+ *
+ * Denormalization for Authorization: This ruleset relies on denormalized ownership fields (e.g., `userId`, `id`, `createdByUserId`)
+ * being present on documents. For example, a `communityPost` must have a `userId` field that stores the author's UID.
+ * This allows rules to perform fast, direct authorization checks (e.g., `resource.data.userId == request.auth.uid`) without
+ * looking up related documents. This is a critical pattern for performant and secure rules.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+
+    // ------------------
+    // Helper Functions
+    // ------------------
+
+    /**
+     * Verifies that a user is signed into the application.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Verifies that the currently signed-in user's UID matches the provided userId.
+     * This is the cornerstone of the user-ownership model.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Verifies ownership for an existing document. Used for safe updates and deletes.
+     * Combines an ownership check with an existence check (`resource != null`).
+     */
+    function isExistingOwner(ownerId) {
+      return isOwner(ownerId) && resource != null;
+    }
+
+    // ------------------
+    // User-Specific Data
+    // ------------------
+
+    /**
+     * @description Controls access to a user's own profile document.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user creating their own profile document for the first time.
+     * @deny (get) An authenticated user trying to read another user's profile.
+     * @principle Restricts access to a user's own data tree and allows for self-creation of the root document.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Explicitly deny listing all users to prevent enumeration.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to a user's private weight log entries.
+     * @path /users/{userId}/weightLogs/{weightLogId}
+     * @allow (create) An authenticated user creating a new weight log for themselves.
+     * @deny (list) An authenticated user trying to list another user's weight logs.
+     * @principle Enforces document ownership within a user's private subcollection.
+     */
+    match /users/{userId}/weightLogs/{weightLogId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to a user's private activity log entries.
+     * @path /users/{userId}/activityLogs/{activityLogId}
+     * @allow (update) An authenticated user updating one of their own activity logs.
+     * @deny (delete) An authenticated user trying to delete another user's activity log.
+     * @principle Enforces document ownership within a user's private subcollection.
+     */
+    match /users/{userId}/activityLogs/{activityLogId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to a user's custom-created food items.
+     * @path /users/{userId}/customFoodItems/{foodItemId}
+     * @allow (create) An authenticated user creating a new custom food item.
+     * @deny (get) An authenticated user trying to read another user's custom food item.
+     * @principle Enforces document ownership and validates relational integrity of the `createdByUserId`.
+     */
+    match /users/{userId}/customFoodItems/{foodItemId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.createdByUserId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.createdByUserId == resource.data.createdByUserId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to a user's private meal log entries.
+     * @path /users/{userId}/mealLogs/{mealLogId}
+     * @allow (list) An authenticated user listing their own meal logs.
+     * @deny (get) An authenticated user trying to get another user's meal log.
+     * @principle Enforces document ownership within a user's private subcollection.
+     */
+    match /users/{userId}/mealLogs/{mealLogId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to the food items within a user's meal log.
+     * @path /users/{userId}/mealLogs/{mealLogId}/mealFoodItems/{mealFoodItemId}
+     * @allow (create) An authenticated user adding a food item to their own meal log.
+     * @deny (create) An authenticated user trying to add a food item to another user's meal log.
+     * @principle Inherits ownership from the parent document path for deep data protection.
+     */
+    match /users/{userId}/mealLogs/{mealLogId}/mealFoodItems/{mealFoodItemId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.mealLogId == mealLogId;
+      allow update: if isExistingOwner(userId) && request.resource.data.mealLogId == resource.data.mealLogId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to a user's personal, private recipes.
+     * @path /users/{userId}/personalRecipes/{recipeId}
+     * @allow (create) An authenticated user creating a new personal recipe.
+     * @deny (get) An authenticated user trying to read another user's personal recipe.
+     * @principle Enforces document ownership and validates relational integrity of the `createdByUserId`.
+     */
+    match /users/{userId}/personalRecipes/{recipeId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.createdByUserId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.createdByUserId == resource.data.createdByUserId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to ingredients within a user's personal recipe.
+     * @path /users/{userId}/personalRecipes/{recipeId}/recipeIngredients/{recipeIngredientId}
+     * @allow (create) An authenticated user adding an ingredient to their own personal recipe.
+     * @deny (create) An authenticated user trying to add an ingredient to another user's recipe.
+     * @principle Inherits ownership from the parent document path for deep data protection.
+     */
+    match /users/{userId}/personalRecipes/{recipeId}/recipeIngredients/{recipeIngredientId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.recipeId == recipeId;
+      allow update: if isExistingOwner(userId) && request.resource.data.recipeId == resource.data.recipeId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    // ---------------------
+    // Global Public Data
+    // ---------------------
+
+    /**
+     * @description Controls access to the global, predefined food item database.
+     * @path /globalFoodItems/{foodItemId}
+     * @allow (get, list) Any user, signed in or not, can read the global food database.
+     * @deny (create, update, delete) All write operations are denied from the client to protect app data.
+     * @principle Provides public read-only access to a shared application resource.
+     */
+    match /globalFoodItems/{foodItemId} {
+      allow get, list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Controls access to the global, AI-suggested recipe database.
+     * @path /globalRecipes/{recipeId}
+     * @allow (get, list) Any user, signed in or not, can read global recipes.
+     * @deny (create, update, delete) All write operations are denied from the client to protect app data.
+     * @principle Provides public read-only access to a shared application resource.
+     */
+    match /globalRecipes/{recipeId} {
+      allow get, list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Controls access to ingredients within a global recipe.
+     * @path /globalRecipes/{recipeId}/recipeIngredients/{recipeIngredientId}
+     * @allow (get, list) Any user, signed in or not, can read global recipe ingredients.
+     * @deny (create, update, delete) All write operations are denied to protect the integrity of global recipes.
+     * @principle Provides public read-only access, inheriting permissions from its parent.
+     */
+    match /globalRecipes/{recipeId}/recipeIngredients/{recipeIngredientId} {
+      allow get, list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ------------------
+    // Community Data
+    // ------------------
+
+    /**
+     * @description Controls access to community posts. Allows public reading and owner-only writes.
+     * @path /communityPosts/{postId}
+     * @allow (create) An authenticated user creating a new post.
+     * @deny (update) An authenticated user trying to update a post they did not create.
+     * @principle Enforces document ownership for writes on a publicly readable collection.
+     */
+    match /communityPosts/{postId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isExistingOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(resource.data.userId);
+    }
+
+    /**
+     * @description Controls access to comments on community posts. Allows public reading and owner-only writes.
+     * @path /communityPosts/{postId}/comments/{commentId}
+     * @allow (create) An authenticated user creating a new comment on a post.
+     * @deny (delete) An authenticated user trying to delete a comment they did not write.
+     * @principle Enforces document ownership for writes and validates the parent-child relationship.
+     */
+    match /communityPosts/{postId}/comments/{commentId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.postId == postId;
+      allow update: if isExistingOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId && request.resource.data.postId == resource.data.postId;
+      allow delete: if isExistingOwner(resource.data.userId);
     }
   }
 }
