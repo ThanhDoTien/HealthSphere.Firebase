@@ -1,0 +1,244 @@
+/**
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model, where a user's private data is
+ * completely segregated and inaccessible to others. It distinguishes between private user data
+ * and public or community-shared data, applying different security postures to each.
+ *
+ * Data Structure:
+ * The data is organized into two main categories:
+ * 1. Private User Data: All data specific to a single user (profiles, health metrics,
+ *    private meals, etc.) is nested under the `/users/{userId}` path. This path-based
+ *    ownership is the primary mechanism for authorization.
+ * 2. Public & Community Data: Collections that are shared or publicly visible, like
+ *    the global food catalog (`/foodItems`), public recipes (`/recipes`), and community
+ *    discussions (`/forumPosts`), are stored in top-level collections.
+ *
+ * Key Security Decisions:
+ * - Strict Ownership: A user can only access data within their own `/users/{userId}` tree.
+ *   This prevents any user from even knowing about the existence of another user's private data.
+ * - Structural Segregation: Instead of using flags to denote public vs. private content
+ *   (e.g., a public recipe vs. a user's draft), we use separate collections. For instance,
+ *   `/recipes` is for public items, while `/users/{userId}/userRecipes` is for a user's
+ *   private items. This makes list queries inherently secure and performant.
+ * - Public Read, Owner Write: For community content like forum posts, all signed-in users
+ *   can read, but only the original author can create, update, or delete their own content.
+ * - Authorization Independence: By denormalizing owner IDs (e.g., a `userId` field on a
+ *   forum post), rules for public collections can make authorization decisions without needing
+ *   slow and costly `get()` calls to other documents.
+ * - Prototyping Flexibility: These rules focus strictly on authorization (who can access what)
+ *   and relational integrity (e.g., a subcollection item must link to its parent). They do
+ *   NOT enforce the specific data types or shapes of documents, allowing for rapid front-end
+ *   development and iteration.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --------------------------------------------------------------------
+    // Helper Functions
+    // --------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the cornerstone of the user-ownership model.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks for ownership on an existing document. Used for update/delete operations
+     * to prevent acting on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    // --------------------------------------------------------------------
+    // User-Specific Data (/users/{userId}/*)
+    // --------------------------------------------------------------------
+
+    /**
+     * @description Controls access to a user's primary profile document.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user creating their own profile document.
+     * @deny (get) An authenticated user trying to read another user's profile.
+     * @principle A user has exclusive control over their own root document.
+     */
+    match /users/{userId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secures a user's private health metric entries.
+     * @path /users/{userId}/healthMetrics/{metricId}
+     * @allow (create) The user creating a new health metric for themselves.
+     * @deny (list) Another user trying to list health metrics.
+     * @principle Enforces strict ownership of nested private data.
+     */
+    match /users/{userId}/healthMetrics/{metricId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secures a user's privately created food items.
+     * @path /users/{userId}/userFoodItems/{foodItemId}
+     * @allow (update) The user updating a food item they previously created.
+     * @deny (create) The user trying to create a food item for another user.
+     * @principle Enforces strict ownership of nested private data.
+     */
+    match /users/{userId}/userFoodItems/{foodItemId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.createdByUserId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.createdByUserId == resource.data.createdByUserId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secures a user's private meal logs.
+     * @path /users/{userId}/meals/{mealId}
+     * @allow (get) The user reading one of their own logged meals.
+     * @deny (get) Anyone else reading that meal log.
+     * @principle Enforces strict ownership of nested private data.
+     */
+    match /users/{userId}/meals/{mealId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secures the individual food entries within a user's meal log.
+     * @path /users/{userId}/meals/{mealId}/mealEntries/{mealEntryId}
+     * @allow (delete) The user deleting a food entry from one of their meals.
+     * @deny (delete) Another user trying to delete a food entry from someone else's meal.
+     * @principle Inherits ownership from the path, ensuring data integrity.
+     */
+    match /users/{userId}/meals/{mealId}/mealEntries/{mealEntryId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.mealId == mealId;
+      allow update: if isExistingOwner(userId) && request.resource.data.mealId == resource.data.mealId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secures a user's privately created recipes.
+     * @path /users/{userId}/userRecipes/{recipeId}
+     * @allow (create) The user creating a new private recipe.
+     * @deny (create) The user trying to create a recipe under another user's profile.
+     * @principle Enforces strict ownership of nested private data.
+     */
+    match /users/{userId}/userRecipes/{recipeId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.createdByUserId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.createdByUserId == resource.data.createdByUserId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secures the ingredients list for a user's private recipe.
+     * @path /users/{userId}/userRecipes/{recipeId}/recipeIngredients/{ingredientId}
+     * @allow (get) The user reading the ingredients for their own recipe.
+     * @deny (list) Another user trying to list the ingredients.
+     * @principle Inherits ownership from the path, ensuring data integrity.
+     */
+    match /users/{userId}/userRecipes/{recipeId}/recipeIngredients/{ingredientId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.recipeId == recipeId;
+      allow update: if isExistingOwner(userId) && request.resource.data.recipeId == resource.data.recipeId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    // --------------------------------------------------------------------
+    // Public Read-Only Data
+    // --------------------------------------------------------------------
+
+    /**
+     * @description Controls access to the public, curated catalog of food items.
+     * @path /foodItems/{foodItemId}
+     * @allow (get) Any authenticated user reading a public food item.
+     * @deny (create) Any user trying to add a new item to the public catalog.
+     * @principle Provides public read access to signed-in users but prevents modification.
+     */
+    match /foodItems/{foodItemId} {
+      allow get, list: if isSignedIn();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Controls access to the public, curated catalog of recipes.
+     * @path /recipes/{recipeId}
+     * @allow (list) Any authenticated user listing all public recipes.
+     * @deny (update) Any user trying to modify a public recipe.
+     * @principle Provides public read access to signed-in users but prevents modification.
+     */
+    match /recipes/{recipeId} {
+      allow get, list: if isSignedIn();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Controls access to the ingredients for public recipes.
+     * @path /recipes/{recipeId}/recipeIngredients/{ingredientId}
+     * @allow (get) Any authenticated user reading the ingredients of a public recipe.
+     * @deny (create, update, delete) All write operations are denied.
+     * @principle Data inherits the read-only security posture of its parent collection.
+     */
+    match /recipes/{recipeId}/recipeIngredients/{ingredientId} {
+      allow get, list: if isSignedIn();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // --------------------------------------------------------------------
+    // Community Data (Public Read, Owner Write)
+    // --------------------------------------------------------------------
+
+    /**
+     * @description Secures community forum posts.
+     * @path /forumPosts/{postId}
+     * @allow (create) An authenticated user creating a new post for themselves.
+     * @deny (update) A user trying to edit another user's post.
+     * @principle Enforces document ownership for writes while allowing public reads.
+     */
+    match /forumPosts/{postId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if resource != null && isOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if resource != null && isOwner(resource.data.userId);
+    }
+
+    /**
+     * @description Secures comments on community forum posts.
+     * @path /forumPosts/{postId}/comments/{commentId}
+     * @allow (get) Any authenticated user reading comments on a post.
+     * @deny (delete) A user trying to delete someone else's comment.
+     * @principle Enforces document ownership for writes while allowing public reads.
+     */
+    match /forumPosts/{postId}/comments/{commentId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.postId == postId;
+      allow update: if resource != null && isOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId && request.resource.data.postId == resource.data.postId;
+      allow delete: if resource != null && isOwner(resource.data.userId);
+    }
+  }
+}
