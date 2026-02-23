@@ -49,9 +49,8 @@ export default function RootPage() {
     <div className="min-h-screen bg-background text-foreground">
       <LandingHeader lang={lang} setLang={setLang} dict={dict} />
       <main>
-        <div className="container py-12 md:py-24">
-          <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
-            <div className="flex flex-col items-center gap-6 text-center">
+        <section className="container grid grid-cols-1 items-center gap-12 py-12 md:grid-cols-2 md:py-24">
+            <div className="flex flex-col items-center gap-6 text-center md:items-start md:text-left">
               <div className="inline-flex items-center rounded-lg bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
                 <Icons.zap className="mr-2 h-4 w-4" />
                 {dict['hero.tag']}
@@ -62,7 +61,7 @@ export default function RootPage() {
               <p className="max-w-xl text-lg text-muted-foreground">
                 {dict['hero.subtitle']}
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-4">
+              <div className="flex flex-wrap items-center justify-center gap-4 md:justify-start">
                 <Button size="lg" asChild>
                   <Link href="/signup">
                     {dict['hero.getStarted']}
@@ -96,8 +95,7 @@ export default function RootPage() {
                 />
               )}
             </div>
-          </div>
-        </div>
+        </section>
       </main>
     </div>
   );
