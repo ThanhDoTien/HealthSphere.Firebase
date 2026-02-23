@@ -1,0 +1,141 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores all information related to a user's profile.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "age": {
+          "type": "number",
+          "description": "The user's age."
+        },
+        "height": {
+          "type": "number",
+          "description": "The user's height in centimeters."
+        },
+        "weight": {
+          "type": "number",
+          "description": "The user's weight in kilograms."
+        },
+        "gender": {
+          "type": "string",
+          "description": "The user's gender."
+        }
+      },
+      "required": ["name", "email"]
+    },
+    "WeightLog": {
+      "title": "Weight Log",
+      "description": "A single weight entry for a user.",
+      "type": "object",
+      "properties": {
+        "weight": {
+          "type": "number",
+          "description": "Weight in kilograms."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of the weight entry."
+        }
+      },
+      "required": ["weight", "date"]
+    },
+    "Meal": {
+      "title": "Meal Entry",
+      "description": "A single meal entry for a user.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the food or meal."
+        },
+        "calories": {
+          "type": "number",
+          "description": "Calories in the meal."
+        },
+        "mealType": {
+          "type": "string",
+          "enum": ["Breakfast", "Lunch", "Dinner", "Snack"],
+          "description": "The type of meal."
+        },
+        "imageUrl": {
+            "type": "string",
+            "description": "URL of the meal image."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of the meal entry."
+        }
+      },
+      "required": ["name", "calories", "mealType", "date"]
+    },
+    "Activity": {
+      "title": "Activity Log",
+      "description": "A single activity entry for a user.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the activity."
+        },
+        "duration": {
+          "type": "number",
+          "description": "Duration of the activity in minutes."
+        },
+        "caloriesBurned": {
+          "type": "number",
+          "description": "Calories burned during the activity."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of the activity."
+        }
+      },
+      "required": ["name", "duration", "caloriesBurned", "date"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "google.com"
+    ]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Stores public-facing user profile information."
+    },
+    "/users/{userId}/weights/{weightId}": {
+      "schema": {
+        "$ref": "#/entities/WeightLog"
+      },
+      "description": "Subcollection for a user's weight entries."
+    },
+    "/users/{userId}/meals/{mealId}": {
+      "schema": {
+        "$ref": "#/entities/Meal"
+      },
+      "description": "Subcollection for a user's meal entries."
+    },
+    "/users/{userId}/activities/{activityId}": {
+      "schema": {
+        "$ref": "#/entities/Activity"
+      },
+      "description": "Subcollection for a user's logged activities."
+    }
+  }
+}
