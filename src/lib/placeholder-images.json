@@ -19,10 +19,10 @@
       "imageHint": "oatmeal berries"
     },
     {
-      "id": "hero-plane",
-      "description": "Airplane flying through dramatic pink and purple clouds at sunset, with sun rays breaking through.",
-      "imageUrl": "https://images.unsplash.com/photo-1534190760663-1d408372d6d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhirplane%20sunset%20clouds|flying&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "airplane sunset"
+      "id": "hero-workout",
+      "description": "A person in a gym, mid-workout, showing strength and determination.",
+      "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxmaXRuZXNzfGVufDB8fHx8MTcxODQzMjc0Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fitness workout"
     }
   ]
 }
