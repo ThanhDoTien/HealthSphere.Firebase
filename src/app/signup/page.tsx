@@ -39,6 +39,7 @@ const SignUpFormSchema = z
     age: z.coerce.number().min(1, { message: "Age is required." }),
     height: z.coerce.number().min(1, { message: "Height is required." }),
     weight: z.coerce.number().min(1, { message: "Weight is required." }),
+    goal: z.string().min(1, { message: "Health goal is required." }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match.",
@@ -191,6 +192,14 @@ export default function SignUpPage() {
                   </p>
                 )}
               </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="goal">Health Goal</Label>
+              <Input id="goal" placeholder="e.g., Lose 5kg" {...register("goal")} />
+              {errors.goal && (
+                <p className="text-sm text-destructive">{errors.goal.message}</p>
+              )}
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>

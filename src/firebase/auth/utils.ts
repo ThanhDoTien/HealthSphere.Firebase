@@ -21,6 +21,7 @@ interface SignUpData {
   height: number;
   weight: number;
   gender: string;
+  goal: string;
 }
 
 // Create a user profile in Firestore
@@ -29,7 +30,9 @@ const createUserProfile = async (
   data: Omit<SignUpData, "password">
 ): Promise<void> => {
   const userDocRef = doc(firestore, `users/${userId}`);
-  await setDoc(userDocRef, data);
+  // Don't save password-related fields if they exist
+  const { ...profileData } = data;
+  await setDoc(userDocRef, profileData);
 };
 
 // Sign Up with email and password
@@ -62,7 +65,6 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
   const userDocRef = doc(firestore, `users/${userCredential.user.uid}`);
   const userDoc = await getDoc(userDocRef);
   if (!userDoc.exists()) {
-    // Create a complete profile with default values
     const profileData = {
       name: userCredential.user.displayName || "Google User",
       email: userCredential.user.email!,
@@ -70,6 +72,7 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
       height: 0,
       weight: 0,
       gender: "other",
+      goal: "Stay healthy",
     };
     await createUserProfile(userCredential.user.uid, profileData);
   }
