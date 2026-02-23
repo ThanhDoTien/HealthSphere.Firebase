@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Flame, Lightbulb } from 'lucide-react';
 
 import {
