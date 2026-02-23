@@ -87,43 +87,34 @@ export default function ProfilePage() {
       return;
     }
 
-    const payload: { [key: string]: any } = {};
-
-    // Carefully construct payload, excluding undefined values
-    const fieldsToUpdate: (keyof UserProfile)[] = ['username', 'gender', 'activityLevel', 'dietaryPreferences', 'heightCm', 'weightKg'];
-    
-    fieldsToUpdate.forEach(field => {
-        const value = formData[field];
-        if (value !== undefined) {
-             if (field === 'heightCm' || field === 'weightKg') {
-                const numValue = parseFloat(String(value));
-                payload[field] = isNaN(numValue) ? null : numValue;
-             } else {
-                payload[field] = value;
-             }
-        }
-    });
-
-    if (Object.keys(payload).length === 0) {
-        toast({ title: "Không có gì thay đổi." });
+    // If the username hasn't changed, do nothing.
+    if (formData.username === userProfile?.username) {
+        toast({ title: "Tên người dùng không thay đổi." });
         setIsEditing(false);
         return;
     }
 
     try {
-        await updateDoc(userProfileRef, payload);
-        toast({
-            title: 'Thành công!',
-            description: 'Hồ sơ của bạn đã được cập nhật.',
-        });
-        setIsEditing(false);
+      // ONLY attempt to update the username.
+      await updateDoc(userProfileRef, {
+        username: formData.username,
+      });
+
+      toast({
+        title: 'Thành công!',
+        description: 'Hồ sơ của bạn đã được cập nhật.',
+      });
+      setIsEditing(false);
     } catch (e: any) {
-        console.error('Lỗi cập nhật hồ sơ:', e);
-        toast({
-            variant: 'destructive',
-            title: 'Ôi, đã có lỗi xảy ra.',
-            description: e.message || 'Không thể cập nhật hồ sơ của bạn.',
-        });
+      // Log the full error to the console for debugging
+      console.error('Lỗi cập nhật hồ sơ:', e);
+      
+      // Show a user-friendly error
+      toast({
+        variant: 'destructive',
+        title: 'Ôi, đã có lỗi xảy ra.',
+        description: e.message || 'Không thể cập nhật hồ sơ của bạn. Vui lòng kiểm tra console để biết chi tiết.',
+      });
     }
   };
 
