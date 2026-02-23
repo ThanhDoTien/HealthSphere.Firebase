@@ -10,18 +10,13 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useUser } from '@/firebase/auth/use-user';
+import { useFirestore } from '@/firebase/provider';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { useMemoFirebase } from '@/firebase/provider';
+import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { LineChart as LineChartComponent } from '@/components/ui/line-chart';
 import { type ChartConfig } from '@/components/ui/chart';
-
-const weightData = [
-  { date: 'Mon', weight: 75.2 },
-  { date: 'Tue', weight: 75.1 },
-  { date: 'Wed', weight: 75.3 },
-  { date: 'Thu', weight: 74.9 },
-  { date: 'Fri', weight: 74.8 },
-  { date: 'Sat', weight: 75.0 },
-  { date: 'Sun', weight: 74.7 },
-];
+import AddWeightForm from '@/components/dashboard/AddWeightForm';
 
 const weightChartConfig = {
   weight: {
@@ -32,6 +27,34 @@ const weightChartConfig = {
 
 export default function DashboardPage() {
   const { user, userProfile } = useUser();
+  const firestore = useFirestore();
+
+  const weightQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'weights'),
+      orderBy('date', 'desc'),
+      limit(7)
+    );
+  }, [firestore, user]);
+
+  const { data: weightData } = useCollection(weightQuery);
+
+  const chartData = useMemo(() => {
+    if (!weightData) return [];
+    // The data is fetched in descending order, so we reverse it for the chart
+    return weightData
+      .map((d) => ({
+        date: new Date(d.date).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }),
+        weight: d.weight,
+      }))
+      .reverse();
+  }, [weightData]);
+
+  const currentWeight = weightData?.[0]?.weight;
 
   return (
     <div className="flex flex-col">
@@ -83,11 +106,17 @@ export default function DashboardPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription>Current Weight</CardDescription>
-                <CardTitle className="text-4xl">74.7 kg</CardTitle>
+                <CardTitle className="text-4xl">
+                  {currentWeight ? `${currentWeight} kg` : 'N/A'}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-muted-foreground">
-                  -0.5kg from last week
+                  {weightData && weightData.length > 1
+                    ? `${(
+                        currentWeight - weightData[weightData.length - 1].weight
+                      ).toFixed(1)}kg change`
+                    : 'Log weight to see trend'}
                 </div>
               </CardContent>
             </Card>
@@ -95,16 +124,17 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>Weight Tracking</CardTitle>
-              <CardDescription>Last 7 days</CardDescription>
+              <CardDescription>Last 7 entries</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <LineChartComponent
-                data={weightData}
+                data={chartData}
                 config={weightChartConfig}
                 yAxisWidth={40}
                 className="h-64"
                 showLegend={false}
               />
+              {user && <AddWeightForm userId={user.uid} />}
             </CardContent>
           </Card>
         </div>
