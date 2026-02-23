@@ -1,26 +1,21 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- User Profiles & Subcollections ---
-    // This single rule covers:
-    // 1. The user's own profile document (/users/{userId})
-    // 2. All documents in all subcollections (/users/{userId}/meal_logs/{logId}, etc.)
-    //
-    // RULE: You can only read or write your own data.
-    // This is checked by comparing your login UID (request.auth.uid)
-    // with the UID in the document path (userId).
-    match /users/{userId}/{document=**} {
+    // --- User Data: Profiles, Logs, etc. ---
+    // RULE: A user can only read and write their own data.
+    // This is checked by comparing their auth UID with the {userId} in the path.
+    // This single rule covers all subcollections like meal_logs, weight_logs, etc.
+    match /users/{userId}/{documents=**} {
       allow read, write: if request.auth.uid == userId;
     }
 
-    // --- Recipes ---
-    // Path: /recipes/{recipeId}
+    // --- Public Recipes ---
+    // RULE: Anyone can read recipes, but no one can write them from the client.
     match /recipes/{recipeId} {
-      // Recipes are public for anyone to read.
       allow get, list: if true;
-      // No one can write recipes from the client app.
-      allow write: if false;
+      allow create, update, delete: if false;
     }
   }
 }

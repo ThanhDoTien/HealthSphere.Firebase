@@ -78,38 +78,29 @@ export default function ProfilePage() {
   };
 
   const handleSaveChanges = async () => {
-    if (!userProfileRef) return;
+    if (!canEdit || !userProfileRef) {
+      toast({
+        variant: 'destructive',
+        title: 'Lỗi',
+        description: 'Bạn không có quyền thực hiện hành động này.',
+      });
+      return;
+    }
 
-    // Create a payload with only the fields that are actually defined in the form state.
     const payload: { [key: string]: any } = {};
-    
-    // List of editable fields
-    const editableFields: (keyof Partial<UserProfile>)[] = [
-        'username', 
-        'gender', 
-        'activityLevel', 
-        'dietaryPreferences', 
-        'heightCm', 
-        'weightKg'
-    ];
 
-    editableFields.forEach(field => {
-        if (formData[field] !== undefined) {
-            if (field === 'heightCm' || field === 'weightKg') {
-                // For numeric fields, parse them, allowing empty string to become null
-                const valueStr = String(formData[field]).trim();
-                if (valueStr === '' || formData[field] === null) {
-                    payload[field] = null;
-                } else {
-                    const numValue = parseFloat(valueStr);
-                    if (!isNaN(numValue)) {
-                        payload[field] = numValue;
-                    }
-                }
-            } else {
-                // For other fields, just assign the value
-                payload[field] = formData[field];
-            }
+    // Carefully construct payload, excluding undefined values
+    const fieldsToUpdate: (keyof UserProfile)[] = ['username', 'gender', 'activityLevel', 'dietaryPreferences', 'heightCm', 'weightKg'];
+    
+    fieldsToUpdate.forEach(field => {
+        const value = formData[field];
+        if (value !== undefined) {
+             if (field === 'heightCm' || field === 'weightKg') {
+                const numValue = parseFloat(String(value));
+                payload[field] = isNaN(numValue) ? null : numValue;
+             } else {
+                payload[field] = value;
+             }
         }
     });
 
@@ -135,6 +126,7 @@ export default function ProfilePage() {
         });
     }
   };
+
 
   const userAvatar = PlaceHolderImages.find((p) => p.id === 'user-avatar-1');
   const isLoading = isAuthLoading || isProfileLoading;
