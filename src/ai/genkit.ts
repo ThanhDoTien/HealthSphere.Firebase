@@ -12,7 +12,7 @@ if (process.env.GEMINI_API_KEY) {
     apiKey: process.env.GEMINI_API_KEY,
   });
   plugins.push(googleAiPlugin);
-  geminiModel = googleAI.model('gemini-pro');
+  geminiModel = googleAI.model('gemini-1.5-flash-latest');
 } else {
   console.warn(
     'GEMINI_API_KEY is not set. GenAI features will be disabled. Please add it to your .env file.'
