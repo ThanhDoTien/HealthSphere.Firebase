@@ -15,8 +15,8 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
     console.error('Lỗi đăng nhập ẩn danh:', error);
     toast({
         variant: "destructive",
-        title: "Lỗi đăng nhập",
-        description: error.message,
+        title: "Lỗi đăng nhập ẩn danh",
+        description: "Không thể đăng nhập ẩn danh vào lúc này. Vui lòng thử lại sau.",
     });
   });
   // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
@@ -34,12 +34,26 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
       }
     })
     .catch((error) => {
-    console.error('Lỗi đăng ký:', error);
-    toast({
-        variant: "destructive",
-        title: "Lỗi đăng ký",
-        description: error.message,
-    });
+        console.error('Lỗi đăng ký:', error);
+        let description = "Đã xảy ra lỗi không xác định. Vui lòng thử lại.";
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                description = "Email này đã được sử dụng bởi một tài khoản khác.";
+                break;
+            case 'auth/weak-password':
+                description = "Mật khẩu quá yếu. Vui lòng chọn một mật khẩu mạnh hơn (ít nhất 6 ký tự).";
+                break;
+            case 'auth/invalid-email':
+                description = "Địa chỉ email không hợp lệ.";
+                break;
+            default:
+                description = error.message;
+        }
+        toast({
+            variant: "destructive",
+            title: "Lỗi đăng ký",
+            description: description,
+        });
   });
   // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
@@ -49,10 +63,16 @@ export function initiateEmailSignIn(authInstance: Auth, email: string, password:
   // CRITICAL: Call signInWithEmailAndPassword directly. Do NOT use 'await signInWithEmailAndPassword(...)'.
   signInWithEmailAndPassword(authInstance, email, password).catch((error) => {
     console.error('Lỗi đăng nhập:', error);
+    let description = "Đã xảy ra lỗi không xác định. Vui lòng thử lại.";
+    if (error.code === 'auth/invalid-credential') {
+        description = "Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.";
+    } else {
+        description = error.message;
+    }
     toast({
         variant: "destructive",
         title: "Lỗi đăng nhập",
-        description: error.message,
+        description: description,
     });
   });
   // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
