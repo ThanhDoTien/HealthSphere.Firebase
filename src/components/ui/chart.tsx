@@ -45,7 +45,7 @@ const ChartContainer = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
     config: ChartConfig
-    children: React.ReactNode
+    children: React.ReactElement
   }
 >(({ config, children, className, ...props }, ref) => {
   const chartId = React.useId()
