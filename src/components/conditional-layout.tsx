@@ -8,12 +8,14 @@ import { Icons } from './icons';
 import { SidebarProvider } from './ui/sidebar';
 
 const authRoutes = ['/login', '/signup'];
+const landingPageRoute = '/';
 
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, isUserLoading } = useUser();
 
   const isAuthRoute = authRoutes.includes(pathname);
+  const isLandingPage = pathname === landingPageRoute;
 
   if (isUserLoading) {
     return (
@@ -21,6 +23,10 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
         <Icons.logo className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (isLandingPage) {
+    return <>{children}</>;
   }
 
   if (isAuthRoute) {

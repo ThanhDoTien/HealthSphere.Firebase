@@ -17,6 +17,12 @@
       "description": "A bowl of oatmeal with fresh berries.",
       "imageUrl": "https://images.unsplash.com/photo-1686344234276-dc3ac6f284ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxvYXRtZWFsJTIwYmVycmllc3xlbnwwfHx8fDE3NzE4NDg2MDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "oatmeal berries"
+    },
+    {
+      "id": "hero-plane",
+      "description": "Airplane flying through dramatic pink and purple clouds at sunset, with sun rays breaking through.",
+      "imageUrl": "https://images.unsplash.com/photo-1534190760663-1d408372d6d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhirplane%20sunset%20clouds|flying&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "airplane sunset"
     }
   ]
 }

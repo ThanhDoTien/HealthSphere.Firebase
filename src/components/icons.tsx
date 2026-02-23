@@ -1,4 +1,5 @@
 import {
+  Heart,
   HeartPulse,
   LayoutDashboard,
   User,
@@ -10,6 +11,9 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  Globe,
+  Zap,
+  Shield,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -27,4 +31,8 @@ export const Icons = {
   chevronRight: ChevronRight,
   sun: Sun,
   moon: Moon,
+  globe: Globe,
+  zap: Zap,
+  shield: Shield,
+  heart: Heart,
 };
