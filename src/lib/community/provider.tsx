@@ -1,45 +1,29 @@
 "use client";
 
 import { createContext, useContext, ReactNode } from "react";
-import {
-  collection,
-  query,
-  orderBy,
-  limit,
-} from "firebase/firestore";
-import { useFirebase, useCollection, useMemoFirebase } from "@/firebase";
 
-export function useCommunity() {
-  const context = useContext(CommunityContext);
-  if (!context) {
-    throw new Error("useCommunity must be used within a CommunityProvider");
-  }
-  return context;
-}
+// The Community feature has been removed. This provider is now a shell
+// to prevent breaking existing imports, but it no longer provides any data.
 
 const CommunityContext = createContext<{
-  forumPosts: any[] | null;
+  forumPosts: any[];
   forumPostsLoading: boolean;
-} | null>(null);
+}>({
+  forumPosts: [],
+  forumPostsLoading: false,
+});
+
+export function useCommunity() {
+  return useContext(CommunityContext);
+}
 
 export function CommunityProvider({ children }: { children: ReactNode }) {
-  const { firestore: db } = useFirebase();
-
-  const forumPostsRef = useMemoFirebase(
-    () => (db ? collection(db, "forum_posts") : null),
-    [db]
-  );
-  const forumPostsQuery = useMemoFirebase(
-    () => (forumPostsRef ? query(forumPostsRef, orderBy("timestamp", "desc"), limit(20)) : null),
-    [forumPostsRef]
-  );
-  const { data: forumPosts, isLoading: forumPostsLoading } = useCollection(forumPostsQuery);
-
   const value = {
-    forumPosts,
-    forumPostsLoading,
+    forumPosts: [],
+    forumPostsLoading: false,
   };
 
+  // The provider no longer fetches data but returns a default empty state.
   return (
     <CommunityContext.Provider value={value}>
       {children}

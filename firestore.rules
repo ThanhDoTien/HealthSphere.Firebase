@@ -14,20 +14,6 @@ service cloud.firestore {
       allow read, write: if request.auth.uid == userId;
     }
 
-    // --- Forum Posts ---
-    // Path: /forum_posts/{postId}
-    match /forum_posts/{postId} {
-      // ANYONE can read forum posts.
-      allow read: if true;
-      
-      // You can ONLY create a post with your own userId.
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      
-      // You can ONLY update or delete your own posts.
-      // This is checked by comparing your login UID with the userId stored in the post.
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-    }
-
     // --- Recipes ---
     // Path: /recipes/{recipeId}
     match /recipes/{recipeId} {
