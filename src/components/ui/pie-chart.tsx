@@ -56,6 +56,8 @@ const PieChart = React.forwardRef<
       config,
       showLegend = true,
       showTooltip = true,
+      nameKey,
+      dataKey,
       ...props
     },
     ref
@@ -70,7 +72,11 @@ const PieChart = React.forwardRef<
             <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
           )}
 
-          <Pie data={data}>
+          <Pie
+            data={data}
+            nameKey={nameKey || pieChartDefaultProps.nameKey}
+            dataKey={dataKey || pieChartDefaultProps.dataKey}
+          >
             {Object.entries(config).map(([key, config], i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
               <Sector key={i} name={key} />
