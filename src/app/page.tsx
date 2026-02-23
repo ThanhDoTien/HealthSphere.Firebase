@@ -24,9 +24,14 @@ export default function RootPage() {
               HealthSphere
             </span>
           </Link>
-          <Button asChild variant="outline" className="bg-white/80 backdrop-blur-sm">
-            <Link href="/login">Log In</Link>
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button asChild variant="outline" className="bg-white/80 backdrop-blur-sm">
+              <Link href="/login">Log In</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/signup">Sign Up</Link>
+            </Button>
+          </div>
         </nav>
       </header>
 
