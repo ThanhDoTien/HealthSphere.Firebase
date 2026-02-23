@@ -49,7 +49,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 const calorieChartConfig = {
   calories: {
     label: 'Calories',
-    color: 'hsl(var(--primary))',
+    color: 'hsl(var(--accent))',
   },
 } satisfies ChartConfig;
 

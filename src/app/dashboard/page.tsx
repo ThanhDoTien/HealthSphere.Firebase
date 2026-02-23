@@ -15,7 +15,7 @@ import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
 import { collection, query, orderBy, limit } from 'firebase/firestore';
-import { LineChart as LineChartComponent } from '@/components/ui/line-chart';
+import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
 import AddWeightForm from '@/components/dashboard/AddWeightForm';
 
@@ -35,7 +35,7 @@ export default function DashboardPage() {
     return query(
       collection(firestore, 'users', user.uid, 'weights'),
       orderBy('date', 'desc'),
-      limit(7)
+      limit(30)
     );
   }, [firestore, user]);
 
@@ -46,7 +46,7 @@ export default function DashboardPage() {
     // The data is fetched in descending order, so we reverse it for the chart
     return weightData
       .map((d) => ({
-        date: new Date(d.date).toLocaleDateString('en-US', {
+        date: new Date(d.date + 'T00:00').toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
         }),
@@ -125,10 +125,10 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>Weight Tracking</CardTitle>
-              <CardDescription>Last 7 entries</CardDescription>
+              <CardDescription>Last 30 entries</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <LineChartComponent
+              <BarChart
                 data={chartData}
                 config={weightChartConfig}
                 yAxisWidth={40}
