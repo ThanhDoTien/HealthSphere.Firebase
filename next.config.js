@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['undici', 'firebase'],
+  experimental: {
+    transpilePackages: ['firebase', 'undici'],
+  },
 };
 
 module.exports = nextConfig;
