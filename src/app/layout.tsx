@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { Toaster } from "@/components/ui/toaster";
-import { FirebaseClientProvider } from "@/firebase/client-provider";
-import { ConditionalLayout } from "@/components/conditional-layout";
+import { PT_Sans } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/toaster";
+import FirebaseClientProvider from "@/firebase/client-provider";
 
-const inter = Inter({ subsets: ["latin", "vietnamese"] });
+const ptSans = PT_Sans({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-sans",
+});
 
 export const metadata: Metadata = {
   title: "HealthSphere",
-  description: "Your personal health and wellness companion.",
+  description: "Your personal health and nutrition companion.",
 };
 
 export default function RootLayout({
@@ -18,10 +22,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="light">
-      <body className={inter.className}>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          ptSans.variable
+        )}
+      >
         <FirebaseClientProvider>
-          <ConditionalLayout>{children}</ConditionalLayout>
+          {children}
           <Toaster />
         </FirebaseClientProvider>
       </body>
