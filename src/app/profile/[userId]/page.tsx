@@ -78,63 +78,57 @@ export default function ProfilePage() {
   };
 
   const handleSaveChanges = async () => {
-    if (!canEdit || !userProfileRef) {
+    if (!canEdit || !userProfileRef || !userProfile) {
       toast({
         variant: 'destructive',
         title: 'Lỗi',
-        description: 'Bạn không có quyền thực hiện hành động này.',
+        description: 'Không thể cập nhật hồ sơ ngay lúc này.',
       });
       return;
     }
 
-    // Create a clean payload object to send to Firestore.
-    // This prevents sending `undefined` values, which Firestore rejects.
-    const payload: Record<string, any> = {};
+    const payload: { [key: string]: any } = {};
 
-    // For each editable field, if it exists in the form data, add it to the payload.
-    // This ensures we only try to update fields that are actually part of the form.
-    if (formData.username !== undefined) {
+    // Compare form data with original profile data to build the payload
+    if (formData.username !== userProfile.username) {
       payload.username = formData.username || '';
     }
-    if (formData.weightKg !== undefined) {
-      // Convert empty string to null, otherwise convert to number.
-      payload.weightKg = formData.weightKg ? Number(formData.weightKg) : null;
-    }
-    if (formData.heightCm !== undefined) {
-      payload.heightCm = formData.heightCm ? Number(formData.heightCm) : null;
-    }
-    if (formData.gender !== undefined) {
-      payload.gender = formData.gender || null;
-    }
-    if (formData.activityLevel !== undefined) {
-      payload.activityLevel = formData.activityLevel || null;
-    }
-    if (formData.dietaryPreferences !== undefined) {
-      payload.dietaryPreferences = formData.dietaryPreferences || '';
-    }
     
-    // Check if there are any actual changes to be made.
-    let hasChanges = false;
-    if (userProfile) {
-        for (const key in payload) {
-            if (payload[key] !== (userProfile[key as keyof UserProfile] ?? null)) {
-                 if (key === 'dietaryPreferences' && payload[key] === '' && (userProfile.dietaryPreferences === undefined || userProfile.dietaryPreferences === null)) {
-                    continue; // Treat undefined/null from db as same as empty string from form
-                }
-                hasChanges = true;
-                break;
-            }
-        }
-    } else {
-        hasChanges = true; // If there's no initial profile, any data is a change.
+    const newWeight = (formData.weightKg === '' || formData.weightKg === undefined || formData.weightKg === null) ? null : Number(formData.weightKg);
+    const oldWeight = userProfile.weightKg ?? null;
+    if (newWeight !== oldWeight) {
+      payload.weightKg = newWeight;
     }
 
-    if (!hasChanges) {
+    const newHeight = (formData.heightCm === '' || formData.heightCm === undefined || formData.heightCm === null) ? null : Number(formData.heightCm);
+    const oldHeight = userProfile.heightCm ?? null;
+    if (newHeight !== oldHeight) {
+        payload.heightCm = newHeight;
+    }
+
+    const newGender = formData.gender || null;
+    const oldGender = userProfile.gender || null;
+    if (newGender !== oldGender) {
+        payload.gender = newGender;
+    }
+
+    const newActivityLevel = formData.activityLevel || null;
+    const oldActivityLevel = userProfile.activityLevel || null;
+    if (newActivityLevel !== oldActivityLevel) {
+        payload.activityLevel = newActivityLevel;
+    }
+    
+    const newDietaryPrefs = formData.dietaryPreferences || '';
+    const oldDietaryPrefs = userProfile.dietaryPreferences || '';
+    if (newDietaryPrefs !== oldDietaryPrefs) {
+        payload.dietaryPreferences = newDietaryPrefs;
+    }
+
+    if (Object.keys(payload).length === 0) {
         toast({ title: "Thông tin không thay đổi." });
         setIsEditing(false);
         return;
     }
-
 
     try {
       await updateDoc(userProfileRef, payload);
@@ -148,7 +142,7 @@ export default function ProfilePage() {
       toast({
         variant: 'destructive',
         title: 'Ôi, đã có lỗi xảy ra.',
-        description: e.message || 'Không thể cập nhật hồ sơ của bạn. Vui lòng kiểm tra console để biết chi tiết.',
+        description: e.message || 'Không thể cập nhật hồ sơ của bạn.',
       });
     }
   };
