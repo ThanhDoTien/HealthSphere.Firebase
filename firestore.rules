@@ -1,21 +1,8 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // --- User Data: Profiles, Logs, etc. ---
-    // RULE: A user can only read and write their own data.
-    // This is checked by comparing their auth UID with the {userId} in the path.
-    // This single rule covers all subcollections like meal_logs, weight_logs, etc.
-    match /users/{userId}/{documents=**} {
-      allow read, write: if request.auth.uid == userId;
-    }
-
-    // --- Public Recipes ---
-    // RULE: Anyone can read recipes, but no one can write them from the client.
-    match /recipes/{recipeId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
