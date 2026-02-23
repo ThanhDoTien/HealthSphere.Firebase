@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useUser } from "@/firebase/auth/use-user";
 import { logout } from "@/firebase/auth/utils";
 import { useRouter } from "next/navigation";
+import EditProfileForm from "@/components/dashboard/EditProfileForm";
 
 export default function ProfilePage() {
   const { user, userProfile } = useUser();
@@ -22,22 +23,19 @@ export default function ProfilePage() {
           <CardTitle>Profile</CardTitle>
           <CardDescription>View and manage your account details.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-            <div>
-              <h3 className="font-medium">Name</h3>
-              <p className="text-muted-foreground">{userProfile?.name}</p>
-            </div>
-             <div>
-              <h3 className="font-medium">Email</h3>
-              <p className="text-muted-foreground">{userProfile?.email}</p>
-            </div>
-             <div>
-              <h3 className="font-medium">Health Goal</h3>
-              <p className="text-muted-foreground">{userProfile?.goal}</p>
-            </div>
-           <Button onClick={handleLogout} variant="outline" className="w-full sm:w-auto">
-            Logout
-          </Button>
+        <CardContent className="space-y-6">
+          {user && userProfile && (
+            <EditProfileForm userProfile={userProfile} userId={user.uid} />
+          )}
+          <div className="border-t pt-6">
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
+              Logout
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -8,7 +8,7 @@ import {
   UserCredential,
   signOut,
 } from "firebase/auth";
-import { doc, setDoc, getDoc, addDoc, collection } from "firebase/firestore";
+import { doc, setDoc, getDoc, addDoc, collection, updateDoc } from "firebase/firestore";
 import { initializeFirebase } from "..";
 import { errorEmitter } from "../error-emitter";
 import { FirestorePermissionError } from "../errors";
@@ -63,6 +63,34 @@ const createUserProfile = async (
         requestResourceData: weightLogData,
       })
     );
+  });
+};
+
+// Data for updating profile, which may include fields we don't want to update.
+type UpdateProfileData = Partial<SignUpData>;
+
+// New function to update user profile
+export const updateUserProfile = async (
+  userId: string,
+  data: UpdateProfileData
+): Promise<void> => {
+  const userDocRef = doc(firestore, `users/${userId}`);
+  
+  // Create a copy and remove fields that should not be updated
+  const updateData = { ...data };
+  delete updateData.email; 
+  delete updateData.password;
+
+  await updateDoc(userDocRef, updateData).catch((error) => {
+    errorEmitter.emit(
+      'permission-error',
+      new FirestorePermissionError({
+        path: userDocRef.path,
+        operation: 'update',
+        requestResourceData: updateData,
+      })
+    );
+    throw error;
   });
 };
 
