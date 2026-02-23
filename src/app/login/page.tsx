@@ -16,6 +16,7 @@ import { useAuth, useUser } from '@/firebase';
 import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -23,6 +24,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -31,6 +33,14 @@ export default function LoginPage() {
   }, [user, isUserLoading, router]);
 
   const handleLogin = () => {
+    if (!email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Thông tin đăng nhập không đầy đủ",
+        description: "Vui lòng nhập cả email và mật khẩu.",
+      });
+      return;
+    }
     initiateEmailSignIn(auth, email, password);
   };
 

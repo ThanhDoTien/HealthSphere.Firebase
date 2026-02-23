@@ -15,13 +15,16 @@ import { Icons } from '@/components/icons';
 import { useState, useEffect } from 'react';
 import { useAuth, useUser, initiateEmailSignUp } from '@/firebase';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -30,14 +33,22 @@ export default function SignupPage() {
   }, [user, isUserLoading, router]);
 
   const handleSignUp = () => {
-    if (!email || !password) {
-      alert("Vui lòng nhập email và mật khẩu.");
+    if (!fullName || !email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Thông tin không đầy đủ",
+        description: "Vui lòng điền đầy đủ họ tên, email và mật khẩu.",
+      });
       return;
     }
     if (auth) {
-      initiateEmailSignUp(auth, email, password);
+      initiateEmailSignUp(auth, email, password, fullName);
     } else {
-      alert("Dịch vụ xác thực chưa sẵn sàng, vui lòng thử lại sau.");
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Dịch vụ xác thực chưa sẵn sàng, vui lòng thử lại sau.",
+      });
     }
   };
 
@@ -57,7 +68,13 @@ export default function SignupPage() {
           <div className="grid gap-4">
              <div className="grid gap-2">
                 <Label htmlFor="full-name">Họ và tên</Label>
-                <Input id="full-name" placeholder="Alex Doe" required />
+                <Input 
+                    id="full-name" 
+                    placeholder="Alex Doe" 
+                    required 
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                />
               </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>

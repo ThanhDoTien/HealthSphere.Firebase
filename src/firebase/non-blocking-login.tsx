@@ -4,25 +4,42 @@ import {
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  // Assume getAuth and app are initialized elsewhere
+  updateProfile,
 } from 'firebase/auth';
+import { toast } from '@/hooks/use-toast';
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
   // CRITICAL: Call signInAnonymously directly. Do NOT use 'await signInAnonymously(...)'.
   signInAnonymously(authInstance).catch((error) => {
     console.error('Lỗi đăng nhập ẩn danh:', error);
-    alert(`Lỗi đăng nhập ẩn danh: ${error.message}`);
+    toast({
+        variant: "destructive",
+        title: "Lỗi đăng nhập",
+        description: error.message,
+    });
   });
   // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
 
 /** Initiate email/password sign-up (non-blocking). */
-export function initiateEmailSignUp(authInstance: Auth, email: string, password: string): void {
+export function initiateEmailSignUp(authInstance: Auth, email: string, password: string, fullName: string): void {
   // CRITICAL: Call createUserWithEmailAndPassword directly. Do NOT use 'await createUserWithEmailAndPassword(...)'.
-  createUserWithEmailAndPassword(authInstance, email, password).catch((error) => {
+  createUserWithEmailAndPassword(authInstance, email, password)
+    .then((userCredential) => {
+      if (userCredential.user && fullName) {
+        updateProfile(userCredential.user, { displayName: fullName }).catch(err => {
+            console.error("Lỗi cập nhật hồ sơ:", err);
+        });
+      }
+    })
+    .catch((error) => {
     console.error('Lỗi đăng ký:', error);
-    alert(`Lỗi đăng ký: ${error.message}`);
+    toast({
+        variant: "destructive",
+        title: "Lỗi đăng ký",
+        description: error.message,
+    });
   });
   // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
@@ -32,7 +49,11 @@ export function initiateEmailSignIn(authInstance: Auth, email: string, password:
   // CRITICAL: Call signInWithEmailAndPassword directly. Do NOT use 'await signInWithEmailAndPassword(...)'.
   signInWithEmailAndPassword(authInstance, email, password).catch((error) => {
     console.error('Lỗi đăng nhập:', error);
-    alert(`Lỗi đăng nhập: ${error.message}`);
+    toast({
+        variant: "destructive",
+        title: "Lỗi đăng nhập",
+        description: error.message,
+    });
   });
   // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
