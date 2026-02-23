@@ -1,24 +1,6 @@
 'use client';
 
-import {
-  Activity,
-  ArrowDownRight,
-  ArrowUpRight,
-  Flame,
-  Lightbulb,
-  LineChart as LineChartIcon,
-  PieChart,
-  Users,
-} from 'lucide-react';
-import {
-  Bar,
-  BarChart,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Flame, Lightbulb } from 'lucide-react';
 
 import {
   Card,
@@ -28,18 +10,25 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useUser } from '@/firebase/auth/use-user';
-import { BarChart as BarChartComponent } from '@/components/ui/bar-chart';
 import { LineChart as LineChartComponent } from '@/components/ui/line-chart';
+import { type ChartConfig } from '@/components/ui/chart';
 
 const weightData = [
-    { date: 'Mon', weight: 75.2 },
-    { date: 'Tue', weight: 75.1 },
-    { date: 'Wed', weight: 75.3 },
-    { date: 'Thu', weight: 74.9 },
-    { date: 'Fri', weight: 74.8 },
-    { date: 'Sat', weight: 75.0 },
-    { date: 'Sun', weight: 74.7 },
+  { date: 'Mon', weight: 75.2 },
+  { date: 'Tue', weight: 75.1 },
+  { date: 'Wed', weight: 75.3 },
+  { date: 'Thu', weight: 74.9 },
+  { date: 'Fri', weight: 74.8 },
+  { date: 'Sat', weight: 75.0 },
+  { date: 'Sun', weight: 74.7 },
 ];
+
+const weightChartConfig = {
+  weight: {
+    label: 'Weight (kg)',
+    color: 'hsl(var(--primary))',
+  },
+} satisfies ChartConfig;
 
 export default function DashboardPage() {
   const { user, userProfile } = useUser();
@@ -111,9 +100,7 @@ export default function DashboardPage() {
             <CardContent>
               <LineChartComponent
                 data={weightData}
-                index="date"
-                categories={['weight']}
-                colors={['primary']}
+                config={weightChartConfig}
                 yAxisWidth={40}
                 className="h-64"
                 showLegend={false}
@@ -122,7 +109,7 @@ export default function DashboardPage() {
           </Card>
         </div>
         <div className="grid auto-rows-max items-start gap-4 md:gap-8">
-           <Card>
+          <Card>
             <CardHeader>
               <CardTitle>AI Suggestions</CardTitle>
               <CardDescription>
@@ -137,7 +124,8 @@ export default function DashboardPage() {
                 <div className="flex-1">
                   <p className="font-medium">Recipe Suggestion</p>
                   <p className="text-sm text-muted-foreground">
-                    Try a grilled chicken salad for a high-protein, low-calorie lunch.
+                    Try a grilled chicken salad for a high-protein, low-calorie
+                    lunch.
                   </p>
                 </div>
               </div>
@@ -148,29 +136,32 @@ export default function DashboardPage() {
                 <div className="flex-1">
                   <p className="font-medium">Exercise Suggestion</p>
                   <p className="text-sm text-muted-foreground">
-                    A 30-minute brisk walk can help you reach your daily calorie burn goal.
+                    A 30-minute brisk walk can help you reach your daily calorie
+                    burn goal.
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card>
-             <CardHeader>
+            <CardHeader>
               <CardTitle>Activities</CardTitle>
-              <CardDescription>Summary of your activities today.</CardDescription>
+              <CardDescription>
+                Summary of your activities today.
+              </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
-               <div className="flex items-center">
+              <div className="flex items-center">
                 <div>Running</div>
-                <div className="font-semibold ml-auto">150 kcal</div>
+                <div className="ml-auto font-semibold">150 kcal</div>
               </div>
               <div className="flex items-center">
                 <div>Walking</div>
-                <div className="font-semibold ml-auto">90 kcal</div>
+                <div className="ml-auto font-semibold">90 kcal</div>
               </div>
-               <div className="flex items-center">
+              <div className="flex items-center">
                 <div>Weight Lifting</div>
-                <div className="font-semibold ml-auto">100 kcal</div>
+                <div className="ml-auto font-semibold">100 kcal</div>
               </div>
             </CardContent>
           </Card>

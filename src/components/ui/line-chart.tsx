@@ -40,6 +40,7 @@ type LineChartProps = Omit<
   showGrid?: boolean
   showLegend?: boolean
   showTooltip?: boolean
+  yAxisWidth?: number
 }
 
 const LineChart = React.forwardRef<
@@ -56,6 +57,7 @@ const LineChart = React.forwardRef<
       showGrid = true,
       showLegend = true,
       showTooltip = true,
+      yAxisWidth,
       ...props
     },
     ref
@@ -77,6 +79,7 @@ const LineChart = React.forwardRef<
               stroke="hsl(var(--muted-foreground))"
               tickLine={false}
               axisLine={false}
+              width={yAxisWidth}
             />
           )}
           {showXAxis && (
@@ -93,7 +96,7 @@ const LineChart = React.forwardRef<
 
           {showLegend && <ChartLegend content={<ChartLegendContent />} />}
 
-          {Object.entries(config).map(([key, config]) => (
+          {Object.entries(config || {}).map(([key, config]) => (
             <Line
               key={key}
               dataKey={key}

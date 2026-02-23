@@ -48,6 +48,7 @@ type BarChartProps = Omit<
   showGrid?: boolean
   showLegend?: boolean
   showTooltip?: boolean
+  yAxisWidth?: number
 }
 
 const BarChart = React.forwardRef<
@@ -64,6 +65,7 @@ const BarChart = React.forwardRef<
       showGrid = true,
       showLegend = false,
       showTooltip = true,
+      yAxisWidth,
       ...props
     },
     ref
@@ -80,7 +82,7 @@ const BarChart = React.forwardRef<
           {...props}
         >
           {showGrid && <CartesianGrid vertical={false} />}
-          {showYAxis && <YAxis tickLine={false} axisLine={false} />}
+          {showYAxis && <YAxis tickLine={false} axisLine={false} width={yAxisWidth} />}
           {showXAxis && (
             <XAxis
               dataKey="date"
@@ -107,7 +109,7 @@ const BarChart = React.forwardRef<
               }}
             />
           )}
-          {Object.entries(config).map(([key, config]) => {
+          {Object.entries(config || {}).map(([key, config]) => {
             return (
               <Bar key={key} dataKey={key} name={key} fill={`var(--color)`}>
                 {/* @ts-ignore */}
