@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -40,10 +40,20 @@ export default function SignupPage() {
       await updateProfile(user, { displayName });
 
       const userDocRef = doc(firestore, 'users', user.uid);
-      await setDoc(userDocRef, {
+      const userData = {
         id: user.uid,
         username: displayName,
         email: user.email,
+      };
+
+      // Non-blocking write with proper error handling
+      setDoc(userDocRef, userData).catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: userDocRef.path,
+          operation: 'create',
+          requestResourceData: userData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
       });
 
       router.push('/dashboard');
@@ -60,8 +70,7 @@ export default function SignupPage() {
         title: 'Lỗi đăng ký',
         description,
       });
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Stop loading on error
     }
   };
 
