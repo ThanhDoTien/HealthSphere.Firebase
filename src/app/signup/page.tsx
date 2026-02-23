@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +18,7 @@ export default function SignupPage() {
   const [displayName, setDisplayName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -33,14 +35,26 @@ export default function SignupPage() {
     setIsLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(userCredential.user, { displayName });
+      const user = userCredential.user;
+
+      await updateProfile(user, { displayName });
+
+      const userDocRef = doc(firestore, 'users', user.uid);
+      await setDoc(userDocRef, {
+        id: user.uid,
+        username: displayName,
+        email: user.email,
+      });
+
       router.push('/dashboard');
     } catch (error: any) {
-      console.error(error);
       let description = 'Đã có lỗi xảy ra. Vui lòng thử lại.';
       if (error.code === 'auth/email-already-in-use') {
         description = 'Địa chỉ email này đã được sử dụng.';
+      } else if (error.code === 'auth/weak-password') {
+        description = 'Mật khẩu phải có ít nhất 6 ký tự.';
       }
+      
       toast({
         variant: 'destructive',
         title: 'Lỗi đăng ký',
