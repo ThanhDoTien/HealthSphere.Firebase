@@ -87,29 +87,64 @@ export default function ProfilePage() {
       return;
     }
 
-    // If the username hasn't changed, do nothing.
-    if (formData.username === userProfile?.username) {
-        toast({ title: "Tên người dùng không thay đổi." });
+    // Create a clean payload object to send to Firestore.
+    // This prevents sending `undefined` values, which Firestore rejects.
+    const payload: Record<string, any> = {};
+
+    // For each editable field, if it exists in the form data, add it to the payload.
+    // This ensures we only try to update fields that are actually part of the form.
+    if (formData.username !== undefined) {
+      payload.username = formData.username || '';
+    }
+    if (formData.weightKg !== undefined) {
+      // Convert empty string to null, otherwise convert to number.
+      payload.weightKg = formData.weightKg ? Number(formData.weightKg) : null;
+    }
+    if (formData.heightCm !== undefined) {
+      payload.heightCm = formData.heightCm ? Number(formData.heightCm) : null;
+    }
+    if (formData.gender !== undefined) {
+      payload.gender = formData.gender || null;
+    }
+    if (formData.activityLevel !== undefined) {
+      payload.activityLevel = formData.activityLevel || null;
+    }
+    if (formData.dietaryPreferences !== undefined) {
+      payload.dietaryPreferences = formData.dietaryPreferences || '';
+    }
+    
+    // Check if there are any actual changes to be made.
+    let hasChanges = false;
+    if (userProfile) {
+        for (const key in payload) {
+            if (payload[key] !== (userProfile[key as keyof UserProfile] ?? null)) {
+                 if (key === 'dietaryPreferences' && payload[key] === '' && (userProfile.dietaryPreferences === undefined || userProfile.dietaryPreferences === null)) {
+                    continue; // Treat undefined/null from db as same as empty string from form
+                }
+                hasChanges = true;
+                break;
+            }
+        }
+    } else {
+        hasChanges = true; // If there's no initial profile, any data is a change.
+    }
+
+    if (!hasChanges) {
+        toast({ title: "Thông tin không thay đổi." });
         setIsEditing(false);
         return;
     }
 
-    try {
-      // ONLY attempt to update the username.
-      await updateDoc(userProfileRef, {
-        username: formData.username,
-      });
 
+    try {
+      await updateDoc(userProfileRef, payload);
       toast({
         title: 'Thành công!',
         description: 'Hồ sơ của bạn đã được cập nhật.',
       });
       setIsEditing(false);
     } catch (e: any) {
-      // Log the full error to the console for debugging
       console.error('Lỗi cập nhật hồ sơ:', e);
-      
-      // Show a user-friendly error
       toast({
         variant: 'destructive',
         title: 'Ôi, đã có lỗi xảy ra.',
