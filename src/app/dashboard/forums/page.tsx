@@ -9,7 +9,7 @@ import {
 } from 'firebase/firestore';
 import { Plus } from 'lucide-react';
 
-import { useCollection, WithId } from '@/firebase/firestore/use-collection';
+import { useCollection } from '@/firebase/firestore/use-collection';
 import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from '@/context/LanguageContext';
 
 type ForumPost = {
   title: string;
@@ -33,6 +34,7 @@ type ForumPost = {
 export default function ForumsPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { t } = useTranslation();
 
   const postsQuery = useMemoFirebase(() => {
     return query(collection(firestore, 'forums'), orderBy('createdAt', 'desc'));
@@ -53,16 +55,16 @@ export default function ForumsPage() {
       <Card>
         <CardHeader className="flex-row items-center justify-between">
           <div>
-            <CardTitle>Community Forums</CardTitle>
+            <CardTitle>{t('forums.title')}</CardTitle>
             <CardDescription>
-              Connect, share, and learn from others.
+              {t('forums.description')}
             </CardDescription>
           </div>
           {user && (
             <Button asChild>
               <Link href="/dashboard/forums/new">
                 <Plus className="mr-2 h-4 w-4" />
-                New Post
+                {t('forums.newPost')}
               </Link>
             </Button>
           )}
@@ -74,9 +76,9 @@ export default function ForumsPage() {
             </div>
           ) : !posts || posts.length === 0 ? (
             <div className="py-16 text-center">
-              <p className="text-muted-foreground">No posts yet.</p>
+              <p className="text-muted-foreground">{t('forums.noPosts')}</p>
               <p className="text-sm text-muted-foreground">
-                Be the first to start a conversation!
+                {t('forums.beFirst')}
               </p>
             </div>
           ) : (
@@ -99,7 +101,7 @@ export default function ForumsPage() {
                         <h3 className="font-semibold">{post.title}</h3>
                         <div className="text-sm text-muted-foreground">
                           <p>
-                            By {post.authorName} on {formatTimestamp(post.createdAt)}
+                            {t('forums.authorBy', { author: post.authorName, date: formatTimestamp(post.createdAt) })}
                           </p>
                         </div>
                       </div>

@@ -15,6 +15,7 @@ import { useFirestore } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Label } from '../ui/label';
+import { useTranslation } from '@/context/LanguageContext';
 
 const FormSchema = z.object({
   weight: z.coerce
@@ -34,6 +35,7 @@ interface AddWeightFormProps {
 export default function AddWeightForm({ userId }: AddWeightFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { t } = useTranslation();
 
   const {
     register,
@@ -59,8 +61,8 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
     addDoc(weightLogRef, weightLogData)
       .then(() => {
         toast({
-          title: 'Success',
-          description: `Weight for ${data.date} has been logged.`,
+          title: t('form.common.success'),
+          description: t('form.add_weight.success', { date: data.date }),
         });
         reset();
       })
@@ -75,8 +77,8 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
         );
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: 'Could not log your weight. Please try again.',
+          title: t('form.common.error'),
+          description: t('form.add_weight.error'),
         });
       });
   };
@@ -84,7 +86,7 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 sm:grid-cols-3 sm:items-end">
       <div className="grid gap-1.5">
-        <Label htmlFor="date">Date</Label>
+        <Label htmlFor="date">{t('form.common.date')}</Label>
         <Input
           id="date"
           type="date"
@@ -95,12 +97,12 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
         )}
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="weight">Weight (kg)</Label>
+        <Label htmlFor="weight">{t('form.add_weight.title')}</Label>
         <Input
           id="weight"
           type="number"
           step="0.1"
-          placeholder="e.g. 75.5"
+          placeholder={t('form.add_weight.placeholder')}
           {...register('weight')}
         />
         {errors.weight && (
@@ -108,7 +110,7 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
         )}
       </div>
       <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
-        {isSubmitting ? 'Saving...' : 'Save'}
+        {isSubmitting ? t('form.add_weight.saving') : t('form.add_weight.save')}
       </Button>
     </form>
   );

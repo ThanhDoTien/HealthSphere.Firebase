@@ -15,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, Loader2, Send } from 'lucide-react';
 
-import { useDoc, WithId } from '@/firebase/firestore/use-doc';
+import { useDoc } from '@/firebase/firestore/use-doc';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore, useMemoFirebase } from '@/firebase';
@@ -29,6 +29,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useTranslation } from '@/context/LanguageContext';
 
 type ForumPost = {
   title: string;
@@ -61,6 +62,7 @@ export default function ForumPostPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const postRef = useMemoFirebase(
     () => (postId ? doc(firestore, 'forums', postId) : null),
@@ -102,7 +104,7 @@ export default function ForumPostPage() {
     
     addDoc(repliesRef, newReplyData)
       .then(() => {
-        toast({ title: 'Success', description: 'Your reply has been posted.' });
+        toast({ title: t('form.common.success'), description: t('forum_post.replySuccess') });
         reset();
       })
       .catch((error) => {
@@ -116,8 +118,8 @@ export default function ForumPostPage() {
         );
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: 'Could not post your reply.',
+          title: t('form.common.error'),
+          description: t('forum_post.replyError'),
         });
       });
   };
@@ -140,11 +142,11 @@ export default function ForumPostPage() {
   if (!post) {
     return (
       <div className="p-4 sm:p-6 text-center">
-        <h2 className="text-xl font-semibold mb-4">Post not found</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('forum_post.notFound')}</h2>
         <Button variant="outline" asChild>
           <Link href="/dashboard/forums">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Forums
+            {t('forum_post.back')}
           </Link>
         </Button>
       </div>
@@ -156,7 +158,7 @@ export default function ForumPostPage() {
       <Button variant="ghost" asChild className="mb-4">
         <Link href="/dashboard/forums">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Forums
+          {t('forum_post.back')}
         </Link>
       </Button>
       
@@ -173,7 +175,7 @@ export default function ForumPostPage() {
               className="rounded-full"
             />
             <span>
-              By {post.authorName} on {formatTimestamp(post.createdAt)}
+              {t('forums.authorBy', { author: post.authorName, date: formatTimestamp(post.createdAt)})}
             </span>
           </div>
         </CardHeader>
@@ -186,7 +188,7 @@ export default function ForumPostPage() {
       
       {/* Replies */}
       <div className="space-y-6">
-        <h2 className="text-xl font-bold">Replies ({replies?.length || 0})</h2>
+        <h2 className="text-xl font-bold">{t('forum_post.repliesTitle', { count: replies?.length || 0 })}</h2>
         
         {areRepliesLoading ? (
             <div className="flex items-center justify-center py-8">
@@ -215,7 +217,7 @@ export default function ForumPostPage() {
                     ))}
                 </ul>
             ) : (
-                <p className="py-8 text-center text-sm text-muted-foreground">Be the first to reply!</p>
+                <p className="py-8 text-center text-sm text-muted-foreground">{t('forum_post.noReplies')}</p>
             )
         )}
         
@@ -223,7 +225,7 @@ export default function ForumPostPage() {
         {user && (
           <Card>
             <CardHeader>
-              <h3 className="text-lg font-semibold">Post a Reply</h3>
+              <h3 className="text-lg font-semibold">{t('forum_post.postReplyTitle')}</h3>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit(onReplySubmit)} className="flex items-start gap-4">
@@ -236,14 +238,14 @@ export default function ForumPostPage() {
                 />
                 <div className="flex-1 space-y-2">
                      <Textarea 
-                        placeholder="Write your reply here..." 
+                        placeholder={t('forum_post.replyPlaceholder')} 
                         {...register('content')} 
                         className="w-full"
                     />
                     {errors.content && <p className="text-sm text-destructive">{errors.content.message}</p>}
                     <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                        {isSubmitting ? 'Posting...' : 'Post Reply'}
+                        {isSubmitting ? t('forum_post.postingButton') : t('forum_post.postButton')}
                     </Button>
                 </div>
               </form>

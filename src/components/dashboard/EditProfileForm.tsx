@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/context/LanguageContext";
 
 
 const ProfileFormSchema = z.object({
@@ -38,6 +39,7 @@ interface EditProfileFormProps {
 
 export default function EditProfileForm({ userProfile, userId }: EditProfileFormProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -60,14 +62,14 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
     try {
       await updateUserProfile(userId, data);
       toast({
-        title: "Success",
-        description: "Your profile has been updated.",
+        title: t('form.common.success'),
+        description: t('profile.updateSuccess'),
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "An unexpected error occurred.",
+        title: t('form.common.error'),
+        description: error.message || t('profile.updateError'),
       });
     }
   };
@@ -76,34 +78,34 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="name">Full Name</Label>
+          <Label htmlFor="name">{t('signup.nameLabel')}</Label>
           <Input id="name" {...register("name")} />
           {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t('login.emailLabel')}</Label>
           <Input id="email" type="email" {...register("email")} readOnly disabled />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
          <div className="grid gap-2">
-            <Label htmlFor="age">Age</Label>
+            <Label htmlFor="age">{t('signup.ageLabel')}</Label>
             <Input id="age" type="number" {...register("age")} />
             {errors.age && <p className="text-sm text-destructive">{errors.age.message}</p>}
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="height">Height (cm)</Label>
+            <Label htmlFor="height">{t('signup.heightLabel')}</Label>
             <Input id="height" type="number" {...register("height")} />
             {errors.height && <p className="text-sm text-destructive">{errors.height.message}</p>}
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="weight">Weight (kg)</Label>
+            <Label htmlFor="weight">{t('signup.weightLabel')}</Label>
             <Input id="weight" type="number" {...register("weight")} />
             {errors.weight && <p className="text-sm text-destructive">{errors.weight.message}</p>}
           </div>
           <div className="grid gap-2">
-          <Label htmlFor="gender">Gender</Label>
+          <Label htmlFor="gender">{t('signup.genderLabel')}</Label>
             <Controller
                 control={control}
                 name="gender"
@@ -113,12 +115,12 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
                     defaultValue={field.value}
                 >
                     <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
+                    <SelectValue placeholder={t('signup.genderSelect')} />
                     </SelectTrigger>
                     <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="male">{t('signup.genderMale')}</SelectItem>
+                    <SelectItem value="female">{t('signup.genderFemale')}</SelectItem>
+                    <SelectItem value="other">{t('signup.genderOther')}</SelectItem>
                     </SelectContent>
                 </Select>
                 )}
@@ -132,13 +134,13 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
       </div>
       
       <div className="grid gap-2">
-        <Label htmlFor="goal">Health Goal</Label>
+        <Label htmlFor="goal">{t('signup.goalLabel')}</Label>
         <Input id="goal" {...register("goal")} />
         {errors.goal && <p className="text-sm text-destructive">{errors.goal.message}</p>}
       </div>
       
       <Button type="submit" disabled={isSubmitting || !isDirty}>
-        {isSubmitting ? "Saving..." : "Save Changes"}
+        {isSubmitting ? t('profile.savingButton') : t('profile.saveButton')}
       </Button>
     </form>
   );

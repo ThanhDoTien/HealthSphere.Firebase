@@ -1,9 +1,10 @@
 'use client';
 
-import BottomNav from "@/components/BottomNav";
+import Header from "@/components/Header";
 import { useUser } from "@/firebase/auth/use-user";
 import useMustBeLoggedIn from "@/lib/hooks/use-must-be-logged-in";
 import { Loader2 } from "lucide-react";
+import Chatbot from "@/components/dashboard/Chatbot";
 
 export default function DashboardLayout({
   children,
@@ -23,8 +24,9 @@ export default function DashboardLayout({
 
   return (
     <div className="relative flex min-h-screen flex-col">
-      <main className="flex-1 pb-24">{children}</main>
-      <BottomNav />
+      <Header />
+      <main className="flex-1">{children}</main>
+      <Chatbot />
     </div>
   );
 }

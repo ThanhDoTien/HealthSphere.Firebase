@@ -46,13 +46,7 @@ import { useToast } from '@/components/ui/toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import LogMealWithAiDialog from '@/components/dashboard/LogMealWithAiDialog';
-
-const calorieChartConfig = {
-  calories: {
-    label: 'Calories',
-    color: 'hsl(var(--accent))',
-  },
-} satisfies ChartConfig;
+import { useTranslation } from '@/context/LanguageContext';
 
 type Meal = {
   name: string;
@@ -66,6 +60,14 @@ export default function CaloriesPage() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { t } = useTranslation();
+
+  const calorieChartConfig = useMemo(() => ({
+    calories: {
+      label: t('calories.chart.calories'),
+      color: 'hsl(var(--accent))',
+    },
+  }), [t]) satisfies ChartConfig;
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -137,8 +139,8 @@ export default function CaloriesPage() {
     deleteDoc(mealDocRef)
       .then(() => {
         toast({
-          title: 'Success',
-          description: 'Meal deleted successfully.',
+          title: t('form.common.success'),
+          description: t('calories.deleteSuccess'),
         });
       })
       .catch((error) => {
@@ -151,8 +153,8 @@ export default function CaloriesPage() {
         );
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: 'Could not delete meal. Please try again.',
+          title: t('form.common.error'),
+          description: t('calories.deleteError'),
         });
       })
       .finally(() => {
@@ -167,9 +169,9 @@ export default function CaloriesPage() {
     <div className="p-4 sm:p-6">
       <Card>
         <CardHeader>
-          <CardTitle>Calorie Intake</CardTitle>
+          <CardTitle>{t('calories.title')}</CardTitle>
           <CardDescription>
-            Log your meals and track your daily calorie consumption.
+            {t('calories.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -187,7 +189,7 @@ export default function CaloriesPage() {
             />
           )}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Log a Meal</h3>
+            <h3 className="text-lg font-medium">{t('calories.logTitle')}</h3>
             {user && <LogMealWithAiDialog userId={user.uid} />}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -195,7 +197,7 @@ export default function CaloriesPage() {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-card px-2 text-muted-foreground">
-                  Or add manually
+                  {t('calories.manualSeparator')}
                 </span>
               </div>
             </div>
@@ -203,7 +205,7 @@ export default function CaloriesPage() {
           </div>
 
           <div className="space-y-6 border-t pt-6">
-            <h3 className="text-lg font-medium">Daily Meal Log</h3>
+            <h3 className="text-lg font-medium">{t('calories.dailyLogTitle')}</h3>
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -228,7 +230,7 @@ export default function CaloriesPage() {
                           <div>
                             <p className="font-medium">{meal.name}</p>
                             <p className="text-sm capitalize text-muted-foreground">
-                              {meal.mealType}
+                              {t(`form.add_meal.type${meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1)}`)}
                             </p>
                           </div>
                           <div className="flex items-center gap-4">
@@ -250,7 +252,7 @@ export default function CaloriesPage() {
                                   }}
                                 >
                                   <Pencil className="mr-2 h-4 w-4" />
-                                  Edit
+                                  {t('form.common.edit')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive"
@@ -260,7 +262,7 @@ export default function CaloriesPage() {
                                   }}
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
+                                  {t('form.common.delete')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -273,7 +275,7 @@ export default function CaloriesPage() {
               </div>
             ) : (
               <p className="py-8 text-center text-muted-foreground">
-                No meals logged yet. Add one above to get started!
+                {t('calories.noMeals')}
               </p>
             )}
           </div>
@@ -284,7 +286,7 @@ export default function CaloriesPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Meal</DialogTitle>
+            <DialogTitle>{t('calories.editTitle')}</DialogTitle>
           </DialogHeader>
           {selectedMeal && user && (
             <EditMealForm
@@ -303,19 +305,18 @@ export default function CaloriesPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t('calories.deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              meal log for &quot;{selectedMeal?.name}&quot;.
+              {t('calories.deleteDescription', { name: selectedMeal?.name || '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('form.common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteMeal}
               className="bg-destructive hover:bg-destructive/90"
             >
-              Delete
+              {t('calories.deleteConfirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

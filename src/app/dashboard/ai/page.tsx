@@ -19,6 +19,8 @@ import {
   limit,
 } from 'firebase/firestore';
 import {
+  getHealthSuggestions,
+  type HealthSuggestionRequest,
   type HealthSuggestionResponse,
 } from '@/ai/flows/suggestion-flow';
 import {
@@ -29,12 +31,14 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useTranslation } from '@/context/LanguageContext';
 
 
 export default function AiPage() {
   const { user, userProfile, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const [today, setToday] = useState('');
+  const { t, locale } = useTranslation();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +88,7 @@ export default function AiPage() {
     useCollection(activitiesQuery);
   const { data: sleepData, isLoading: sleepLoading } =
     useCollection(sleepQuery);
+  const { data: recentActivityData, isLoading: recentActivityLoading } = useCollection(recentActivitiesQuery);
   
   const dailySummary = useMemo(() => {
     const summary = {
@@ -114,67 +119,35 @@ export default function AiPage() {
   }, [mealData, activityData, sleepData]);
 
   const handleGenerateSuggestions = async () => {
+    if (!userProfile) return;
+
     setIsLoading(true);
     setError(null);
     setGeneratedSuggestions(null);
   
+    const requestData: HealthSuggestionRequest = {
+      language: locale,
+      userProfile: {
+        goal: userProfile.goal,
+        weight: userProfile.weight,
+        height: userProfile.height,
+        age: userProfile.age,
+        gender: userProfile.gender,
+      },
+      dailySummary: {
+        caloriesConsumed: dailySummary.caloriesConsumed,
+        caloriesBurned: dailySummary.caloriesBurned,
+        sleepHours: dailySummary.sleepHours,
+      },
+      recentActivities: recentActivityData?.map(act => act.name) || [],
+    };
+
     try {
-      const prompt = `
-  You are a health assistant AI.
-  
-  User info:
-  - Height: ${userProfile?.height} cm
-  - Weight: ${userProfile?.weight} kg
-  - Goal: ${userProfile?.goal}
-  
-  Today summary:
-  - Calories consumed: ${dailySummary.caloriesConsumed}
-  - Calories burned: ${dailySummary.caloriesBurned}
-  - Sleep hours: ${dailySummary.sleepHours}
-  
-  Generate a JSON response ONLY (no explanation) with this format:
-  {
-    "mealSuggestions": [
-      { "name": "", "recipe": "", "calories": number }
-    ],
-    "workoutSuggestion": [
-      { "name": "", "description": "" }
-    ],
-    "generalTip": ""
-  }
-  `;
-  
-      const response = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyBKqU7wBv58ZGE501N8ydSTbLXGNolOdC4",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [{ text: prompt }],
-              },
-            ],
-          }),
-        }
-      );
-  
-      const data = await response.json();
-  
-      let text =
-        data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  
-      // 🔥 Xử lý trường hợp Gemini trả về ```json ... ```
-      text = text.replace(/```json|```/g, "").trim();
-  
-      const parsed: HealthSuggestionResponse = JSON.parse(text);
-  
-      setGeneratedSuggestions(parsed);
+      const result = await getHealthSuggestions(requestData);
+      setGeneratedSuggestions(result);
     } catch (err) {
       console.error(err);
-      setError("Failed to generate AI suggestions");
+      setError(t('ai.errorMessage'));
     } finally {
       setIsLoading(false);
     }
@@ -184,57 +157,58 @@ export default function AiPage() {
     userLoading ||
     mealLoading ||
     activityLoading ||
-    sleepLoading;
+    sleepLoading ||
+    recentActivityLoading;
 
   return (
     <div className="p-4 sm:p-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            AI Health Assistant
+            {t('ai.title')}
           </CardTitle>
           <CardDescription>
-            Get personalized meal and exercise suggestions based on your data.
+            {t('ai.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {userProfile && (
             <Card className="bg-muted/30">
               <CardHeader>
-                <CardTitle className="text-lg">Today&apos;s Snapshot</CardTitle>
+                <CardTitle className="text-lg">{t('ai.snapshotTitle')}</CardTitle>
                 <CardDescription>
-                  This data will be used to generate your personalized plan.
+                  {t('ai.snapshotDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground">Height</span>
+                  <span className="text-muted-foreground">{t('ai.height')}</span>
                   <span className="font-semibold">{userProfile.height} cm</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground">Weight</span>
+                  <span className="text-muted-foreground">{t('ai.weight')}</span>
                   <span className="font-semibold">{userProfile.weight} kg</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground">Goal</span>
+                  <span className="text-muted-foreground">{t('ai.goal')}</span>
                   <span className="font-semibold">{userProfile.goal}</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground">Calories In</span>
+                  <span className="text-muted-foreground">{t('ai.caloriesIn')}</span>
                   <span className="font-semibold">
                     {dailySummary.caloriesConsumed.toFixed(0)} kcal
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground">Calories Out</span>
+                  <span className="text-muted-foreground">{t('ai.caloriesOut')}</span>
                   <span className="font-semibold">
                     {dailySummary.caloriesBurned.toFixed(0)} kcal
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground">Sleep</span>
+                  <span className="text-muted-foreground">{t('ai.sleep')}</span>
                   <span className="font-semibold">
-                    {dailySummary.sleepHours.toFixed(1)} hours
+                    {dailySummary.sleepHours.toFixed(1)} {t('sleep.unit.hours')}
                   </span>
                 </div>
               </CardContent>
@@ -250,12 +224,12 @@ export default function AiPage() {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating...
+                {t('ai.loadingButton')}
               </>
             ) : (
               <>
                 <Wand2 className="mr-2 h-4 w-4" />
-                Generate My Plan for Today
+                {t('ai.generateButton')}
               </>
             )}
           </Button>
@@ -263,13 +237,13 @@ export default function AiPage() {
           {dataIsLoading && !isLoading && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <p>Loading your latest health data...</p>
+              <p>{t('ai.loadingData')}</p>
             </div>
           )}
 
           {error && (
             <Alert variant="destructive">
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle>{t('ai.errorTitle')}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -283,7 +257,7 @@ export default function AiPage() {
                     <Lightbulb className="h-6 w-6" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">Your Daily Tip</CardTitle>
+                    <CardTitle className="text-lg">{t('ai.tipTitle')}</CardTitle>
                     <CardDescription className="text-base">
                       {generatedSuggestions.generalTip}
                     </CardDescription>
@@ -295,7 +269,7 @@ export default function AiPage() {
               <div>
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
                   <Utensils className="h-6 w-6 text-accent" />
-                  Meal Suggestions
+                  {t('ai.mealsTitle')}
                 </h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {generatedSuggestions.mealSuggestions.map((meal) => (
@@ -321,7 +295,7 @@ export default function AiPage() {
               <div>
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
                   <Dumbbell className="h-6 w-6 text-orange-500" />
-                  Workout Suggestion
+                  {t('ai.workoutTitle')}
                 </h3>
                 <div className="space-y-4">
                   {generatedSuggestions.workoutSuggestion.map((exercise) => (

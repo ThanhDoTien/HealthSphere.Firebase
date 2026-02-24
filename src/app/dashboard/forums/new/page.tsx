@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/card';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useTranslation } from '@/context/LanguageContext';
 
 const FormSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters long.'),
@@ -36,6 +37,7 @@ export default function NewForumPostPage() {
   const firestore = useFirestore();
   const { user, userProfile } = useUser();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const {
     register,
@@ -48,7 +50,7 @@ export default function NewForumPostPage() {
 
   const onSubmit = (data: FormValues) => {
     if (!user || !userProfile) {
-      toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to post.' });
+      toast({ variant: 'destructive', title: t('form.common.error'), description: t('forum_new.loginError') });
       return;
     }
 
@@ -64,8 +66,8 @@ export default function NewForumPostPage() {
     addDoc(postsRef, newPostData)
       .then((docRef) => {
         toast({
-          title: 'Success',
-          description: 'Your post has been published.',
+          title: t('form.common.success'),
+          description: t('forum_new.publishSuccess'),
         });
         router.push('/dashboard/forums');
       })
@@ -80,8 +82,8 @@ export default function NewForumPostPage() {
         );
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: 'Could not create post. Please try again.',
+          title: t('form.common.error'),
+          description: t('forum_new.publishError'),
         });
       });
   };
@@ -91,30 +93,30 @@ export default function NewForumPostPage() {
        <Button variant="ghost" asChild className="mb-4">
         <Link href="/dashboard/forums">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Forums
+          {t('forum_post.back')}
         </Link>
       </Button>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Card>
           <CardHeader>
-            <CardTitle>Create a New Post</CardTitle>
-            <CardDescription>Share your thoughts with the community.</CardDescription>
+            <CardTitle>{t('forum_new.title')}</CardTitle>
+            <CardDescription>{t('forum_new.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-1.5">
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" type="text" placeholder="A catchy title for your post" {...register('title')} />
+              <Label htmlFor="title">{t('forum_new.postTitleLabel')}</Label>
+              <Input id="title" type="text" placeholder={t('forum_new.postTitlePlaceholder')} {...register('title')} />
               {errors.title && <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>}
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="content">Content</Label>
-              <Textarea id="content" placeholder="Write your post here..." {...register('content')} rows={10} />
+              <Label htmlFor="content">{t('forum_new.contentLabel')}</Label>
+              <Textarea id="content" placeholder={t('forum_new.contentPlaceholder')} {...register('content')} rows={10} />
               {errors.content && <p className="mt-1 text-sm text-destructive">{errors.content.message}</p>}
             </div>
           </CardContent>
           <CardFooter>
             <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
-              {isSubmitting ? 'Publishing...' : 'Publish Post'}
+              {isSubmitting ? t('forum_new.publishingButton') : t('forum_new.publishButton')}
             </Button>
           </CardFooter>
         </Card>

@@ -19,6 +19,7 @@ import { useToast } from '@/components/ui/toast';
 import { useFirestore } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useTranslation } from '@/context/LanguageContext';
 
 const FormSchema = z.object({
   name: z.string().min(1, 'Meal name is required.'),
@@ -38,6 +39,7 @@ interface AddMealFormProps {
 export default function AddMealForm({ userId }: AddMealFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { t } = useTranslation();
 
   const {
     register,
@@ -65,8 +67,8 @@ export default function AddMealForm({ userId }: AddMealFormProps) {
     addDoc(mealLogRef, mealLogData)
       .then(() => {
         toast({
-          title: 'Success',
-          description: `Meal "${data.name}" has been logged.`,
+          title: t('form.common.success'),
+          description: t('form.add_meal.success', { name: data.name }),
         });
         reset({
             ...data, // keep the date and mealtype
@@ -85,8 +87,8 @@ export default function AddMealForm({ userId }: AddMealFormProps) {
         );
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: 'Could not log your meal. Please try again.',
+          title: t('form.common.error'),
+          description: t('form.add_meal.error'),
         });
       });
   };
@@ -95,35 +97,35 @@ export default function AddMealForm({ userId }: AddMealFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="grid gap-1.5">
-          <Label htmlFor="date">Date</Label>
+          <Label htmlFor="date">{t('form.common.date')}</Label>
           <Input id="date" type="date" {...register('date')} />
           {errors.date && <p className="mt-1 text-sm text-destructive">{errors.date.message}</p>}
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="name">Meal Name</Label>
-          <Input id="name" type="text" placeholder="e.g. Apple" {...register('name')} />
+          <Label htmlFor="name">{t('form.add_meal.nameLabel')}</Label>
+          <Input id="name" type="text" placeholder={t('form.add_meal.namePlaceholder')} {...register('name')} />
           {errors.name && <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>}
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="calories">Calories</Label>
-          <Input id="calories" type="number" placeholder="e.g. 95" {...register('calories')} />
+          <Label htmlFor="calories">{t('form.add_meal.caloriesLabel')}</Label>
+          <Input id="calories" type="number" placeholder={t('form.add_meal.caloriesPlaceholder')} {...register('calories')} />
           {errors.calories && <p className="mt-1 text-sm text-destructive">{errors.calories.message}</p>}
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="mealType">Meal Type</Label>
+          <Label htmlFor="mealType">{t('form.add_meal.typeLabel')}</Label>
           <Controller
             control={control}
             name="mealType"
             render={({ field }) => (
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t('form.add_meal.typePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="breakfast">Breakfast</SelectItem>
-                  <SelectItem value="lunch">Lunch</SelectItem>
-                  <SelectItem value="dinner">Dinner</SelectItem>
-                  <SelectItem value="snack">Snack</SelectItem>
+                  <SelectItem value="breakfast">{t('form.add_meal.typeBreakfast')}</SelectItem>
+                  <SelectItem value="lunch">{t('form.add_meal.typeLunch')}</SelectItem>
+                  <SelectItem value="dinner">{t('form.add_meal.typeDinner')}</SelectItem>
+                  <SelectItem value="snack">{t('form.add_meal.typeSnack')}</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -132,7 +134,7 @@ export default function AddMealForm({ userId }: AddMealFormProps) {
         </div>
       </div>
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? 'Adding...' : 'Add Meal'}
+        {isSubmitting ? t('form.add_meal.loadingButton') : t('form.add_meal.button')}
       </Button>
     </form>
   );

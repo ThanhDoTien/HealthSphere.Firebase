@@ -26,8 +26,9 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { signUp } from "@/firebase/auth/utils";
 import useMustBeLoggedOut from "@/lib/hooks/use-must-be-logged-out";
+import { useTranslation } from "@/context/LanguageContext";
 
-const SignUpFormSchema = z
+const SignUpFormSchema = (t: (key: string) => string) => z
   .object({
     name: z.string().min(1, { message: "Full name is required." }),
     email: z.string().email({ message: "Please enter a valid email address." }),
@@ -42,22 +43,24 @@ const SignUpFormSchema = z
     goal: z.string().min(1, { message: "Health goal is required." }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match.",
+    message: t('signup.error.passwordMismatch'),
     path: ["confirmPassword"],
   });
 
-type SignUpFormValues = z.infer<typeof SignUpFormSchema>;
+type SignUpFormValues = z.infer<ReturnType<typeof SignUpFormSchema>>;
 
 export default function SignUpPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const { t } = useTranslation();
+  
   const {
     register,
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormValues>({
-    resolver: zodResolver(SignUpFormSchema),
+    resolver: zodResolver(SignUpFormSchema(t)),
   });
 
   useMustBeLoggedOut();
@@ -66,15 +69,15 @@ export default function SignUpPage() {
     try {
       await signUp(data);
       toast({
-        title: "Success",
-        description: "Your account has been created.",
+        title: t('form.common.success'),
+        description: t('signup.success'),
       });
       router.push("/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "An unexpected error occurred.",
+        title: t('form.common.error'),
+        description: error.message || t('login.error'),
       });
     }
   };
@@ -83,22 +86,22 @@ export default function SignUpPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <CardTitle className="text-2xl">Sign Up</CardTitle>
+          <CardTitle className="text-2xl">{t('signup.title')}</CardTitle>
           <CardDescription>
-            Create an account to start your health journey.
+            {t('signup.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{t('signup.nameLabel')}</Label>
               <Input id="name" placeholder="John Doe" {...register("name")} />
               {errors.name && (
                 <p className="text-sm text-destructive">{errors.name.message}</p>
               )}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('login.emailLabel')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -111,7 +114,7 @@ export default function SignUpPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('login.passwordLabel')}</Label>
                 <Input id="password" type="password" {...register("password")} />
                 {errors.password && (
                   <p className="text-sm text-destructive">
@@ -120,7 +123,7 @@ export default function SignUpPage() {
                 )}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">{t('signup.passwordConfirmLabel')}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -136,7 +139,7 @@ export default function SignUpPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="gender">Gender</Label>
+                <Label htmlFor="gender">{t('signup.genderLabel')}</Label>
                 <Controller
                   control={control}
                   name="gender"
@@ -146,12 +149,12 @@ export default function SignUpPage() {
                       defaultValue={field.value}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
+                        <SelectValue placeholder={t('signup.genderSelect')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="male">{t('signup.genderMale')}</SelectItem>
+                        <SelectItem value="female">{t('signup.genderFemale')}</SelectItem>
+                        <SelectItem value="other">{t('signup.genderOther')}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -163,7 +166,7 @@ export default function SignUpPage() {
                 )}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="age">Age</Label>
+                <Label htmlFor="age">{t('signup.ageLabel')}</Label>
                 <Input id="age" type="number" {...register("age")} />
                 {errors.age && (
                   <p className="text-sm text-destructive">
@@ -175,7 +178,7 @@ export default function SignUpPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="height">Height (cm)</Label>
+                <Label htmlFor="height">{t('signup.heightLabel')}</Label>
                 <Input id="height" type="number" {...register("height")} />
                 {errors.height && (
                   <p className="text-sm text-destructive">
@@ -184,7 +187,7 @@ export default function SignUpPage() {
                 )}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="weight">Weight (kg)</Label>
+                <Label htmlFor="weight">{t('signup.weightLabel')}</Label>
                 <Input id="weight" type="number" {...register("weight")} />
                 {errors.weight && (
                   <p className="text-sm text-destructive">
@@ -195,21 +198,21 @@ export default function SignUpPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="goal">Health Goal</Label>
-              <Input id="goal" placeholder="e.g., Lose 5kg" {...register("goal")} />
+              <Label htmlFor="goal">{t('signup.goalLabel')}</Label>
+              <Input id="goal" placeholder={t('signup.goalPlaceholder')} {...register("goal")} />
               {errors.goal && (
                 <p className="text-sm text-destructive">{errors.goal.message}</p>
               )}
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Creating account..." : "Sign Up"}
+              {isSubmitting ? t('signup.loadingButton') : t('signup.button')}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
-            Already have an account?{" "}
+            {t('signup.hasAccount')}{" "}
             <Link href="/login" className="underline">
-              Login
+              {t('signup.loginLink')}
             </Link>
           </div>
         </CardContent>

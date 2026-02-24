@@ -18,13 +18,7 @@ import { type ChartConfig } from '@/components/ui/chart';
 import AddActivityForm from '@/components/dashboard/AddActivityForm';
 import { Loader2 } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
-
-const activityChartConfig = {
-  calories: {
-    label: 'Calories Burned',
-    color: 'hsl(var(--accent))',
-  },
-} satisfies ChartConfig;
+import { useTranslation } from '@/context/LanguageContext';
 
 type Activity = {
   name: string;
@@ -37,6 +31,14 @@ type Activity = {
 export default function ActivityPage() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
+  const { t } = useTranslation();
+
+  const activityChartConfig = useMemo(() => ({
+    calories: {
+      label: t('activity.chart.calories'),
+      color: 'hsl(var(--accent))',
+    },
+  }), [t]) satisfies ChartConfig;
 
   const activityQuery = useMemoFirebase(() => {
     if (!user) return null;
@@ -100,9 +102,9 @@ export default function ActivityPage() {
     <div className="p-4 sm:p-6">
       <Card>
         <CardHeader>
-          <CardTitle>Activity Tracking</CardTitle>
+          <CardTitle>{t('activity.title')}</CardTitle>
           <CardDescription>
-            Log your physical activities and track your daily calories burned.
+            {t('activity.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -120,12 +122,12 @@ export default function ActivityPage() {
             />
           )}
           <div>
-            <h3 className="mb-4 text-lg font-medium">Log an Activity</h3>
+            <h3 className="mb-4 text-lg font-medium">{t('activity.logTitle')}</h3>
             {user && <AddActivityForm userId={user.uid} />}
           </div>
 
           <div className="space-y-6 border-t pt-6">
-            <h3 className="text-lg font-medium">Daily Activity Log</h3>
+            <h3 className="text-lg font-medium">{t('activity.dailyLogTitle')}</h3>
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -150,7 +152,7 @@ export default function ActivityPage() {
                           <div>
                             <p className="font-medium">{activity.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              {activity.duration} minutes
+                              {activity.duration} {t('activity.unit.minutes')}
                             </p>
                           </div>
                           <p className="font-semibold">
@@ -164,7 +166,7 @@ export default function ActivityPage() {
               </div>
             ) : (
               <p className="py-8 text-center text-muted-foreground">
-                No activities logged yet. Add one above to get started!
+                {t('activity.noActivity')}
               </p>
             )}
           </div>

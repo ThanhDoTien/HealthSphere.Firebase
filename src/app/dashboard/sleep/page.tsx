@@ -18,13 +18,7 @@ import { type ChartConfig } from '@/components/ui/chart';
 import AddSleepForm from '@/components/dashboard/AddSleepForm';
 import { Loader2 } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
-
-const sleepChartConfig = {
-  duration: {
-    label: 'Sleep (hours)',
-    color: '#8A00FF',
-  },
-} satisfies ChartConfig;
+import { useTranslation } from '@/context/LanguageContext';
 
 type Sleep = {
   duration: number;
@@ -35,6 +29,14 @@ type Sleep = {
 export default function SleepPage() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
+  const { t } = useTranslation();
+
+  const sleepChartConfig = useMemo(() => ({
+    duration: {
+      label: t('sleep.chart.duration'),
+      color: '#8A00FF',
+    },
+  }), [t]) satisfies ChartConfig;
 
   const sleepQuery = useMemoFirebase(() => {
     if (!user) return null;
@@ -87,9 +89,9 @@ export default function SleepPage() {
     <div className="p-4 sm:p-6">
       <Card>
         <CardHeader>
-          <CardTitle>Sleep Tracking</CardTitle>
+          <CardTitle>{t('sleep.title')}</CardTitle>
           <CardDescription>
-            Log your sleep and track your daily hours.
+            {t('sleep.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -107,12 +109,12 @@ export default function SleepPage() {
             />
           )}
           <div>
-            <h3 className="mb-4 text-lg font-medium">Log Sleep</h3>
+            <h3 className="mb-4 text-lg font-medium">{t('sleep.logTitle')}</h3>
             {user && <AddSleepForm userId={user.uid} />}
           </div>
 
           <div className="space-y-6 border-t pt-6">
-            <h3 className="text-lg font-medium">Daily Sleep Log</h3>
+            <h3 className="text-lg font-medium">{t('sleep.dailyLogTitle')}</h3>
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -135,10 +137,10 @@ export default function SleepPage() {
                           className="flex items-center justify-between rounded-lg bg-muted/50 p-3"
                         >
                           <div>
-                            <p className="font-medium">Sleep</p>
+                            <p className="font-medium">{t('sleep.logEntryName')}</p>
                           </div>
                           <p className="font-semibold">
-                            {sleep.duration} hours
+                            {sleep.duration} {t('sleep.unit.hours')}
                           </p>
                         </li>
                       ))}
@@ -148,7 +150,7 @@ export default function SleepPage() {
               </div>
             ) : (
               <p className="py-8 text-center text-muted-foreground">
-                No sleep logged yet. Add one above to get started!
+                {t('sleep.noSleep')}
               </p>
             )}
           </div>

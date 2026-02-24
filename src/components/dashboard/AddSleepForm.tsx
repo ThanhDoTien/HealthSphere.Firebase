@@ -15,6 +15,7 @@ import { useFirestore } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Label } from '../ui/label';
+import { useTranslation } from '@/context/LanguageContext';
 
 const FormSchema = z.object({
   duration: z.coerce
@@ -35,6 +36,7 @@ interface AddSleepFormProps {
 export default function AddSleepForm({ userId }: AddSleepFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { t } = useTranslation();
 
   const {
     register,
@@ -60,8 +62,8 @@ export default function AddSleepForm({ userId }: AddSleepFormProps) {
     addDoc(sleepLogRef, sleepLogData)
       .then(() => {
         toast({
-          title: 'Success',
-          description: `Sleep for ${data.date} has been logged.`,
+          title: t('form.common.success'),
+          description: t('form.add_sleep.success', { date: data.date }),
         });
         reset();
       })
@@ -76,8 +78,8 @@ export default function AddSleepForm({ userId }: AddSleepFormProps) {
         );
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: 'Could not log your sleep. Please try again.',
+          title: t('form.common.error'),
+          description: t('form.add_sleep.error'),
         });
       });
   };
@@ -85,7 +87,7 @@ export default function AddSleepForm({ userId }: AddSleepFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 sm:grid-cols-3 sm:items-end">
       <div className="grid gap-1.5">
-        <Label htmlFor="date">Date</Label>
+        <Label htmlFor="date">{t('form.common.date')}</Label>
         <Input
           id="date"
           type="date"
@@ -96,12 +98,12 @@ export default function AddSleepForm({ userId }: AddSleepFormProps) {
         )}
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="duration">Sleep (hours)</Label>
+        <Label htmlFor="duration">{t('form.add_sleep.title')}</Label>
         <Input
           id="duration"
           type="number"
           step="0.1"
-          placeholder="e.g. 8"
+          placeholder={t('form.add_sleep.placeholder')}
           {...register('duration')}
         />
         {errors.duration && (
@@ -109,7 +111,7 @@ export default function AddSleepForm({ userId }: AddSleepFormProps) {
         )}
       </div>
       <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
-        {isSubmitting ? 'Saving...' : 'Save'}
+        {isSubmitting ? t('form.add_sleep.saving') : t('form.add_sleep.save')}
       </Button>
     </form>
   );

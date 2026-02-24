@@ -38,6 +38,7 @@ import { useFirestore } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Label } from '../ui/label';
+import { useTranslation } from '@/context/LanguageContext';
 
 interface LogMealWithAiDialogProps {
   userId: string;
@@ -46,6 +47,7 @@ interface LogMealWithAiDialogProps {
 export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -73,8 +75,8 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
           setHasCameraPermission(false);
           toast({
             variant: 'destructive',
-            title: 'Camera Access Denied',
-            description: 'Please enable camera permissions in your browser settings.',
+            title: t('dialog.ai_meal.cameraError'),
+            description: t('dialog.ai_meal.cameraErrorDescription'),
           });
           setOpen(false);
         }
@@ -91,7 +93,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
             videoElement.srcObject = null;
         }
     }
-  }, [open, toast]);
+  }, [open, toast, t]);
 
   const handleCapture = () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -118,16 +120,16 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
       if (result.identifiedFoods.length === 0) {
         toast({
             variant: 'default',
-            title: 'No food detected',
-            description: 'The AI could not detect any food in the image. Please try again.'
+            title: t('dialog.ai_meal.noFoodToast'),
+            description: t('dialog.ai_meal.noFoodToastDescription')
         });
       }
     } catch (error: any) {
       console.error('AI analysis error:', error);
       toast({
         variant: 'destructive',
-        title: 'Analysis Failed',
-        description: error.message || 'The AI could not analyze the image. Please try again.',
+        title: t('dialog.ai_meal.analysisFailed'),
+        description: error.message || t('dialog.ai_meal.analysisError'),
       });
     } finally {
       setIsAnalyzing(false);
@@ -152,8 +154,8 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
     addDoc(mealLogRef, mealLogData)
       .then(() => {
         toast({
-          title: 'Success!',
-          description: `Meal logged with ${totalCalories} calories.`,
+          title: t('form.common.success'),
+          description: t('dialog.ai_meal.logSuccess', {calories: totalCalories }),
         });
         resetAndClose();
       })
@@ -168,8 +170,8 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
         );
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: 'Could not log your meal. Please try again.',
+          title: t('form.common.error'),
+          description: t('dialog.ai_meal.logError'),
         });
       });
   };
@@ -191,12 +193,12 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full">
             <Camera className="mr-2 h-4 w-4" />
-            Log Meal with Photo
+            {t('dialog.ai_meal.button')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Log Meal with AI</DialogTitle>
+          <DialogTitle>{t('dialog.ai_meal.title')}</DialogTitle>
         </DialogHeader>
         <canvas ref={canvasRef} className="hidden" />
         <div className="space-y-4 py-4">
@@ -207,15 +209,15 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
                     </div>
                     {hasCameraPermission === false && (
                          <Alert variant="destructive">
-                            <AlertTitle>Camera Access Required</AlertTitle>
+                            <AlertTitle>{t('dialog.ai_meal.cameraError')}</AlertTitle>
                             <AlertDescription>
-                                Please allow camera access in your browser to use this feature.
+                                {t('dialog.ai_meal.cameraErrorDescription')}
                             </AlertDescription>
                         </Alert>
                     )}
                     <Button onClick={handleCapture} className="w-full" disabled={hasCameraPermission === false}>
                         <Camera className="mr-2 h-4 w-4" />
-                        Capture Photo
+                        {t('dialog.ai_meal.captureButton')}
                     </Button>
                 </div>
             ) : (
@@ -227,7 +229,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
                     {isAnalyzing && (
                         <div className="flex items-center justify-center gap-2 text-muted-foreground">
                             <Loader2 className="h-5 w-5 animate-spin" />
-                            <span>Analyzing your meal...</span>
+                            <span>{t('dialog.ai_meal.analyzing')}</span>
                         </div>
                     )}
                     
@@ -236,7 +238,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
                             {analysisResult.identifiedFoods.length > 0 ? (
                                 <Card>
                                     <CardHeader>
-                                        <CardTitle className="text-lg">Analysis Result</CardTitle>
+                                        <CardTitle className="text-lg">{t('dialog.ai_meal.analysisResult')}</CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-2">
                                         {analysisResult.identifiedFoods.map((food, index) => (
@@ -246,16 +248,16 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
                                             </div>
                                         ))}
                                         <div className="flex justify-between border-t pt-2 font-bold">
-                                            <span>Total</span>
+                                            <span>{t('dialog.ai_meal.total')}</span>
                                             <span>{analysisResult.totalCalories} kcal</span>
                                         </div>
                                     </CardContent>
                                 </Card>
                             ) : !isAnalyzing && (
                                 <Alert>
-                                    <AlertTitle>No Food Detected</AlertTitle>
+                                    <AlertTitle>{t('dialog.ai_meal.noFoodTitle')}</AlertTitle>
                                     <AlertDescription>
-                                        We couldn&apos;t find any food items in your photo. Try again in a well-lit area.
+                                        {t('dialog.ai_meal.noFoodDescription')}
                                     </AlertDescription>
                                 </Alert>
                             )}
@@ -268,34 +270,34 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
             {analysisResult && analysisResult.identifiedFoods.length > 0 ? (
                 <>
                  <div className="grid w-full items-center gap-1.5">
-                    <Label htmlFor="mealType-ai" className="sr-only">Meal Type</Label>
+                    <Label htmlFor="mealType-ai" className="sr-only">{t('form.add_meal.typeLabel')}</Label>
                     <Select value={mealType} onValueChange={(value) => setMealType(value as any)}>
                         <SelectTrigger id="mealType-ai">
-                            <SelectValue placeholder="Select type" />
+                            <SelectValue placeholder={t('form.add_meal.typePlaceholder')} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="breakfast">Breakfast</SelectItem>
-                            <SelectItem value="lunch">Lunch</SelectItem>
-                            <SelectItem value="dinner">Dinner</SelectItem>
-                            <SelectItem value="snack">Snack</SelectItem>
+                            <SelectItem value="breakfast">{t('form.add_meal.typeBreakfast')}</SelectItem>
+                            <SelectItem value="lunch">{t('form.add_meal.typeLunch')}</SelectItem>
+                            <SelectItem value="dinner">{t('form.add_meal.typeDinner')}</SelectItem>
+                            <SelectItem value="snack">{t('form.add_meal.typeSnack')}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
                 <Button onClick={handleLogMeal}>
                     <ChevronsRight className="mr-2 h-4 w-4" />
-                    Log Meal
+                    {t('dialog.ai_meal.logButton')}
                 </Button>
                 </>
             ) : capturedImage ? (
                  <Button variant="outline" onClick={() => setCapturedImage(null)} className="col-span-2">
                     <RotateCcw className="mr-2 h-4 w-4" />
-                    Try Again
+                    {t('dialog.ai_meal.tryAgainButton')}
                 </Button>
             ) : null }
             
              <DialogClose asChild className="col-span-2">
                 <Button variant="ghost">
-                    Cancel
+                    {t('form.common.cancel')}
                 </Button>
             </DialogClose>
         </DialogFooter>

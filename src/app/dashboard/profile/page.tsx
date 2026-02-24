@@ -6,10 +6,12 @@ import { useUser } from "@/firebase/auth/use-user";
 import { logout } from "@/firebase/auth/utils";
 import { useRouter } from "next/navigation";
 import EditProfileForm from "@/components/dashboard/EditProfileForm";
+import { useTranslation } from "@/context/LanguageContext";
 
 export default function ProfilePage() {
   const { user, userProfile } = useUser();
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     await logout();
@@ -20,8 +22,8 @@ export default function ProfilePage() {
     <div className="p-4 sm:p-6">
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>View and manage your account details.</CardDescription>
+          <CardTitle>{t('profile.title')}</CardTitle>
+          <CardDescription>{t('profile.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {user && userProfile && (
@@ -33,7 +35,7 @@ export default function ProfilePage() {
               variant="outline"
               className="w-full sm:w-auto"
             >
-              Logout
+              {t('profile.logout')}
             </Button>
           </div>
         </CardContent>
