@@ -16,11 +16,5 @@
     "width": 800,
     "height": 600,
     "hint": "healthy food"
-  },
-  "feature_community": {
-    "src": "https://picsum.photos/seed/community/800/600",
-    "width": 800,
-    "height": 600,
-    "hint": "people talking"
   }
 }

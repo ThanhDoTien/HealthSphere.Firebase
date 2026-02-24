@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useTranslation } from "@/context/LanguageContext";
 import { Logo } from "@/components/Logo";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Globe, BarChart2, BrainCircuit, Users } from "lucide-react";
+import { Globe, BarChart2, BrainCircuit } from "lucide-react";
 import imageData from '@/app/lib/placeholder-images.json';
 
 export default function HomePage() {
@@ -23,12 +23,6 @@ export default function HomePage() {
       title: t('home.features.ai.title'),
       description: t('home.features.ai.description'),
       image: imageData.feature_ai,
-    },
-    {
-      icon: Users,
-      title: t('home.features.community.title'),
-      description: t('home.features.community.description'),
-      image: imageData.feature_community,
     },
   ];
 
@@ -66,7 +60,7 @@ export default function HomePage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative py-16 text-center sm:py-24">
+        <section className="relative py-12 text-center sm:py-20">
           <div className="container relative z-10 mx-auto px-4">
             <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
               <span className="text-primary">Health</span>Sphere
@@ -94,14 +88,14 @@ export default function HomePage() {
         </section>
 
         {/* Features Section */}
-        <section className="py-16 sm:py-24">
+        <section className="py-12 sm:py-20">
           <div className="container mx-auto px-4">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 {t('home.features.title')}
               </h2>
             </div>
-            <div className="mx-auto mt-16 grid max-w-none grid-cols-1 gap-x-8 gap-y-16 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mx-auto mt-16 grid max-w-none grid-cols-1 gap-x-8 gap-y-16 md:grid-cols-2 lg:max-w-4xl">
               {features.map((feature) => (
                 <div key={feature.title} className="flex flex-col items-center text-center">
                    <div className="relative h-56 w-full overflow-hidden rounded-lg">
@@ -128,7 +122,7 @@ export default function HomePage() {
         </section>
         
         {/* CTA Section */}
-        <section className="bg-muted/50 py-16 sm:py-20">
+        <section className="bg-muted/50 py-12 sm:py-16">
             <div className="container mx-auto px-4 text-center">
                  <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                     {t('home.cta.title')}
@@ -146,7 +140,7 @@ export default function HomePage() {
       </main>
 
        {/* Footer */}
-      <footer className="py-6">
+      <footer className="py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
             © {new Date().getFullYear()} HealthSphere. All rights reserved.
         </div>
