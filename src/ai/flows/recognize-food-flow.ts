@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Identifies food items from an image and estimates their nutritional value.
- * - recognizeFood - A function that handles the food recognition process.
+ * - recognizeFood - a function that handles the food recognition process.
  * - RecognizeFoodRequest - The input type for the recognizeFood function.
  * - RecognizeFoodResponse - The return type for the recognizeFood function.
  */
@@ -41,17 +41,18 @@ export type RecognizeFoodResponse = z.infer<typeof RecognizeFoodResponseSchema>;
 const foodRecognitionPrompt = ai.definePrompt({
   name: 'foodRecognitionPrompt',
   input: { schema: RecognizeFoodRequestSchema },
-  output: { schema: RecognizeFoodResponseSchema },
-  model: 'models/gemini-pro-vision',
+  model: 'gemini-pro-vision',
   prompt: `You are an expert nutritionist. Your task is to analyze the image of a meal provided by the user and identify all the food items present.
 
 For each food item you identify, provide its name and an estimated calorie count for a standard serving size shown in the picture.
 
 Combine the calories of all items to provide a total calorie count for the meal.
 
-If the image does not appear to contain any food, please return an empty array for 'identifiedFoods' and a 'totalCalories' of 0.
+If the image does not appear to contain any food, please return a JSON object with an empty 'identifiedFoods' array and a 'totalCalories' of 0.
 
-User's photo: {{media url=photoDataUri}}`,
+User's photo: {{media url=photoDataUri}}
+
+Generate the response as a single, valid JSON object. Do not include any text, markdown formatting, or code fences before or after the JSON object. The JSON object must have the following structure: { identifiedFoods: [{ name: string, calories: number }], totalCalories: number }.`,
 });
 
 const recognizeFoodFlow = ai.defineFlow(
@@ -61,11 +62,22 @@ const recognizeFoodFlow = ai.defineFlow(
     outputSchema: RecognizeFoodResponseSchema,
   },
   async (input) => {
-    const { output } = await foodRecognitionPrompt(input);
-    if (!output) {
+    const response = await foodRecognitionPrompt(input);
+    const textResponse = response.text;
+    if (!textResponse) {
       throw new Error('Failed to get a response from the AI model.');
     }
-    return output;
+    try {
+      const parsed = JSON.parse(textResponse);
+      return RecognizeFoodResponseSchema.parse(parsed);
+    } catch (e) {
+      console.error(
+        'Failed to parse or validate JSON response from AI:',
+        textResponse,
+        e
+      );
+      throw new Error('The AI returned an invalid response format.');
+    }
   }
 );
 

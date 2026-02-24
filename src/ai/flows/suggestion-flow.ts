@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Generates health suggestions based on user data.
- * - getHealthSuggestions - A function that handles the health suggestion process.
+ * - getHealthSuggestions - a function that handles the health suggestion process.
  * - HealthSuggestionRequest - The input type for the getHealthSuggestions function.
  * - HealthSuggestionResponse - The return type for the getHealthSuggestions function.
  */
@@ -59,7 +59,7 @@ const HealthSuggestionResponseSchema = z.object({
     .describe('A list of 2-3 suggested exercises or a workout routine.'),
   generalTip: z
     .string()
-    .describe("A general, encouraging health tip for the day."),
+    .describe('A general, encouraging health tip for the day.'),
 });
 export type HealthSuggestionResponse = z.infer<
   typeof HealthSuggestionResponseSchema
@@ -68,8 +68,7 @@ export type HealthSuggestionResponse = z.infer<
 const suggestionPrompt = ai.definePrompt({
   name: 'healthSuggestionPrompt',
   input: { schema: HealthSuggestionRequestSchema },
-  output: { schema: HealthSuggestionResponseSchema },
-  model: 'models/gemini-pro',
+  model: 'gemini-pro',
   prompt: `You are a friendly and encouraging AI health assistant. Your goal is to provide personalized, actionable, and safe health suggestions based on the user's data.
 
 Analyze the following user data:
@@ -95,7 +94,7 @@ Your suggestions should be:
 2.  **Workout Suggestion:** Recommend 2 or 3 exercises or a short workout routine. The suggestions should be appropriate for the user's recent activities and goals.
 3.  **General Tip:** Provide one general, encouraging tip for the day.
 
-Generate the response in the required JSON format. The response should be in English.
+Generate the response as a single, valid JSON object. Do not include any text, markdown formatting, or code fences before or after the JSON object. The JSON object should have the following structure: { mealSuggestions: [{ name: string, recipe: string, calories: number }], workoutSuggestion: [{ name:string, description: string }], generalTip: string }.
 `,
 });
 
@@ -106,11 +105,24 @@ const suggestionFlow = ai.defineFlow(
     outputSchema: HealthSuggestionResponseSchema,
   },
   async (input) => {
-    const { output } = await suggestionPrompt(input);
-    if (!output) {
+    const response = await suggestionPrompt(input);
+    const textResponse = response.text;
+    if (!textResponse) {
       throw new Error('Failed to get a response from the AI model.');
     }
-    return output;
+    try {
+      // The output from the model should be a raw JSON string
+      const parsed = JSON.parse(textResponse);
+      // Validate the parsed object against the Zod schema
+      return HealthSuggestionResponseSchema.parse(parsed);
+    } catch (e) {
+      console.error(
+        'Failed to parse or validate JSON response from AI:',
+        textResponse,
+        e
+      );
+      throw new Error('The AI returned an invalid response format.');
+    }
   }
 );
 
