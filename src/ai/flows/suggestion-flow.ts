@@ -17,7 +17,7 @@ const HealthSuggestionRequestSchema = z.object({
     age: z.number(),
     gender: z.string(),
   }),
-  averageSummary: z.object({
+  dailySummary: z.object({
     caloriesConsumed: z.number(),
     caloriesBurned: z.number(),
     sleepHours: z.number(),
@@ -77,10 +77,10 @@ Analyze the following user data:
   - Height: {{{userProfile.height}}} cm
   - Age: {{{userProfile.age}}}
   - Gender: {{{userProfile.gender}}}
-- **7-Day Average Summary:**
-  - Average Calories Consumed: {{{averageSummary.caloriesConsumed}}} kcal/day
-  - Average Calories Burned: {{{averageSummary.caloriesBurned}}} kcal/day
-  - Average Hours Slept: {{{averageSummary.sleepHours}}} hours/night
+- **Today's Summary:**
+  - Calories Consumed: {{{dailySummary.caloriesConsumed}}} kcal
+  - Calories Burned: {{{dailySummary.caloriesBurned}}} kcal
+  - Hours Slept: {{{dailySummary.sleepHours}}} hours
 - **Recent Activities:**
 {{#each recentActivities}}
 - {{{this}}}
@@ -89,7 +89,7 @@ Analyze the following user data:
 Based on this data, provide a set of suggestions.
 
 Your suggestions should be:
-1.  **Meal Suggestions:** Provide 3 meal ideas (one for breakfast, one for lunch, one for dinner) that align with the user's goals and average calorie intake. Include a simple recipe for each.
+1.  **Meal Suggestions:** Provide 3 meal ideas (one for breakfast, one for lunch, one for dinner) that align with the user's goals and today's calorie intake. Include a simple recipe for each.
 2.  **Workout Suggestion:** Recommend 2 or 3 exercises or a short workout routine. The suggestions should be appropriate for the user's recent activities and goals.
 3.  **General Tip:** Provide one general, encouraging tip for the day.
 

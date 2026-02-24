@@ -29,7 +29,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 export default function AiPage() {
   const { user, userProfile, loading: userLoading } = useUser();
   const firestore = useFirestore();
-  const [sevenDaysAgo, setSevenDaysAgo] = useState('');
+  const [today, setToday] = useState('');
 
   const [suggestions, setSuggestions] =
     useState<HealthSuggestionResponse | null>(null);
@@ -37,24 +37,23 @@ export default function AiPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // This runs only on the client, after hydration, avoiding mismatch
     const todayDate = new Date();
-    const sevenDaysAgoDate = new Date();
-    sevenDaysAgoDate.setDate(todayDate.getDate() - 6); // 7 days in total
-    setSevenDaysAgo(sevenDaysAgoDate.toISOString().split('T')[0]);
+    setToday(todayDate.toISOString().split('T')[0]);
   }, []);
 
-  const last7DaysQuery = (collectionName: string) =>
+  const dailyQuery = (collectionName: string) =>
     useMemoFirebase(() => {
-      if (!user || !sevenDaysAgo) return null;
+      if (!user || !today) return null;
       return query(
         collection(firestore, 'users', user.uid, collectionName),
-        where('date', '>=', sevenDaysAgo)
+        where('date', '==', today)
       );
-    }, [firestore, user, sevenDaysAgo]);
+    }, [firestore, user, today]);
 
-  const mealsQuery = last7DaysQuery('meals');
-  const activitiesQuery = last7DaysQuery('activities');
-  const sleepQuery = last7DaysQuery('sleep');
+  const mealsQuery = dailyQuery('meals');
+  const activitiesQuery = dailyQuery('activities');
+  const sleepQuery = dailyQuery('sleep');
 
   const recentActivitiesQuery = useMemoFirebase(() => {
     if (!user) return null;
@@ -73,36 +72,31 @@ export default function AiPage() {
   const { data: recentActivityData, isLoading: recentActivityLoading } =
     useCollection(recentActivitiesQuery);
 
-  const weeklySummary = useMemo(() => {
+  const dailySummary = useMemo(() => {
     const summary = {
-      avgCaloriesConsumed: 0,
-      avgCaloriesBurned: 0,
-      avgSleepHours: 0,
+      caloriesConsumed: 0,
+      caloriesBurned: 0,
+      sleepHours: 0,
     };
-    const NUM_DAYS = 7;
 
     if (mealData) {
-      const totalCaloriesConsumed = mealData.reduce(
+      summary.caloriesConsumed = mealData.reduce(
         (sum, meal) => sum + meal.calories,
         0
       );
-      summary.avgCaloriesConsumed = totalCaloriesConsumed / NUM_DAYS;
     }
     if (activityData) {
-      const totalCaloriesBurned = activityData.reduce(
+      summary.caloriesBurned = activityData.reduce(
         (sum, activity) => sum + activity.caloriesBurned,
         0
       );
-      summary.avgCaloriesBurned = totalCaloriesBurned / NUM_DAYS;
     }
     if (sleepData) {
-      const totalSleepHours = sleepData.reduce(
+      summary.sleepHours = sleepData.reduce(
         (sum, sleep) => sum + sleep.duration,
         0
       );
-      summary.avgSleepHours = totalSleepHours / NUM_DAYS;
     }
-
     return summary;
   }, [mealData, activityData, sleepData]);
 
@@ -130,10 +124,10 @@ export default function AiPage() {
           age: userProfile.age,
           gender: userProfile.gender,
         },
-        averageSummary: {
-          caloriesConsumed: weeklySummary.avgCaloriesConsumed,
-          caloriesBurned: weeklySummary.avgCaloriesBurned,
-          sleepHours: weeklySummary.avgSleepHours,
+        dailySummary: {
+          caloriesConsumed: dailySummary.caloriesConsumed,
+          caloriesBurned: dailySummary.caloriesBurned,
+          sleepHours: dailySummary.sleepHours,
         },
         recentActivities: recentActivities,
       };
@@ -169,7 +163,7 @@ export default function AiPage() {
           {userProfile && (
             <Card className="bg-muted/30">
               <CardHeader>
-                <CardTitle className="text-lg">Your 7-Day Snapshot</CardTitle>
+                <CardTitle className="text-lg">Today's Snapshot</CardTitle>
                 <CardDescription>
                   This data will be used to generate your personalized plan.
                 </CardDescription>
@@ -189,24 +183,24 @@ export default function AiPage() {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-muted-foreground">
-                    Avg. Calories In
+                    Calories In
                   </span>
                   <span className="font-semibold">
-                    {weeklySummary.avgCaloriesConsumed.toFixed(0)} kcal/day
+                    {dailySummary.caloriesConsumed.toFixed(0)} kcal
                   </span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-muted-foreground">
-                    Avg. Calories Out
+                    Calories Out
                   </span>
                   <span className="font-semibold">
-                    {weeklySummary.avgCaloriesBurned.toFixed(0)} kcal/day
+                    {dailySummary.caloriesBurned.toFixed(0)} kcal
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground">Avg. Sleep</span>
+                  <span className="text-muted-foreground">Sleep</span>
                   <span className="font-semibold">
-                    {weeklySummary.avgSleepHours.toFixed(1)} hours/night
+                    {dailySummary.sleepHours.toFixed(1)} hours
                   </span>
                 </div>
               </CardContent>
