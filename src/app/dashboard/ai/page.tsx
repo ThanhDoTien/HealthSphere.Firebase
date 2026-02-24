@@ -29,7 +29,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 export default function AiPage() {
   const { user, userProfile, loading: userLoading } = useUser();
   const firestore = useFirestore();
-  const [today, setToday] = useState('');
+  const [sevenDaysAgo, setSevenDaysAgo] = useState('');
 
   const [suggestions, setSuggestions] =
     useState<HealthSuggestionResponse | null>(null);
@@ -37,33 +37,24 @@ export default function AiPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setToday(new Date().toISOString().split('T')[0]);
+    const todayDate = new Date();
+    const sevenDaysAgoDate = new Date();
+    sevenDaysAgoDate.setDate(todayDate.getDate() - 6); // 7 days in total
+    setSevenDaysAgo(sevenDaysAgoDate.toISOString().split('T')[0]);
   }, []);
 
-  // Data fetching hooks
-  const mealsQuery = useMemoFirebase(() => {
-    if (!user || !today) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'meals'),
-      where('date', '==', today)
-    );
-  }, [firestore, user, today]);
+  const last7DaysQuery = (collectionName: string) =>
+    useMemoFirebase(() => {
+      if (!user || !sevenDaysAgo) return null;
+      return query(
+        collection(firestore, 'users', user.uid, collectionName),
+        where('date', '>=', sevenDaysAgo)
+      );
+    }, [firestore, user, sevenDaysAgo]);
 
-  const activitiesQuery = useMemoFirebase(() => {
-    if (!user || !today) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'activities'),
-      where('date', '==', today)
-    );
-  }, [firestore, user, today]);
-  
-  const sleepQuery = useMemoFirebase(() => {
-    if (!user || !today) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'sleep'),
-      where('date', '==', today)
-    );
-  }, [firestore, user, today]);
+  const mealsQuery = last7DaysQuery('meals');
+  const activitiesQuery = last7DaysQuery('activities');
+  const sleepQuery = last7DaysQuery('sleep');
 
   const recentActivitiesQuery = useMemoFirebase(() => {
     if (!user) return null;
@@ -82,27 +73,42 @@ export default function AiPage() {
   const { data: recentActivityData, isLoading: recentActivityLoading } =
     useCollection(recentActivitiesQuery);
 
-  const caloriesConsumed = useMemo(() => {
-    if (!mealData) return 0;
-    return mealData.reduce((sum, meal) => sum + meal.calories, 0);
-  }, [mealData]);
+  const weeklySummary = useMemo(() => {
+    const summary = {
+      avgCaloriesConsumed: 0,
+      avgCaloriesBurned: 0,
+      avgSleepHours: 0,
+    };
+    const NUM_DAYS = 7;
 
-  const caloriesBurned = useMemo(() => {
-    if (!activityData) return 0;
-    return activityData.reduce(
-      (sum, activity) => sum + activity.caloriesBurned,
-      0
-    );
-  }, [activityData]);
+    if (mealData) {
+      const totalCaloriesConsumed = mealData.reduce(
+        (sum, meal) => sum + meal.calories,
+        0
+      );
+      summary.avgCaloriesConsumed = totalCaloriesConsumed / NUM_DAYS;
+    }
+    if (activityData) {
+      const totalCaloriesBurned = activityData.reduce(
+        (sum, activity) => sum + activity.caloriesBurned,
+        0
+      );
+      summary.avgCaloriesBurned = totalCaloriesBurned / NUM_DAYS;
+    }
+    if (sleepData) {
+      const totalSleepHours = sleepData.reduce(
+        (sum, sleep) => sum + sleep.duration,
+        0
+      );
+      summary.avgSleepHours = totalSleepHours / NUM_DAYS;
+    }
 
-  const sleepHours = useMemo(() => {
-    if (!sleepData || sleepData.length === 0) return 0;
-    return sleepData.reduce((sum, sleep) => sum + sleep.duration, 0);
-  }, [sleepData]);
+    return summary;
+  }, [mealData, activityData, sleepData]);
 
   const recentActivities = useMemo(() => {
     if (!recentActivityData) return [];
-    return recentActivityData;
+    return recentActivityData.map((a) => a.name);
   }, [recentActivityData]);
 
   const handleGenerateSuggestions = async () => {
@@ -124,12 +130,12 @@ export default function AiPage() {
           age: userProfile.age,
           gender: userProfile.gender,
         },
-        dailySummary: {
-          caloriesConsumed,
-          caloriesBurned,
-          sleepHours,
+        averageSummary: {
+          caloriesConsumed: weeklySummary.avgCaloriesConsumed,
+          caloriesBurned: weeklySummary.avgCaloriesBurned,
+          sleepHours: weeklySummary.avgSleepHours,
         },
-        recentActivities: recentActivities.map((a) => a.name),
+        recentActivities: recentActivities,
       };
 
       const result = await getHealthSuggestions(requestData);
@@ -160,6 +166,53 @@ export default function AiPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {userProfile && (
+            <Card className="bg-muted/30">
+              <CardHeader>
+                <CardTitle className="text-lg">Your 7-Day Snapshot</CardTitle>
+                <CardDescription>
+                  This data will be used to generate your personalized plan.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Height</span>
+                  <span className="font-semibold">{userProfile.height} cm</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Weight</span>
+                  <span className="font-semibold">{userProfile.weight} kg</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Goal</span>
+                  <span className="font-semibold">{userProfile.goal}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">
+                    Avg. Calories In
+                  </span>
+                  <span className="font-semibold">
+                    {weeklySummary.avgCaloriesConsumed.toFixed(0)} kcal/day
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">
+                    Avg. Calories Out
+                  </span>
+                  <span className="font-semibold">
+                    {weeklySummary.avgCaloriesBurned.toFixed(0)} kcal/day
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Avg. Sleep</span>
+                  <span className="font-semibold">
+                    {weeklySummary.avgSleepHours.toFixed(1)} hours/night
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Button
             onClick={handleGenerateSuggestions}
             disabled={isLoading || dataIsLoading}
@@ -180,10 +233,10 @@ export default function AiPage() {
           </Button>
 
           {dataIsLoading && !isLoading && (
-             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <p>Loading your latest health data...</p>
-             </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <p>Loading your latest health data...</p>
+            </div>
           )}
 
           {error && (
@@ -196,7 +249,7 @@ export default function AiPage() {
           {suggestions && (
             <div className="space-y-8 pt-4">
               {/* General Tip */}
-              <Card className="bg-primary/5 border-primary/20">
+              <Card className="border-primary/20 bg-primary/5">
                 <CardHeader className="flex-row items-start gap-4 space-y-0">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Lightbulb className="h-6 w-6" />
@@ -251,7 +304,9 @@ export default function AiPage() {
                       <CardContent>
                         <div
                           className="prose prose-sm text-sm text-muted-foreground"
-                          dangerouslySetInnerHTML={{ __html: exercise.description }}
+                          dangerouslySetInnerHTML={{
+                            __html: exercise.description,
+                          }}
                         />
                       </CardContent>
                     </Card>
