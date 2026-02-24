@@ -109,11 +109,16 @@ const BarChart = React.forwardRef<
               }}
             />
           )}
-          {Object.entries(config || {}).map(([key, config]) => {
+          {Object.entries(config || {}).map(([key, itemConfig]) => {
             return (
-              <Bar key={key} dataKey={key} name={key} fill={`var(--color)`}>
+              <Bar
+                key={key}
+                dataKey={key}
+                name={key}
+                fill={itemConfig.color || "hsl(var(--primary))"}
+              >
                 {/* @ts-ignore */}
-                {config.label && <LabelList dataKey={key} position="top" />}
+                {itemConfig.label && <LabelList dataKey={key} position="top" />}
               </Bar>
             )
           })}
