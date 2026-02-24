@@ -137,6 +137,34 @@
         }
       },
       "required": ["userId", "date", "duration"]
+    },
+    "ForumPost": {
+      "title": "ForumPost",
+      "type": "object",
+      "description": "A single post in the community forum.",
+      "properties": {
+        "userId": { "type": "string", "description": "ID of the authoring user." },
+        "authorName": { "type": "string", "description": "Name of the author." },
+        "authorAvatarUrl": { "type": "string", "description": "URL of the author's avatar." },
+        "title": { "type": "string", "description": "The title of the forum post." },
+        "content": { "type": "string", "description": "The main content of the post in markdown format." },
+        "createdAt": { "type": "string", "description": "ISO 8601 timestamp of when the post was created." }
+      },
+      "required": ["userId", "authorName", "authorAvatarUrl", "title", "content", "createdAt"]
+    },
+    "ForumReply": {
+      "title": "ForumReply",
+      "type": "object",
+      "description": "A reply to a post in the community forum.",
+      "properties": {
+        "userId": { "type": "string", "description": "ID of the authoring user." },
+        "postId": { "type": "string", "description": "ID of the parent forum post." },
+        "authorName": { "type": "string", "description": "Name of the author." },
+        "authorAvatarUrl": { "type": "string", "description": "URL of the author's avatar." },
+        "content": { "type": "string", "description": "The content of the reply in markdown format." },
+        "createdAt": { "type": "string", "description": "ISO 8601 timestamp of when the reply was created." }
+      },
+      "required": ["userId", "postId", "authorName", "authorAvatarUrl", "content", "createdAt"]
     }
   },
   "auth": {
@@ -195,6 +223,26 @@
             "$ref": "#/backend/entities/SleepLog"
           },
           "description": "Stores a user's daily sleep entries. Private to the user."
+        }
+      },
+      {
+        "path": "/forums/{postId}",
+        "definition": {
+          "entityName": "ForumPost",
+          "schema": {
+            "$ref": "#/backend/entities/ForumPost"
+          },
+          "description": "Publicly readable forum posts."
+        }
+      },
+      {
+        "path": "/forums/{postId}/replies/{replyId}",
+        "definition": {
+          "entityName": "ForumReply",
+          "schema": {
+            "$ref": "#/backend/entities/ForumReply"
+          },
+          "description": "Replies to a specific forum post."
         }
       }
     ]
