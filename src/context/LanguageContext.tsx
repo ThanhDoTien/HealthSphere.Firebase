@@ -40,6 +40,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
     // If still not found, return the key itself.
     if (translatedText === undefined) {
+        console.warn(`Translation key "${key}" not found for locale "${locale}".`);
         return key;
     }
     
