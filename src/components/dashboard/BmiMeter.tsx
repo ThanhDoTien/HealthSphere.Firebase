@@ -123,7 +123,7 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4">
-            <div className="relative w-[240px] h-[120px]">
+            <div className="relative w-[240px] h-[150px]">
               <svg width="240" height="120" viewBox="0 0 240 120" className="absolute top-0 left-0">
                 <g strokeLinecap="round">
                   {segments.map((segment) => {
@@ -142,13 +142,13 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
                 </g>
                 {/* Needle */}
                 <g transform={`rotate(${bmiRotation}, ${centerX}, ${centerY})`}>
-                    <path d={`M ${centerX} ${centerY - 5} L ${centerX} ${centerY - radius - 10}`} stroke="hsl(var(--foreground))" strokeWidth="2" />
-                    <circle cx={centerX} cy={centerY} r="4" fill="hsl(var(--foreground))" />
+                    <path d={`M ${centerX - 3.5} ${centerY} L ${centerX} ${centerY - radius - 5} L ${centerX + 3.5} ${centerY} Z`} fill="hsl(var(--foreground))" />
+                    <circle cx={centerX} cy={centerY} r="5" fill="hsl(var(--foreground))" />
                 </g>
               </svg>
 
               {/* BMI Value and Status Text */}
-              <div className="absolute bottom-[-10px] w-full text-center">
+              <div className="absolute bottom-0 w-full text-center">
                 <div className="text-4xl font-bold tracking-tighter">
                   {bmi.toFixed(1)}
                 </div>
