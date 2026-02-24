@@ -1,0 +1,20 @@
+{
+  "home_hero": {
+    "src": "https://picsum.photos/seed/home-hero/1280/720",
+    "width": 1280,
+    "height": 720,
+    "hint": "health lifestyle"
+  },
+  "feature_track": {
+    "src": "https://picsum.photos/seed/feature-track/800/600",
+    "width": 800,
+    "height": 600,
+    "hint": "fitness tracker"
+  },
+  "feature_ai": {
+    "src": "https://picsum.photos/seed/feature-ai/800/600",
+    "width": 800,
+    "height": 600,
+    "hint": "healthy food"
+  }
+}

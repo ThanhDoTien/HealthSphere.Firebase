@@ -130,33 +130,78 @@ export default function AiPage() {
 
   const { data: suggestionData, isLoading: suggestionLoading } = useDoc<HealthSuggestionResponse>(suggestionDocRef);
 
-  // Đây là hàm xử lý logic AI mà bạn muốn sửa.
-  // Nó sẽ được gọi tự động khi dữ liệu sẵn sàng.
+  
   const handleGenerateSuggestions = useCallback(async () => {
-    if (!userProfile || !user || !today || !suggestionDocRef) {
-      return;
-    }
-
+    if (!userProfile || !user || !today || !suggestionDocRef) return;
+  
     setIsGenerating(true);
     setError(null);
-
-    const request: HealthSuggestionRequest = {
-      userProfile: {
-        goal: userProfile.goal,
-        weight: userProfile.weight,
-        height: userProfile.height,
-        age: userProfile.age,
-        gender: userProfile.gender,
-      },
-      dailySummary,
-      recentActivities: recentActivityData?.map((a) => a.name) || [],
-      language: locale,
-    };
-
+  
+    const prompt = `
+  You are a health assistant AI.
+  
+  Return ONLY valid JSON (no markdown, no explanation).
+  
+  Schema:
+  {
+    "generalTip": string,
+    "mealSuggestions": [
+      { "name": string, "calories": number, "recipe": string }
+    ],
+    "workoutSuggestion": [
+      { "name": string, "description": string }
+    ]
+  }
+  
+  User profile:
+  - Goal: ${userProfile.goal}
+  - Weight: ${userProfile.weight}
+  - Height: ${userProfile.height}
+  - Age: ${userProfile.age}
+  - Gender: ${userProfile.gender}
+  
+  Daily summary:
+  - Calories in: ${dailySummary.caloriesConsumed}
+  - Calories out: ${dailySummary.caloriesBurned}
+  - Sleep: ${dailySummary.sleepHours}
+  
+  Recent activities: ${recentActivityData?.map(a => a.name).join(', ') || 'None'}
+  
+  Language: ${locale}
+  
+  Generate realistic, concise suggestions.
+  `;
+  
     try {
-      const result = await getHealthSuggestions(request);
-      // Cập nhật hoặc tạo mới gợi ý cho ngày hôm nay
-      await setDoc(suggestionDocRef, result);
+      const res = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyBKqU7wBv58ZGE501N8ydSTbLXGNolOdC4",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [{ text: prompt }],
+              },
+            ],
+          }),
+        }
+      );
+  
+      const data = await res.json();
+  
+      let text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  
+      if (!text) throw new Error("Empty AI response");
+  
+      // 🔥 FIX: remove markdown ```json ```
+      text = text.replace(/```json|```/g, "").trim();
+  
+      const parsed = JSON.parse(text);
+  
+      await setDoc(suggestionDocRef, parsed);
     } catch (err: any) {
       console.error("AI ERROR:", err);
       setError(err.message || t('ai.errorMessage'));
@@ -164,7 +209,6 @@ export default function AiPage() {
       setIsGenerating(false);
     }
   }, [userProfile, user, today, suggestionDocRef, dailySummary, recentActivityData, locale, t]);
-
 
   useEffect(() => {
     // Tự động tạo gợi ý khi dữ liệu đã tải xong hoặc khi đổi ngôn ngữ.
@@ -287,28 +331,29 @@ export default function AiPage() {
               </div>
 
               <div>
-                <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
-                  <Dumbbell className="h-6 w-6 text-orange-500" />
-                  {t('ai.workoutTitle')}
-                </h3>
-                <div className="space-y-4">
-                  {suggestionData.workoutSuggestion.map((exercise) => (
-                    <Card key={exercise.name}>
-                      <CardHeader>
-                        <CardTitle>{exercise.name}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div
-                          className="prose prose-sm text-sm text-muted-foreground"
-                          dangerouslySetInnerHTML={{
-                            __html: exercise.description,
-                          }}
-                        />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
+  <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
+    <Dumbbell className="h-6 w-6 text-orange-500" />
+    {t('ai.workoutTitle')}
+  </h3>
+
+  <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
+    {suggestionData.workoutSuggestion.map((exercise) => (
+      <Card key={exercise.name} className="h-full">
+        <CardHeader>
+          <CardTitle>{exercise.name}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div
+            className="prose prose-sm text-sm text-muted-foreground"
+            dangerouslySetInnerHTML={{
+              __html: exercise.description,
+            }}
+          />
+        </CardContent>
+      </Card>
+    ))}
+  </div>
+</div>
             </div>
           )}
         </CardContent>

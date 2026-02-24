@@ -183,5 +183,12 @@
   "dialog.ai_meal.analysisFailed": "Analysis Failed",
   "dialog.ai_meal.analysisError": "The AI could not analyze the image. Please try again.",
   "dialog.ai_meal.noFoodToast": "No food detected",
-  "dialog.ai_meal.noFoodToastDescription": "The AI could not detect any food in the image. Please try again."
+  "dialog.ai_meal.noFoodToastDescription": "The AI could not detect any food in the image. Please try again.",
+  "home.features.title": "Everything you need for a healthier life",
+  "home.features.track.title": "Track Your Progress",
+  "home.features.track.description": "Log your meals, activities, sleep, and weight. Visualize your journey with intuitive charts and stay motivated.",
+  "home.features.ai.title": "Personalized AI Suggestions",
+  "home.features.ai.description": "Get smart recommendations for meals and workouts, tailored to your goals and daily activity.",
+  "home.cta.title": "Ready to take control of your health?",
+  "home.cta.subtitle": "Join HealthSphere today and start your journey towards a better you."
 }
