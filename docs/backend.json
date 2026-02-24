@@ -3,7 +3,7 @@
     "UserProfile": {
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a user's profile and basic health information.",
+      "description": "Represents a user's profile, health statistics, and personal goals. This information is used to personalize the user's experience and provide tailored AI suggestions.",
       "properties": {
         "name": {
           "type": "string",
@@ -61,7 +61,7 @@
     "MealLog": {
       "title": "MealLog",
       "type": "object",
-      "description": "A single meal consumed by a user.",
+      "description": "A single meal entry, which can represent a single food item or a full meal composed of multiple items. This can be logged manually by the user or automatically via AI image recognition.",
       "properties": {
         "userId": {
           "type": "string",
@@ -69,7 +69,7 @@
         },
         "name": {
           "type": "string",
-          "description": "Name of the meal or food item."
+          "description": "Name of the meal or food item. For AI-generated logs, this may be a comma-separated list of identified foods, prefixed with 'AI: '."
         },
         "calories": {
           "type": "number",
