@@ -30,10 +30,15 @@ export default function DashboardPage() {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
   const [today, setToday] = useState('');
+  const [yesterday, setYesterday] = useState('');
 
   useEffect(() => {
     // This runs only on the client, after hydration, avoiding mismatch
-    setToday(new Date().toISOString().split('T')[0]);
+    const todayDate = new Date();
+    setToday(todayDate.toISOString().split('T')[0]);
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    setYesterday(yesterdayDate.toISOString().split('T')[0]);
   }, []);
 
   // Weight query (last 30 entries)
@@ -71,10 +76,39 @@ export default function DashboardPage() {
     );
   }, [firestore, user, today]);
 
+  // Queries for yesterday's data
+  const yesterdayMealsQuery = useMemoFirebase(() => {
+    if (!user || !yesterday) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'meals'),
+      where('date', '==', yesterday)
+    );
+  }, [firestore, user, yesterday]);
+
+  const yesterdayActivitiesQuery = useMemoFirebase(() => {
+    if (!user || !yesterday) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'activities'),
+      where('date', '==', yesterday)
+    );
+  }, [firestore, user, yesterday]);
+
+  const yesterdaySleepQuery = useMemoFirebase(() => {
+    if (!user || !yesterday) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'sleep'),
+      where('date', '==', yesterday)
+    );
+  }, [firestore, user, yesterday]);
+
+
   const { data: weightData } = useCollection(weightQuery);
   const { data: mealData } = useCollection(mealsQuery);
   const { data: activityData } = useCollection(activitiesQuery);
   const { data: sleepData } = useCollection(sleepQuery);
+  const { data: yesterdayMealData } = useCollection(yesterdayMealsQuery);
+  const { data: yesterdayActivityData } = useCollection(yesterdayActivitiesQuery);
+  const { data: yesterdaySleepData } = useCollection(yesterdaySleepQuery);
 
   const chartData = useMemo(() => {
     if (!weightData) return [];
@@ -90,6 +124,7 @@ export default function DashboardPage() {
       .reverse();
   }, [weightData]);
 
+  // Today's totals
   const caloriesConsumed = useMemo(() => {
     if (!mealData) return 0;
     return mealData.reduce((sum, meal) => sum + meal.calories, 0);
@@ -105,7 +140,52 @@ export default function DashboardPage() {
     return sleepData.reduce((sum, sleep) => sum + sleep.duration, 0);
   }, [sleepData]);
 
+  // Yesterday's totals
+  const yesterdayCaloriesConsumed = useMemo(() => {
+    if (!yesterdayMealData) return 0;
+    return yesterdayMealData.reduce((sum, meal) => sum + meal.calories, 0);
+  }, [yesterdayMealData]);
+  
+  const yesterdayCaloriesBurned = useMemo(() => {
+    if (!yesterdayActivityData) return 0;
+    return yesterdayActivityData.reduce((sum, activity) => sum + activity.caloriesBurned, 0);
+  }, [yesterdayActivityData]);
+
+  const yesterdaySleepHours = useMemo(() => {
+    if (!yesterdaySleepData || yesterdaySleepData.length === 0) return 0;
+    return yesterdaySleepData.reduce((sum, sleep) => sum + sleep.duration, 0);
+  }, [yesterdaySleepData]);
+  
+  const getComparisonText = (current: number, previous: number, unit: string) => {
+    const diff = current - previous;
+    if (diff === 0) return `Same as yesterday`;
+    return `${diff > 0 ? '+' : ''}${unit === 'hours' ? diff.toFixed(1) : diff.toLocaleString()} ${unit} from yesterday`;
+  };
+
   const currentWeight = weightData?.[0]?.weight;
+
+  const weightChangeText = useMemo(() => {
+    if (!weightData) return 'Log weight to see trend';
+
+    const todayEntry = weightData.find(w => w.date === today);
+    const yesterdayEntry = weightData.find(w => w.date === yesterday);
+
+    if (todayEntry && yesterdayEntry) {
+        const diff = todayEntry.weight - yesterdayEntry.weight;
+        if (diff === 0) return `Same as yesterday`;
+        return `${diff > 0 ? '+' : ''}${diff.toFixed(1)}kg from yesterday`;
+    }
+
+    if (weightData.length > 1) {
+        const latest = weightData[0];
+        const previous = weightData[1];
+        const diff = latest.weight - previous.weight;
+        if (diff === 0) return 'No change since last entry';
+        return `${diff > 0 ? '+' : ''}${diff.toFixed(1)}kg since last entry`;
+    }
+    
+    return 'Log weight to see trend';
+  }, [weightData, today, yesterday]);
 
   return (
     <div className="flex flex-col">
@@ -128,7 +208,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-muted-foreground">
-                  Today
+                  {yesterdayMealData && yesterdayMealData.length > 0 ? getComparisonText(caloriesConsumed, yesterdayCaloriesConsumed, 'kcal') : 'Today'}
                 </div>
               </CardContent>
             </Card>
@@ -139,7 +219,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-muted-foreground">
-                  Today
+                  {yesterdayActivityData && yesterdayActivityData.length > 0 ? getComparisonText(caloriesBurned, yesterdayCaloriesBurned, 'kcal') : 'Today'}
                 </div>
               </CardContent>
             </Card>
@@ -150,7 +230,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-muted-foreground">
-                  Today
+                  {yesterdaySleepData && yesterdaySleepData.length > 0 ? getComparisonText(sleepHours, yesterdaySleepHours, 'hours') : 'Today'}
                 </div>
               </CardContent>
             </Card>
@@ -163,11 +243,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-muted-foreground">
-                  {weightData && weightData.length > 1 && currentWeight
-                    ? `${(
-                        currentWeight - weightData[weightData.length - 1].weight
-                      ).toFixed(1)}kg change`
-                    : 'Log weight to see trend'}
+                  {weightChangeText}
                 </div>
               </CardContent>
             </Card>
