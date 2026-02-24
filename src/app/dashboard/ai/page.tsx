@@ -138,39 +138,55 @@ export default function AiPage() {
     setError(null);
   
     const prompt = `
-  You are a health assistant AI.
-  
-  Return ONLY valid JSON (no markdown, no explanation).
-  
-  Schema:
-  {
-    "generalTip": string,
-    "mealSuggestions": [
-      { "name": string, "calories": number, "recipe": string }
-    ],
+    You are a health assistant AI.
+    
+    Return ONLY valid JSON (no markdown, no explanation).
+    
+    Schema:
+    {
+      "generalTip": string,
+      "mealSuggestions": [
+        { "name": string, "calories": number, "recipe": string }
+      ],
+      "workoutSuggestion": [
+        { 
+          "name": string, 
+          "description": string 
+        }
+      ]
+    }
+    
+    IMPORTANT:
+    - workout description MUST be formatted in HTML
+    - Use <ul><li> for steps OR <br/> for line breaks
+    - Each exercise must be easy to read (multiple lines, not one paragraph)
+    
+    Example:
     "workoutSuggestion": [
-      { "name": string, "description": string }
+      {
+        "name": "Full Body Workout",
+        "description": "<ul><li>Push-ups: 10 reps</li><li>Squats: 15 reps</li><li>Plank: 30 seconds</li></ul>"
+      }
     ]
-  }
-  
-  User profile:
-  - Goal: ${userProfile.goal}
-  - Weight: ${userProfile.weight}
-  - Height: ${userProfile.height}
-  - Age: ${userProfile.age}
-  - Gender: ${userProfile.gender}
-  
-  Daily summary:
-  - Calories in: ${dailySummary.caloriesConsumed}
-  - Calories out: ${dailySummary.caloriesBurned}
-  - Sleep: ${dailySummary.sleepHours}
-  
-  Recent activities: ${recentActivityData?.map(a => a.name).join(', ') || 'None'}
-  
-  Language: ${locale}
-  
-  Generate realistic, concise suggestions.
-  `;
+    
+    User profile:
+    - Goal: ${userProfile.goal}
+    - Weight: ${userProfile.weight}
+    - Height: ${userProfile.height}
+    - Age: ${userProfile.age}
+    - Gender: ${userProfile.gender}
+    
+    Daily summary:
+    - Calories in: ${dailySummary.caloriesConsumed}
+    - Calories out: ${dailySummary.caloriesBurned}
+    - Sleep: ${dailySummary.sleepHours}
+    
+    Recent activities: ${recentActivityData?.map(a => a.name).join(', ') || 'None'}
+    
+    Language: ${locale}
+    
+    Generate realistic, clean, readable suggestions.
+    `;
   
     try {
       const res = await fetch(
