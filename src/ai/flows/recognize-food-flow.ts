@@ -42,7 +42,7 @@ const foodRecognitionPrompt = ai.definePrompt({
   name: 'foodRecognitionPrompt',
   input: { schema: RecognizeFoodRequestSchema },
   output: { schema: RecognizeFoodResponseSchema },
-  model: 'gemini-pro-vision',
+  model: 'models/gemini-pro-vision',
   prompt: `You are an expert nutritionist. Your task is to analyze the image of a meal provided by the user and identify all the food items present.
 
 For each food item you identify, provide its name and an estimated calorie count for a standard serving size shown in the picture.
