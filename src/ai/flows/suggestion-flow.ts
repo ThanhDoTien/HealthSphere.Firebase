@@ -69,7 +69,7 @@ const suggestionPrompt = ai.definePrompt({
   name: 'healthSuggestionPrompt',
   input: { schema: HealthSuggestionRequestSchema },
   output: { schema: HealthSuggestionResponseSchema },
-  model: googleAI.model('gemini-1.5-flash'),
+  model: googleAI.model('gemini-2.5-flash'),
   prompt: `You are a friendly and encouraging AI health assistant. Your goal is to provide personalized, actionable, and safe health suggestions based on the user's data.
 
 Analyze the following user data:
