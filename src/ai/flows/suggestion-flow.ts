@@ -1,13 +1,12 @@
 'use server';
 /**
- * @fileOverview Generates health suggestions based on user data.
+ * @fileOverview Generates health suggestions based on user data using Google AI.
  * - getHealthSuggestions - a function that handles the health suggestion process.
  * - HealthSuggestionRequest - The input type for the getHealthSuggestions function.
  * - HealthSuggestionResponse - The return type for the getHealthSuggestions function.
  */
 
-import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/google-genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 
 const HealthSuggestionRequestSchema = z.object({
@@ -65,27 +64,57 @@ export type HealthSuggestionResponse = z.infer<
   typeof HealthSuggestionResponseSchema
 >;
 
-const suggestionPrompt = ai.definePrompt({
-  name: 'healthSuggestionPrompt',
-  input: { schema: HealthSuggestionRequestSchema },
-  model: 'gemini-pro',
-  prompt: `You are a friendly and encouraging AI health assistant. Your goal is to provide personalized, actionable, and safe health suggestions based on the user's data.
+// Initialize Google AI
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
+const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+function extractJson(text: string): string | null {
+  // First, try to find a JSON block enclosed in markdown
+  const markdownMatch = text.match(/```json\n([\s\S]*?)\n```/);
+  if (markdownMatch && markdownMatch[1]) {
+    return markdownMatch[1];
+  }
+
+  // If no markdown block is found, try to find a raw JSON object
+  const rawJsonMatch = text.match(/{\s*["\w]/); // Starts with { and a quote or word character
+  if (rawJsonMatch) {
+    const startIndex = rawJsonMatch.index!;
+    // Find the matching closing bracket
+    let openBraces = 0;
+    for (let i = startIndex; i < text.length; i++) {
+      if (text[i] === '{') {
+        openBraces++;
+      } else if (text[i] === '}') {
+        openBraces--;
+        if (openBraces === 0) {
+          return text.substring(startIndex, i + 1);
+        }
+      }
+    }
+  }
+
+  return null; // Return null if no JSON is found
+}
+
+
+export async function getHealthSuggestions(
+  input: HealthSuggestionRequest
+): Promise<HealthSuggestionResponse> {
+  const prompt = `You are a friendly and encouraging AI health assistant. Your goal is to provide personalized, actionable, and safe health suggestions based on the user's data.
 
 Analyze the following user data:
 - **User Profile:**
-  - Health Goal: {{{userProfile.goal}}}
-  - Current Weight: {{{userProfile.weight}}} kg
-  - Height: {{{userProfile.height}}} cm
-  - Age: {{{userProfile.age}}}
-  - Gender: {{{userProfile.gender}}}
+  - Health Goal: ${input.userProfile.goal}
+  - Current Weight: ${input.userProfile.weight} kg
+  - Height: ${input.userProfile.height} cm
+  - Age: ${input.userProfile.age}
+  - Gender: ${input.userProfile.gender}
 - **Today's Summary:**
-  - Calories Consumed: {{{dailySummary.caloriesConsumed}}} kcal
-  - Calories Burned: {{{dailySummary.caloriesBurned}}} kcal
-  - Hours Slept: {{{dailySummary.sleepHours}}} hours
+  - Calories Consumed: ${input.dailySummary.caloriesConsumed} kcal
+  - Calories Burned: ${input.dailySummary.caloriesBurned} kcal
+  - Hours Slept: ${input.dailySummary.sleepHours} hours
 - **Recent Activities:**
-{{#each recentActivities}}
-- {{{this}}}
-{{/each}}
+${input.recentActivities.map((act) => `- ${act}`).join('\n')}
 
 Based on this data, provide a set of suggestions.
 
@@ -94,40 +123,25 @@ Your suggestions should be:
 2.  **Workout Suggestion:** Recommend 2 or 3 exercises or a short workout routine. The suggestions should be appropriate for the user's recent activities and goals.
 3.  **General Tip:** Provide one general, encouraging tip for the day.
 
-Generate the response as a single, valid JSON object. Do not include any text, markdown formatting, or code fences before or after the JSON object. The JSON object should have the following structure: { mealSuggestions: [{ name: string, recipe: string, calories: number }], workoutSuggestion: [{ name:string, description: string }], generalTip: string }.
-`,
-});
+Generate the response as a single, valid JSON object. Do not include any text, markdown formatting, or code fences before or after the JSON object. The JSON object must have the following structure: { mealSuggestions: [{ name: string, recipe: string, calories: number }], workoutSuggestion: [{ name:string, description: string }], generalTip: string }.
+`;
 
-const suggestionFlow = ai.defineFlow(
-  {
-    name: 'suggestionFlow',
-    inputSchema: HealthSuggestionRequestSchema,
-    outputSchema: HealthSuggestionResponseSchema,
-  },
-  async (input) => {
-    const response = await suggestionPrompt(input);
-    const textResponse = response.text;
-    if (!textResponse) {
-      throw new Error('Failed to get a response from the AI model.');
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const textResponse = response.text();
+    
+    const jsonText = extractJson(textResponse);
+
+    if (!jsonText) {
+      throw new Error('The AI returned an invalid response format (no JSON found).');
     }
-    try {
-      // The output from the model should be a raw JSON string
-      const parsed = JSON.parse(textResponse);
-      // Validate the parsed object against the Zod schema
-      return HealthSuggestionResponseSchema.parse(parsed);
-    } catch (e) {
-      console.error(
-        'Failed to parse or validate JSON response from AI:',
-        textResponse,
-        e
-      );
-      throw new Error('The AI returned an invalid response format.');
-    }
+
+    const parsed = JSON.parse(jsonText);
+    return HealthSuggestionResponseSchema.parse(parsed);
+
+  } catch (e) {
+    console.error('Failed to get suggestions from AI or parse the response:', e);
+    throw new Error('The AI returned an invalid response format.');
   }
-);
-
-export async function getHealthSuggestions(
-  input: HealthSuggestionRequest
-): Promise<HealthSuggestionResponse> {
-  return await suggestionFlow(input);
 }

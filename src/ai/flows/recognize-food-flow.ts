@@ -1,14 +1,29 @@
 'use server';
 /**
- * @fileOverview Identifies food items from an image and estimates their nutritional value.
+ * @fileOverview Identifies food items from an image and estimates their nutritional value using Google AI.
  * - recognizeFood - a function that handles the food recognition process.
  * - RecognizeFoodRequest - The input type for the recognizeFood function.
  * - RecognizeFoodResponse - The return type for the recognizeFood function.
  */
 
-import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/google-genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
+
+// Helper to convert data URI to a format Google AI can understand
+function dataUriToGenerativePart(uri: string) {
+  const [header, data] = uri.split(',');
+  const mimeTypeMatch = header.match(/:(.*?);/);
+  if (!mimeTypeMatch || !mimeTypeMatch[1]) {
+    throw new Error('Invalid data URI');
+  }
+  const mimeType = mimeTypeMatch[1];
+  return {
+    inlineData: {
+      data,
+      mimeType,
+    },
+  };
+}
 
 const RecognizeFoodRequestSchema = z.object({
   photoDataUri: z
@@ -38,11 +53,11 @@ const RecognizeFoodResponseSchema = z.object({
 });
 export type RecognizeFoodResponse = z.infer<typeof RecognizeFoodResponseSchema>;
 
-const foodRecognitionPrompt = ai.definePrompt({
-  name: 'foodRecognitionPrompt',
-  input: { schema: RecognizeFoodRequestSchema },
-  model: 'gemini-pro-vision',
-  prompt: `You are an expert nutritionist. Your task is to analyze the image of a meal provided by the user and identify all the food items present.
+// Initialize Google AI
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
+const model = genAI.getGenerativeModel({ model: 'gemini-pro-vision' });
+
+const prompt = `You are an expert nutritionist. Your task is to analyze the image of a meal provided by the user and identify all the food items present.
 
 For each food item you identify, provide its name and an estimated calorie count for a standard serving size shown in the picture.
 
@@ -50,39 +65,30 @@ Combine the calories of all items to provide a total calorie count for the meal.
 
 If the image does not appear to contain any food, please return a JSON object with an empty 'identifiedFoods' array and a 'totalCalories' of 0.
 
-User's photo: {{media url=photoDataUri}}
-
-Generate the response as a single, valid JSON object. Do not include any text, markdown formatting, or code fences before or after the JSON object. The JSON object must have the following structure: { identifiedFoods: [{ name: string, calories: number }], totalCalories: number }.`,
-});
-
-const recognizeFoodFlow = ai.defineFlow(
-  {
-    name: 'recognizeFoodFlow',
-    inputSchema: RecognizeFoodRequestSchema,
-    outputSchema: RecognizeFoodResponseSchema,
-  },
-  async (input) => {
-    const response = await foodRecognitionPrompt(input);
-    const textResponse = response.text;
-    if (!textResponse) {
-      throw new Error('Failed to get a response from the AI model.');
-    }
-    try {
-      const parsed = JSON.parse(textResponse);
-      return RecognizeFoodResponseSchema.parse(parsed);
-    } catch (e) {
-      console.error(
-        'Failed to parse or validate JSON response from AI:',
-        textResponse,
-        e
-      );
-      throw new Error('The AI returned an invalid response format.');
-    }
-  }
-);
+Generate the response as a single, valid JSON object. Do not include any text, markdown formatting, or code fences before or after the JSON object. The JSON object must have the following structure: { identifiedFoods: [{ name: string, calories: number }], totalCalories: number }.`;
 
 export async function recognizeFood(
   input: RecognizeFoodRequest
 ): Promise<RecognizeFoodResponse> {
-  return await recognizeFoodFlow(input);
+  const imagePart = dataUriToGenerativePart(input.photoDataUri);
+
+  try {
+    const result = await model.generateContent([prompt, imagePart]);
+    const response = await result.response;
+    const textResponse = response.text();
+
+    if (!textResponse) {
+      throw new Error('Failed to get a response from the AI model.');
+    }
+
+    const parsed = JSON.parse(textResponse);
+    return RecognizeFoodResponseSchema.parse(parsed);
+
+  } catch (e) {
+    console.error(
+      'Failed to parse or validate JSON response from AI:',
+      e
+    );
+    throw new Error('The AI returned an invalid response format.');
+  }
 }
