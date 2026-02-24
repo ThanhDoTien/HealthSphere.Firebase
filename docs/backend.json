@@ -116,6 +116,27 @@
         }
       },
       "required": ["userId", "name", "duration", "caloriesBurned", "date"]
+    },
+    "SleepLog": {
+      "title": "SleepLog",
+      "type": "object",
+      "description": "A single sleep log for a user on a specific date.",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID of the user this sleep log belongs to."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the sleep entry.",
+          "format": "date"
+        },
+        "duration": {
+          "type": "number",
+          "description": "Duration of sleep in hours."
+        }
+      },
+      "required": ["userId", "date", "duration"]
     }
   },
   "auth": {
@@ -164,6 +185,16 @@
             "$ref": "#/backend/entities/ActivityLog"
           },
           "description": "Stores a user's activity entries. Private to the user."
+        }
+      },
+      {
+        "path": "/users/{userId}/sleep/{sleepId}",
+        "definition": {
+          "entityName": "SleepLog",
+          "schema": {
+            "$ref": "#/backend/entities/SleepLog"
+          },
+          "description": "Stores a user's daily sleep entries. Private to the user."
         }
       }
     ]

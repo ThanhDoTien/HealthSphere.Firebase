@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Flame, Lightbulb } from 'lucide-react';
 
 import {
@@ -14,7 +14,7 @@ import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { collection, query, orderBy, limit, where } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
 import AddWeightForm from '@/components/dashboard/AddWeightForm';
@@ -29,7 +29,14 @@ const weightChartConfig = {
 export default function DashboardPage() {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
+  const [today, setToday] = useState('');
 
+  useEffect(() => {
+    // This runs only on the client, after hydration, avoiding mismatch
+    setToday(new Date().toISOString().split('T')[0]);
+  }, []);
+
+  // Weight query (last 30 entries)
   const weightQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -39,7 +46,35 @@ export default function DashboardPage() {
     );
   }, [firestore, user]);
 
+  // Queries for today's data
+  const mealsQuery = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'meals'),
+      where('date', '==', today)
+    );
+  }, [firestore, user, today]);
+
+  const activitiesQuery = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'activities'),
+      where('date', '==', today)
+    );
+  }, [firestore, user, today]);
+
+  const sleepQuery = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'sleep'),
+      where('date', '==', today)
+    );
+  }, [firestore, user, today]);
+
   const { data: weightData } = useCollection(weightQuery);
+  const { data: mealData } = useCollection(mealsQuery);
+  const { data: activityData } = useCollection(activitiesQuery);
+  const { data: sleepData } = useCollection(sleepQuery);
 
   const chartData = useMemo(() => {
     if (!weightData) return [];
@@ -54,6 +89,21 @@ export default function DashboardPage() {
       }))
       .reverse();
   }, [weightData]);
+
+  const caloriesConsumed = useMemo(() => {
+    if (!mealData) return 0;
+    return mealData.reduce((sum, meal) => sum + meal.calories, 0);
+  }, [mealData]);
+
+  const caloriesBurned = useMemo(() => {
+    if (!activityData) return 0;
+    return activityData.reduce((sum, activity) => sum + activity.caloriesBurned, 0);
+  }, [activityData]);
+
+  const sleepHours = useMemo(() => {
+    if (!sleepData || sleepData.length === 0) return 0;
+    return sleepData.reduce((sum, sleep) => sum + sleep.duration, 0);
+  }, [sleepData]);
 
   const currentWeight = weightData?.[0]?.weight;
 
@@ -74,33 +124,33 @@ export default function DashboardPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription>Calories Consumed</CardDescription>
-                <CardTitle className="text-4xl">1,250</CardTitle>
+                <CardTitle className="text-4xl">{caloriesConsumed.toLocaleString()}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-muted-foreground">
-                  +25% from last day
+                  Today
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription>Calories Burned</CardDescription>
-                <CardTitle className="text-4xl">340</CardTitle>
+                <CardTitle className="text-4xl">{caloriesBurned.toLocaleString()}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-muted-foreground">
-                  +10% from last day
+                  Today
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardDescription>Remaining</CardDescription>
-                <CardTitle className="text-4xl">910</CardTitle>
+                <CardDescription>Sleep Hour</CardDescription>
+                <CardTitle className="text-4xl">{sleepHours.toFixed(1)}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-muted-foreground">
-                  Your goal: {userProfile?.goal || 'Not set'}
+                  Today
                 </div>
               </CardContent>
             </Card>
@@ -176,24 +226,22 @@ export default function DashboardPage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Activities</CardTitle>
+              <CardTitle>Today&apos;s Activities</CardTitle>
               <CardDescription>
                 Summary of your activities today.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
-              <div className="flex items-center">
-                <div>Running</div>
-                <div className="ml-auto font-semibold">150 kcal</div>
-              </div>
-              <div className="flex items-center">
-                <div>Walking</div>
-                <div className="ml-auto font-semibold">90 kcal</div>
-              </div>
-              <div className="flex items-center">
-                <div>Weight Lifting</div>
-                <div className="ml-auto font-semibold">100 kcal</div>
-              </div>
+               {activityData && activityData.length > 0 ? (
+                activityData.map((activity) => (
+                    <div key={activity.id} className="flex items-center">
+                        <div>{activity.name}</div>
+                        <div className="ml-auto font-semibold">{activity.caloriesBurned} kcal</div>
+                    </div>
+                ))
+            ) : (
+                <p className="text-sm text-muted-foreground">No activities logged today.</p>
+            )}
             </CardContent>
           </Card>
         </div>

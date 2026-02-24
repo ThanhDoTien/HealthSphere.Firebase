@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Apple, Flame, Sparkles, User } from 'lucide-react';
+import { Home, Apple, Flame, Sparkles, User, Bed } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Home', icon: Home },
   { href: '/dashboard/calories', label: 'Calories', icon: Apple },
   { href: '/dashboard/activity', label: 'Activity', icon: Flame },
+  { href: '/dashboard/sleep', label: 'Sleep', icon: Bed },
   { href: '/dashboard/ai', label: 'AI', icon: Sparkles },
   { href: '/dashboard/profile', label: 'Profile', icon: User },
 ];
