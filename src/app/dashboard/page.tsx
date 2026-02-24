@@ -163,7 +163,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-muted-foreground">
-                  {weightData && weightData.length > 1
+                  {weightData && weightData.length > 1 && currentWeight
                     ? `${(
                         currentWeight - weightData[weightData.length - 1].weight
                       ).toFixed(1)}kg change`
