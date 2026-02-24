@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Loader2, ChevronsRight, Replay } from 'lucide-react';
+import Image from 'next/image';
+import { Camera, Loader2, ChevronsRight, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import {
@@ -57,12 +58,14 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
 
   useEffect(() => {
     let stream: MediaStream | null = null;
+    const videoElement = videoRef.current;
+
     const getCameraPermission = async () => {
       if (open) {
         try {
           stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
+          if (videoElement) {
+            videoElement.srcObject = stream;
           }
           setHasCameraPermission(true);
         } catch (error) {
@@ -84,8 +87,8 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
         }
-        if (videoRef.current) {
-            videoRef.current.srcObject = null;
+        if (videoElement) {
+            videoElement.srcObject = null;
         }
     }
   }, [open, toast]);
@@ -218,7 +221,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
             ) : (
                 <div className="space-y-4">
                     <div className="relative aspect-video w-full overflow-hidden rounded-md border">
-                        <img src={capturedImage} alt="Captured meal" className="h-full w-full object-cover" />
+                        <Image src={capturedImage} alt="Captured meal" fill className="object-cover" />
                     </div>
 
                     {isAnalyzing && (
@@ -252,7 +255,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
                                 <Alert>
                                     <AlertTitle>No Food Detected</AlertTitle>
                                     <AlertDescription>
-                                        We couldn't find any food items in your photo. Try again in a well-lit area.
+                                        We couldn&apos;t find any food items in your photo. Try again in a well-lit area.
                                     </AlertDescription>
                                 </Alert>
                             )}
@@ -285,7 +288,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
                 </>
             ) : capturedImage ? (
                  <Button variant="outline" onClick={() => setCapturedImage(null)} className="col-span-2">
-                    <Replay className="mr-2 h-4 w-4" />
+                    <RotateCcw className="mr-2 h-4 w-4" />
                     Try Again
                 </Button>
             ) : null }

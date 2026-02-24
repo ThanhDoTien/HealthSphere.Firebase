@@ -50,18 +50,29 @@ export default function AiPage() {
     setToday(todayDate.toISOString().split('T')[0]);
   }, []);
 
-  const dailyQuery = (collectionName: string) =>
-    useMemoFirebase(() => {
-      if (!user || !today) return null;
-      return query(
-        collection(firestore, 'users', user.uid, collectionName),
-        where('date', '==', today)
-      );
-    }, [firestore, user, today]);
+  const mealsQuery = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'meals'),
+      where('date', '==', today)
+    );
+  }, [firestore, user, today]);
 
-  const mealsQuery = dailyQuery('meals');
-  const activitiesQuery = dailyQuery('activities');
-  const sleepQuery = dailyQuery('sleep');
+  const activitiesQuery = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'activities'),
+      where('date', '==', today)
+    );
+  }, [firestore, user, today]);
+
+  const sleepQuery = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'sleep'),
+      where('date', '==', today)
+    );
+  }, [firestore, user, today]);
 
   const recentActivitiesQuery = useMemoFirebase(() => {
     if (!user) return null;
@@ -210,7 +221,7 @@ export default function AiPage() {
           {userProfile && (
             <Card className="bg-muted/30">
               <CardHeader>
-                <CardTitle className="text-lg">Today's Snapshot</CardTitle>
+                <CardTitle className="text-lg">Today&apos;s Snapshot</CardTitle>
                 <CardDescription>
                   This data will be used to generate your personalized plan.
                 </CardDescription>
