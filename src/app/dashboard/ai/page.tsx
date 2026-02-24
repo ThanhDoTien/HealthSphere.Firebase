@@ -9,9 +9,17 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase/auth/use-user';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, where, orderBy, limit } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  doc,
+  setDoc,
+} from 'firebase/firestore';
 import {
   getHealthSuggestions,
   type HealthSuggestionRequest,
@@ -25,14 +33,14 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function AiPage() {
   const { user, userProfile, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const [today, setToday] = useState('');
 
-  const [suggestions, setSuggestions] =
-    useState<HealthSuggestionResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +72,11 @@ export default function AiPage() {
     );
   }, [firestore, user]);
 
+  const suggestionDocRef = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return doc(firestore, 'users', user.uid, 'todaysuggestions', today);
+  }, [firestore, user, today]);
+
   const { data: mealData, isLoading: mealLoading } = useCollection(mealsQuery);
   const { data: activityData, isLoading: activityLoading } =
     useCollection(activitiesQuery);
@@ -71,6 +84,8 @@ export default function AiPage() {
     useCollection(sleepQuery);
   const { data: recentActivityData, isLoading: recentActivityLoading } =
     useCollection(recentActivitiesQuery);
+  const { data: suggestions, isLoading: suggestionsLoading } =
+    useDoc<HealthSuggestionResponse>(suggestionDocRef);
 
   const dailySummary = useMemo(() => {
     const summary = {
@@ -106,34 +121,65 @@ export default function AiPage() {
   }, [recentActivityData]);
 
   const handleGenerateSuggestions = async () => {
-    if (!userProfile) {
-      setError('User profile is not loaded.');
+    if (!userProfile || !user || !today) {
+      setError('User profile is not loaded or date is not set.');
       return;
     }
 
     setIsLoading(true);
     setError(null);
-    setSuggestions(null);
+
+    const requestData: HealthSuggestionRequest = {
+      userProfile: {
+        goal: userProfile.goal,
+        weight: userProfile.weight,
+        height: userProfile.height,
+        age: userProfile.age,
+        gender: userProfile.gender,
+      },
+      dailySummary: {
+        caloriesConsumed: dailySummary.caloriesConsumed,
+        caloriesBurned: dailySummary.caloriesBurned,
+        sleepHours: dailySummary.sleepHours,
+      },
+      recentActivities: recentActivities,
+    };
 
     try {
-      const requestData: HealthSuggestionRequest = {
-        userProfile: {
-          goal: userProfile.goal,
-          weight: userProfile.weight,
-          height: userProfile.height,
-          age: userProfile.age,
-          gender: userProfile.gender,
-        },
-        dailySummary: {
-          caloriesConsumed: dailySummary.caloriesConsumed,
-          caloriesBurned: dailySummary.caloriesBurned,
-          sleepHours: dailySummary.sleepHours,
-        },
-        recentActivities: recentActivities,
-      };
+      // 1. Save snapshot to Firestore
+      const snapshotDocRef = doc(
+        firestore,
+        'users',
+        user.uid,
+        'todaysnapshots',
+        today
+      );
+      setDoc(snapshotDocRef, requestData, { merge: true }).catch((err) => {
+        // This is a non-critical background write.
+        // The error will be logged by the global listener.
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: snapshotDocRef.path,
+            operation: 'write',
+            requestResourceData: requestData,
+          })
+        );
+      });
 
+      // 2. Call AI
       const result = await getHealthSuggestions(requestData);
-      setSuggestions(result);
+
+      // 3. Save suggestions to Firestore
+      const newSuggestionDocRef = doc(
+        firestore,
+        'users',
+        user.uid,
+        'todaysuggestions',
+        today
+      );
+      // This is a critical write, so we await it.
+      await setDoc(newSuggestionDocRef, result, { merge: true });
     } catch (e: any) {
       setError(e.message || 'An error occurred while generating suggestions.');
     } finally {
@@ -146,7 +192,8 @@ export default function AiPage() {
     mealLoading ||
     activityLoading ||
     sleepLoading ||
-    recentActivityLoading;
+    recentActivityLoading ||
+    suggestionsLoading;
 
   return (
     <div className="p-4 sm:p-6">
@@ -182,17 +229,13 @@ export default function AiPage() {
                   <span className="font-semibold">{userProfile.goal}</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground">
-                    Calories In
-                  </span>
+                  <span className="text-muted-foreground">Calories In</span>
                   <span className="font-semibold">
                     {dailySummary.caloriesConsumed.toFixed(0)} kcal
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground">
-                    Calories Out
-                  </span>
+                  <span className="text-muted-foreground">Calories Out</span>
                   <span className="font-semibold">
                     {dailySummary.caloriesBurned.toFixed(0)} kcal
                   </span>
