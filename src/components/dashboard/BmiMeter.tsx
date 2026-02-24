@@ -69,7 +69,7 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
   }, [height, weight]);
 
   // SVG Gauge constants
-  const minBmi = 10;
+  const minBmi = 15;
   const maxBmi = 45;
   const radius = 80;
   const strokeWidth = 20;
@@ -78,7 +78,7 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
 
   const mapBmiToAngle = (bmiValue: number) => {
     const clampedBmi = Math.max(minBmi, Math.min(bmiValue, maxBmi));
-    // Map BMI range (10-45) to angle range (-90 to 90 degrees) for rotation
+    // Map BMI range (15-45) to angle range (-90 to 90 degrees) for rotation
     const percentage = (clampedBmi - minBmi) / (maxBmi - minBmi);
     return percentage * 180 - 90;
   };
@@ -86,7 +86,7 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
   const bmiRotation = mapBmiToAngle(bmi);
   
   const segments = [
-    { category: BMI_CATEGORIES.UNDERWEIGHT, min: 10, max: 18.5 },
+    { category: BMI_CATEGORIES.UNDERWEIGHT, min: 15, max: 18.5 },
     { category: BMI_CATEGORIES.NORMAL, min: 18.5, max: 25 },
     { category: BMI_CATEGORIES.OVERWEIGHT, min: 25, max: 30 },
     { category: BMI_CATEGORIES.OBESE, min: 30, max: 40 },
@@ -122,9 +122,9 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
             {t('dashboard.bmi.noData')}
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative w-[240px] h-[150px]">
-              <svg width="240" height="120" viewBox="0 0 240 120" className="absolute top-0 left-0">
+          <div className="flex flex-col items-center gap-1">
+            <div className="relative w-[240px] h-[120px]">
+              <svg width="240" height="120" viewBox="0 0 240 120">
                 <g strokeLinecap="round">
                   {segments.map((segment) => {
                     const startAngle = mapBmiToAngle(segment.min);
@@ -146,15 +146,15 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
                     <circle cx={centerX} cy={centerY} r="5" fill="hsl(var(--foreground))" />
                 </g>
               </svg>
+            </div>
 
-              {/* BMI Value and Status Text */}
-              <div className="absolute bottom-0 w-full text-center">
-                <div className="text-4xl font-bold tracking-tighter">
-                  {bmi.toFixed(1)}
-                </div>
-                <div className={`font-semibold ${status.textColor}`}>
-                  {t(status.labelKey)}
-                </div>
+            {/* BMI Value and Status Text */}
+            <div className="text-center">
+              <div className="text-4xl font-bold tracking-tighter">
+                {bmi.toFixed(1)}
+              </div>
+              <div className={`font-semibold ${status.textColor}`}>
+                {t(status.labelKey)}
               </div>
             </div>
           </div>
