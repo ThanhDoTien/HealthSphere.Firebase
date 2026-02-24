@@ -23,6 +23,7 @@ const HealthSuggestionRequestSchema = z.object({
     sleepHours: z.number(),
   }),
   recentActivities: z.array(z.string()),
+  language: z.string().optional().describe('The language for the response (e.g., "en", "vi").'),
 });
 export type HealthSuggestionRequest = z.infer<
   typeof HealthSuggestionRequestSchema
@@ -64,22 +65,18 @@ export type HealthSuggestionResponse = z.infer<
   typeof HealthSuggestionResponseSchema
 >;
 
-// Initialize Google AI
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
 const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
 function extractJson(text: string): string | null {
-  // First, try to find a JSON block enclosed in markdown
   const markdownMatch = text.match(/```json\n([\s\S]*?)\n```/);
   if (markdownMatch && markdownMatch[1]) {
     return markdownMatch[1];
   }
 
-  // If no markdown block is found, try to find a raw JSON object
-  const rawJsonMatch = text.match(/{\s*["\w]/); // Starts with { and a quote or word character
+  const rawJsonMatch = text.match(/{\s*["\w]/);
   if (rawJsonMatch) {
     const startIndex = rawJsonMatch.index!;
-    // Find the matching closing bracket
     let openBraces = 0;
     for (let i = startIndex; i < text.length; i++) {
       if (text[i] === '{') {
@@ -93,14 +90,20 @@ function extractJson(text: string): string | null {
     }
   }
 
-  return null; // Return null if no JSON is found
+  return null;
 }
 
 
 export async function getHealthSuggestions(
   input: HealthSuggestionRequest
 ): Promise<HealthSuggestionResponse> {
+  const languageInstruction = input.language === 'vi' 
+    ? 'Please provide the entire response in Vietnamese, including all field names and values in the JSON structure.' 
+    : 'Please provide the entire response in English.';
+
   const prompt = `You are a friendly and encouraging AI health assistant. Your goal is to provide personalized, actionable, and safe health suggestions based on the user's data.
+
+${languageInstruction}
 
 Analyze the following user data:
 - **User Profile:**
@@ -123,7 +126,7 @@ Your suggestions should be:
 2.  **Workout Suggestion:** Recommend 2 or 3 exercises or a short workout routine. The suggestions should be appropriate for the user's recent activities and goals.
 3.  **General Tip:** Provide one general, encouraging tip for the day.
 
-Generate the response as a single, valid JSON object. Do not include any text, markdown formatting, or code fences before or after the JSON object. The JSON object must have the following structure: { mealSuggestions: [{ name: string, recipe: string, calories: number }], workoutSuggestion: [{ name:string, description: string }], generalTip: string }.
+Generate the response as a single, valid JSON object. Do not include any text, markdown formatting, or code fences before or after the JSON object. The JSON object must have the following structure: { "mealSuggestions": [{ "name": "string", "recipe": "string", "calories": "number" }], "workoutSuggestion": [{ "name":"string", "description": "string" }], "generalTip": "string" }.
 `;
 
   try {

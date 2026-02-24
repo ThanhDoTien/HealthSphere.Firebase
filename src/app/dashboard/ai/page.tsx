@@ -7,9 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase/auth/use-user';
-import { useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import {
   collection,
@@ -17,6 +16,8 @@ import {
   where,
   orderBy,
   limit,
+  doc,
+  setDoc,
 } from 'firebase/firestore';
 import {
   getHealthSuggestions,
@@ -40,12 +41,10 @@ export default function AiPage() {
   const [today, setToday] = useState('');
   const { t, locale } = useTranslation();
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [generatedSuggestions, setGeneratedSuggestions] = useState<HealthSuggestionResponse | null>(null);
 
   useEffect(() => {
-    // This runs only on the client, after hydration, avoiding mismatch
     const todayDate = new Date();
     setToday(todayDate.toISOString().split('T')[0]);
   }, []);
@@ -118,47 +117,60 @@ export default function AiPage() {
     return summary;
   }, [mealData, activityData, sleepData]);
 
-  const handleGenerateSuggestions = async () => {
-    if (!userProfile) return;
-
-    setIsLoading(true);
-    setError(null);
-    setGeneratedSuggestions(null);
-  
-    const requestData: HealthSuggestionRequest = {
-      locate: locale,
-      userProfile: {
-        goal: userProfile.goal,
-        weight: userProfile.weight,
-        height: userProfile.height,
-        age: userProfile.age,
-        gender: userProfile.gender,
-      },
-      dailySummary: {
-        caloriesConsumed: dailySummary.caloriesConsumed,
-        caloriesBurned: dailySummary.caloriesBurned,
-        sleepHours: dailySummary.sleepHours,
-      },
-      recentActivities: recentActivityData?.map(act => act.name) || [],
-    };
-
-    try {
-      const result = await getHealthSuggestions(requestData);
-      setGeneratedSuggestions(result);
-    } catch (err) {
-      console.error(err);
-      setError(t('ai.errorMessage'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const dataIsLoading =
     userLoading ||
     mealLoading ||
     activityLoading ||
     sleepLoading ||
     recentActivityLoading;
+
+  const suggestionDocRef = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return doc(firestore, 'users', user.uid, 'todaysuggestions', today);
+  }, [firestore, user, today]);
+
+  const { data: suggestionData, isLoading: suggestionLoading } = useDoc<HealthSuggestionResponse>(suggestionDocRef);
+
+  useEffect(() => {
+    const generateAndSaveSuggestions = async () => {
+      if (!userProfile || !user || !today) return;
+
+      setIsGenerating(true);
+      setError(null);
+
+      const request: HealthSuggestionRequest = {
+        userProfile: {
+          goal: userProfile.goal,
+          weight: userProfile.weight,
+          height: userProfile.height,
+          age: userProfile.age,
+          gender: userProfile.gender,
+        },
+        dailySummary,
+        recentActivities: recentActivityData?.map((a) => a.name) || [],
+        language: locale,
+      };
+
+      try {
+        const result = await getHealthSuggestions(request);
+        if (suggestionDocRef) {
+          await setDoc(suggestionDocRef, result);
+        }
+      } catch (err: any) {
+        console.error("AI ERROR:", err);
+        setError(err.message || t('ai.errorMessage'));
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    if (!dataIsLoading && userProfile) {
+      generateAndSaveSuggestions();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataIsLoading, userProfile, dailySummary, recentActivityData, locale, today, user, firestore]);
+
+  const pageIsLoading = dataIsLoading || suggestionLoading;
 
   return (
     <div className="p-4 sm:p-6">
@@ -214,30 +226,11 @@ export default function AiPage() {
               </CardContent>
             </Card>
           )}
-
-          <Button
-            onClick={handleGenerateSuggestions}
-            disabled={isLoading || dataIsLoading}
-            size="lg"
-            className="w-full sm:w-auto"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t('ai.loadingButton')}
-              </>
-            ) : (
-              <>
-                <Wand2 className="mr-2 h-4 w-4" />
-                {t('ai.generateButton')}
-              </>
-            )}
-          </Button>
-
-          {dataIsLoading && !isLoading && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <p>{t('ai.loadingData')}</p>
+          
+          {(pageIsLoading || isGenerating) && (
+            <div className="flex items-center justify-center gap-2 text-muted-foreground py-8">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>{pageIsLoading ? t('ai.loadingData') : t('ai.loadingButton')}</span>
             </div>
           )}
 
@@ -248,9 +241,8 @@ export default function AiPage() {
             </Alert>
           )}
 
-          {generatedSuggestions && (
+          {!isGenerating && !pageIsLoading && suggestionData && (
             <div className="space-y-8 pt-4">
-              {/* General Tip */}
               <Card className="border-primary/20 bg-primary/5">
                 <CardHeader className="flex-row items-start gap-4 space-y-0">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -259,20 +251,19 @@ export default function AiPage() {
                   <div>
                     <CardTitle className="text-lg">{t('ai.tipTitle')}</CardTitle>
                     <CardDescription className="text-base">
-                      {generatedSuggestions.generalTip}
+                      {suggestionData.generalTip}
                     </CardDescription>
                   </div>
                 </CardHeader>
               </Card>
 
-              {/* Meal Suggestions */}
               <div>
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
                   <Utensils className="h-6 w-6 text-accent" />
                   {t('ai.mealsTitle')}
                 </h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
-                  {generatedSuggestions.mealSuggestions.map((meal) => (
+                  {suggestionData.mealSuggestions.map((meal) => (
                     <Card key={meal.name}>
                       <CardHeader>
                         <CardTitle>{meal.name}</CardTitle>
@@ -291,14 +282,13 @@ export default function AiPage() {
                 </div>
               </div>
 
-              {/* Workout Suggestion */}
               <div>
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
                   <Dumbbell className="h-6 w-6 text-orange-500" />
                   {t('ai.workoutTitle')}
                 </h3>
                 <div className="space-y-4">
-                  {generatedSuggestions.workoutSuggestion.map((exercise) => (
+                  {suggestionData.workoutSuggestion.map((exercise) => (
                     <Card key={exercise.name}>
                       <CardHeader>
                         <CardTitle>{exercise.name}</CardTitle>
