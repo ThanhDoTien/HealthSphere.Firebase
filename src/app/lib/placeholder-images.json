@@ -6,15 +6,15 @@
     "hint": "health lifestyle"
   },
   "feature_track": {
-    "src": "https://picsum.photos/seed/person-running/800/600",
+    "src": "https://picsum.photos/seed/gym-workout/800/600",
     "width": 800,
     "height": 600,
-    "hint": "workout"
+    "hint": "gym workout"
   },
   "feature_ai": {
-    "src": "https://picsum.photos/seed/fresh-salad/800/600",
+    "src": "https://picsum.photos/seed/healthy-food-bowl/800/600",
     "width": 800,
     "height": 600,
-    "hint": "healthy meal"
+    "hint": "healthy food"
   }
 }
