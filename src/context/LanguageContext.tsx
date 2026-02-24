@@ -33,31 +33,24 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const t = (key: string, params?: { [key: string]: string | number }): string => {
-    const keys = key.split('.');
-    let result: any = translations[locale];
-    for (const k of keys) {
-      result = result?.[k];
-      if (result === undefined) {
-        // Fallback to English if translation is missing
-        let fallbackResult: any = translations['en'];
-        for (const fk of keys) {
-            fallbackResult = fallbackResult?.[fk];
-        }
-        if (fallbackResult === undefined) {
-            return key; // Return key if not found in English either
-        }
-        result = fallbackResult;
-        break;
-      }
+    const currentLocaleFile = translations[locale] as { [key: string]: string };
+    const fallbackLocaleFile = translations['en'] as { [key: string]: string };
+
+    let translatedText = currentLocaleFile[key] || fallbackLocaleFile[key];
+
+    // If still not found, return the key itself.
+    if (translatedText === undefined) {
+        return key;
     }
     
-    if (typeof result === 'string' && params) {
-        return Object.entries(params).reduce((acc, [paramKey, paramValue]) => {
-            return acc.replace(`{${paramKey}}`, String(paramValue));
-        }, result);
+    // Replace placeholders if params are provided.
+    if (params) {
+        translatedText = Object.entries(params).reduce((acc, [paramKey, paramValue]) => {
+            return acc.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
+        }, translatedText);
     }
 
-    return result || key;
+    return translatedText;
   };
 
   return (
