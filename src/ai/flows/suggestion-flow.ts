@@ -7,7 +7,6 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { gemini15Flash } from '@genkit-ai/google-genai';
 import { z } from 'zod';
 
 const HealthSuggestionRequestSchema = z.object({
@@ -67,7 +66,6 @@ export type HealthSuggestionResponse = z.infer<
 
 const suggestionPrompt = ai.definePrompt({
   name: 'healthSuggestionPrompt',
-  model: gemini15Flash,
   input: { schema: HealthSuggestionRequestSchema },
   output: { schema: HealthSuggestionResponseSchema },
   prompt: `You are a friendly and encouraging AI health assistant. Your goal is to provide personalized, actionable, and safe health suggestions based on the user's data.
