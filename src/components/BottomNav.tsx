@@ -3,14 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Apple, Flame, Sparkles, User, Bed, MessageSquare } from 'lucide-react';
+import { Home, Apple, Flame, Sparkles, User, Bed } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Home', icon: Home },
   { href: '/dashboard/calories', label: 'Calories', icon: Apple },
   { href: '/dashboard/activity', label: 'Activity', icon: Flame },
   { href: '/dashboard/sleep', label: 'Sleep', icon: Bed },
-  { href: '/dashboard/forums', label: 'Forums', icon: MessageSquare },
   { href: '/dashboard/ai', label: 'AI', icon: Sparkles },
   { href: '/dashboard/profile', label: 'Profile', icon: User },
 ];
@@ -20,7 +19,7 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-10 border-t bg-background/80 backdrop-blur-md">
-      <div className="mx-auto grid h-20 max-w-lg grid-cols-7 items-center justify-around px-2">
+      <div className="mx-auto grid h-20 max-w-lg grid-cols-6 items-center justify-around px-2">
         {navItems.map((item) => (
           <Link
             key={item.href}
