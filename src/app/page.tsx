@@ -60,7 +60,7 @@ export default function HomePage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative py-12 text-center sm:py-20">
+        <section className="relative py-20 text-center sm:py-32">
           <div className="container relative z-10 mx-auto px-4">
             <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
               <span className="text-primary">Health</span>Sphere
@@ -74,7 +74,7 @@ export default function HomePage() {
               </Button>
             </div>
           </div>
-          <div className="absolute inset-0 z-0 opacity-20">
+           <div className="absolute inset-0 z-0 opacity-20">
               <Image
                 src={imageData.home_hero.src}
                 alt="Healthy lifestyle"
@@ -87,18 +87,25 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Features Section */}
-        <section className="py-12 sm:py-20">
-          <div className="container mx-auto px-4">
-            <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                {t('home.features.title')}
-              </h2>
+        {/* Intro Section */}
+        <section className="py-16 sm:py-24">
+            <div className="container mx-auto px-4 text-center">
+                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                    {t('home.intro.title')}
+                </h2>
+                <p className="mx-auto mt-4 max-w-3xl text-lg text-muted-foreground">
+                    {t('home.intro.description')}
+                </p>
             </div>
-            <div className="mx-auto mt-16 grid max-w-none grid-cols-1 gap-x-8 gap-y-16 md:grid-cols-2 lg:max-w-4xl">
+        </section>
+
+        {/* Features Section */}
+        <section className="border-t py-16 sm:py-24">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto grid max-w-none grid-cols-1 gap-x-12 gap-y-16 md:grid-cols-2 lg:max-w-5xl">
               {features.map((feature) => (
                 <div key={feature.title} className="flex flex-col items-center text-center">
-                   <div className="relative h-56 w-full overflow-hidden rounded-lg">
+                   <div className="relative h-64 w-full overflow-hidden rounded-lg shadow-lg">
                      <Image
                       src={feature.image.src}
                       alt={feature.title}
@@ -108,10 +115,10 @@ export default function HomePage() {
                       data-ai-hint={feature.image.hint}
                     />
                    </div>
-                  <div className="mt-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <div className="mt-8 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                     <feature.icon className="h-6 w-6 text-primary" />
                   </div>
-                  <h3 className="mt-6 text-lg font-semibold">{feature.title}</h3>
+                  <h3 className="mt-6 text-xl font-semibold">{feature.title}</h3>
                   <p className="mt-2 text-base text-muted-foreground">
                     {feature.description}
                   </p>
@@ -122,7 +129,7 @@ export default function HomePage() {
         </section>
         
         {/* CTA Section */}
-        <section className="bg-muted/50 py-12 sm:py-16">
+        <section className="bg-muted/50 py-16 sm:py-24">
             <div className="container mx-auto px-4 text-center">
                  <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                     {t('home.cta.title')}
@@ -132,7 +139,7 @@ export default function HomePage() {
                 </p>
                 <div className="mt-8">
                      <Button size="lg" asChild>
-                        <Link href="/signup">{t('home.signup')}</Link>
+                        <Link href="/signup">{t('home.cta.button')}</Link>
                     </Button>
                 </div>
             </div>
@@ -142,7 +149,7 @@ export default function HomePage() {
        {/* Footer */}
       <footer className="py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} HealthSphere. All rights reserved.
+            {t('home.footer.copyright')}
         </div>
       </footer>
     </div>
