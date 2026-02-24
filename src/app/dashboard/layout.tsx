@@ -4,7 +4,6 @@ import Header from "@/components/Header";
 import { useUser } from "@/firebase/auth/use-user";
 import useMustBeLoggedIn from "@/lib/hooks/use-must-be-logged-in";
 import { Loader2 } from "lucide-react";
-import Chatbot from "@/components/dashboard/Chatbot";
 
 export default function DashboardLayout({
   children,
@@ -26,7 +25,6 @@ export default function DashboardLayout({
     <div className="relative flex min-h-screen flex-col">
       <Header />
       <main className="flex-1">{children}</main>
-      <Chatbot />
     </div>
   );
 }

@@ -126,7 +126,7 @@ export default function AiPage() {
     setGeneratedSuggestions(null);
   
     const requestData: HealthSuggestionRequest = {
-      language: locale,
+      locate: locale,
       userProfile: {
         goal: userProfile.goal,
         weight: userProfile.weight,

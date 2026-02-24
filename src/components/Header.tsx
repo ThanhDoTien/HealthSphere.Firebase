@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Apple, Flame, Sparkles, User, Bed, Globe, MessageSquare } from 'lucide-react';
+import { Home, Apple, Flame, Sparkles, User, Bed, Globe } from 'lucide-react';
 import { useTranslation } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +19,6 @@ const navItems = [
   { href: '/dashboard/activity', labelKey: 'bottomNav.activity', icon: Flame },
   { href: '/dashboard/sleep', labelKey: 'bottomNav.sleep', icon: Bed },
   { href: '/dashboard/ai', labelKey: 'bottomNav.ai', icon: Sparkles },
-  { href: '/dashboard/forums', labelKey: 'bottomNav.forums', icon: MessageSquare },
   { href: '/dashboard/profile', labelKey: 'bottomNav.profile', icon: User },
 ];
 
