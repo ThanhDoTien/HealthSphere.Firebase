@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase/auth/use-user';
-import { useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import {
   collection,
@@ -17,12 +17,8 @@ import {
   where,
   orderBy,
   limit,
-  doc,
-  setDoc,
 } from 'firebase/firestore';
 import {
-  getHealthSuggestions,
-  type HealthSuggestionRequest,
   type HealthSuggestionResponse,
 } from '@/ai/flows/suggestion-flow';
 import {
@@ -33,8 +29,7 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+
 
 export default function AiPage() {
   const { user, userProfile, loading: userLoading } = useUser();
@@ -43,6 +38,7 @@ export default function AiPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generatedSuggestions, setGeneratedSuggestions] = useState<HealthSuggestionResponse | null>(null);
 
   useEffect(() => {
     // This runs only on the client, after hydration, avoiding mismatch
@@ -83,21 +79,12 @@ export default function AiPage() {
     );
   }, [firestore, user]);
 
-  const suggestionDocRef = useMemoFirebase(() => {
-    if (!user || !today) return null;
-    return doc(firestore, 'users', user.uid, 'todaysuggestions', today);
-  }, [firestore, user, today]);
-
   const { data: mealData, isLoading: mealLoading } = useCollection(mealsQuery);
   const { data: activityData, isLoading: activityLoading } =
     useCollection(activitiesQuery);
   const { data: sleepData, isLoading: sleepLoading } =
     useCollection(sleepQuery);
-  const { data: recentActivityData, isLoading: recentActivityLoading } =
-    useCollection(recentActivitiesQuery);
-  const { data: suggestions, isLoading: suggestionsLoading } =
-    useDoc<HealthSuggestionResponse>(suggestionDocRef);
-
+  
   const dailySummary = useMemo(() => {
     const summary = {
       caloriesConsumed: 0,
@@ -126,85 +113,54 @@ export default function AiPage() {
     return summary;
   }, [mealData, activityData, sleepData]);
 
-  const recentActivities = useMemo(() => {
-    if (!recentActivityData) return [];
-    return recentActivityData.map((a) => a.name);
-  }, [recentActivityData]);
-
   const handleGenerateSuggestions = async () => {
-    if (!userProfile || !user || !today) {
-      setError('User profile is not loaded or date is not set.');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
+    setGeneratedSuggestions(null); // Clear previous suggestions
 
-    const requestData: HealthSuggestionRequest = {
-      userProfile: {
-        goal: userProfile.goal,
-        weight: userProfile.weight,
-        height: userProfile.height,
-        age: userProfile.age,
-        gender: userProfile.gender,
-      },
-      dailySummary: {
-        caloriesConsumed: dailySummary.caloriesConsumed,
-        caloriesBurned: dailySummary.caloriesBurned,
-        sleepHours: dailySummary.sleepHours,
-      },
-      recentActivities: recentActivities,
+    const fakeSuggestions: HealthSuggestionResponse = {
+        mealSuggestions: [
+          {
+            name: 'Breakfast: Oatmeal Delight',
+            recipe: 'Cook 1/2 cup of rolled oats with 1 cup of almond milk. Top with fresh berries, a sprinkle of chia seeds, and a drizzle of honey.',
+            calories: 350,
+          },
+          {
+            name: 'Lunch: Power Chicken Salad',
+            recipe: 'Toss mixed greens with 4oz of grilled chicken breast, cherry tomatoes, cucumbers, bell peppers, and a light lemon-tahini dressing.',
+            calories: 450,
+          },
+          {
+            name: 'Dinner: Zesty Baked Salmon',
+            recipe: 'Bake a 4oz salmon fillet with lemon slices and dill. Serve with a side of steamed asparagus and a half cup of quinoa.',
+            calories: 500,
+          },
+        ],
+        workoutSuggestion: [
+          {
+            name: 'Morning Brisk Walk',
+            description: 'Start your day with a 30-minute brisk walk outdoors. It is a great way to boost your metabolism and enjoy some fresh air.',
+          },
+          {
+            name: 'Full Body Strength',
+            description: 'Perform 3 sets of: 12 bodyweight squats, 10 push-ups (on knees if needed), and a 30-second plank. Rest 1 minute between sets.',
+          },
+        ],
+        generalTip: 'Remember to drink at least 8 glasses of water today to stay hydrated and support your body\'s functions!',
     };
 
-    try {
-      // 1. Save snapshot to Firestore
-      const snapshotDocRef = doc(
-        firestore,
-        'users',
-        user.uid,
-        'todaysnapshots',
-        today
-      );
-      setDoc(snapshotDocRef, requestData, { merge: true }).catch((err) => {
-        // This is a non-critical background write.
-        // The error will be logged by the global listener.
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: snapshotDocRef.path,
-            operation: 'write',
-            requestResourceData: requestData,
-          })
-        );
-      });
-
-      // 2. Call AI
-      const result = await getHealthSuggestions(requestData);
-
-      // 3. Save suggestions to Firestore
-      const newSuggestionDocRef = doc(
-        firestore,
-        'users',
-        user.uid,
-        'todaysuggestions',
-        today
-      );
-      // This is a critical write, so we await it.
-      await setDoc(newSuggestionDocRef, result, { merge: true });
-    } catch (e: any) {
-      setError(e.message || 'An error occurred while generating suggestions.');
-    } finally {
-      setIsLoading(false);
-    }
+    // Simulate a delay for the "generation" process
+    setTimeout(() => {
+        setGeneratedSuggestions(fakeSuggestions);
+        setIsLoading(false);
+    }, 1500);
   };
 
   const dataIsLoading =
     userLoading ||
     mealLoading ||
     activityLoading ||
-    sleepLoading ||
-    recentActivityLoading ||
-    suggestionsLoading;
+    sleepLoading;
 
   return (
     <div className="p-4 sm:p-6">
@@ -294,7 +250,7 @@ export default function AiPage() {
             </Alert>
           )}
 
-          {suggestions && (
+          {generatedSuggestions && (
             <div className="space-y-8 pt-4">
               {/* General Tip */}
               <Card className="border-primary/20 bg-primary/5">
@@ -305,7 +261,7 @@ export default function AiPage() {
                   <div>
                     <CardTitle className="text-lg">Your Daily Tip</CardTitle>
                     <CardDescription className="text-base">
-                      {suggestions.generalTip}
+                      {generatedSuggestions.generalTip}
                     </CardDescription>
                   </div>
                 </CardHeader>
@@ -318,7 +274,7 @@ export default function AiPage() {
                   Meal Suggestions
                 </h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
-                  {suggestions.mealSuggestions.map((meal) => (
+                  {generatedSuggestions.mealSuggestions.map((meal) => (
                     <Card key={meal.name}>
                       <CardHeader>
                         <CardTitle>{meal.name}</CardTitle>
@@ -344,7 +300,7 @@ export default function AiPage() {
                   Workout Suggestion
                 </h3>
                 <div className="space-y-4">
-                  {suggestions.workoutSuggestion.map((exercise) => (
+                  {generatedSuggestions.workoutSuggestion.map((exercise) => (
                     <Card key={exercise.name}>
                       <CardHeader>
                         <CardTitle>{exercise.name}</CardTitle>
