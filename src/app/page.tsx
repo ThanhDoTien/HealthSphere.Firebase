@@ -102,7 +102,7 @@ export default function HomePage() {
         {/* Features Section */}
         <section className="border-t py-12 sm:py-16">
           <div className="container mx-auto px-4">
-            <div className="mx-auto grid max-w-none grid-cols-1 gap-x-12 gap-y-16 md:grid-cols-2 lg:max-w-5xl">
+            <div className="mx-auto grid max-w-none grid-cols-1 gap-x-12 gap-y-16 md:grid-cols-2 lg:max-w-4xl">
               {features.map((feature) => (
                 <div key={feature.title} className="flex flex-col items-center text-center">
                    <div className="relative h-64 w-full overflow-hidden rounded-lg shadow-lg">
