@@ -9,7 +9,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-export const HealthSuggestionRequestSchema = z.object({
+const HealthSuggestionRequestSchema = z.object({
   userProfile: z.object({
     goal: z.string(),
     weight: z.number(),
@@ -28,7 +28,7 @@ export type HealthSuggestionRequest = z.infer<
   typeof HealthSuggestionRequestSchema
 >;
 
-export const MealSuggestionSchema = z.object({
+const MealSuggestionSchema = z.object({
   name: z.string().describe('Name of the meal.'),
   recipe: z
     .string()
@@ -38,7 +38,7 @@ export const MealSuggestionSchema = z.object({
   calories: z.number().describe('Estimated calories for the meal.'),
 });
 
-export const ExerciseSuggestionSchema = z.object({
+const ExerciseSuggestionSchema = z.object({
   name: z.string().describe('Name of the exercise or activity.'),
   description: z
     .string()
@@ -47,7 +47,7 @@ export const ExerciseSuggestionSchema = z.object({
     ),
 });
 
-export const HealthSuggestionResponseSchema = z.object({
+const HealthSuggestionResponseSchema = z.object({
   mealSuggestions: z
     .array(MealSuggestionSchema)
     .describe(
