@@ -116,44 +116,68 @@ export default function AiPage() {
   const handleGenerateSuggestions = async () => {
     setIsLoading(true);
     setError(null);
-    setGeneratedSuggestions(null); // Clear previous suggestions
-
-    const fakeSuggestions: HealthSuggestionResponse = {
-        mealSuggestions: [
-          {
-            name: 'Breakfast: Oatmeal Delight',
-            recipe: 'Cook 1/2 cup of rolled oats with 1 cup of almond milk. Top with fresh berries, a sprinkle of chia seeds, and a drizzle of honey.',
-            calories: 350,
+    setGeneratedSuggestions(null);
+  
+    try {
+      const prompt = `
+  You are a health assistant AI.
+  
+  User info:
+  - Height: ${userProfile?.height} cm
+  - Weight: ${userProfile?.weight} kg
+  - Goal: ${userProfile?.goal}
+  
+  Today summary:
+  - Calories consumed: ${dailySummary.caloriesConsumed}
+  - Calories burned: ${dailySummary.caloriesBurned}
+  - Sleep hours: ${dailySummary.sleepHours}
+  
+  Generate a JSON response ONLY (no explanation) with this format:
+  {
+    "mealSuggestions": [
+      { "name": "", "recipe": "", "calories": number }
+    ],
+    "workoutSuggestion": [
+      { "name": "", "description": "" }
+    ],
+    "generalTip": ""
+  }
+  `;
+  
+      const response = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyBKqU7wBv58ZGE501N8ydSTbLXGNolOdC4",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-          {
-            name: 'Lunch: Power Chicken Salad',
-            recipe: 'Toss mixed greens with 4oz of grilled chicken breast, cherry tomatoes, cucumbers, bell peppers, and a light lemon-tahini dressing.',
-            calories: 450,
-          },
-          {
-            name: 'Dinner: Zesty Baked Salmon',
-            recipe: 'Bake a 4oz salmon fillet with lemon slices and dill. Serve with a side of steamed asparagus and a half cup of quinoa.',
-            calories: 500,
-          },
-        ],
-        workoutSuggestion: [
-          {
-            name: 'Morning Brisk Walk',
-            description: 'Start your day with a 30-minute brisk walk outdoors. It is a great way to boost your metabolism and enjoy some fresh air.',
-          },
-          {
-            name: 'Full Body Strength',
-            description: 'Perform 3 sets of: 12 bodyweight squats, 10 push-ups (on knees if needed), and a 30-second plank. Rest 1 minute between sets.',
-          },
-        ],
-        generalTip: 'Remember to drink at least 8 glasses of water today to stay hydrated and support your body\'s functions!',
-    };
-
-    // Simulate a delay for the "generation" process
-    setTimeout(() => {
-        setGeneratedSuggestions(fakeSuggestions);
-        setIsLoading(false);
-    }, 1500);
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [{ text: prompt }],
+              },
+            ],
+          }),
+        }
+      );
+  
+      const data = await response.json();
+  
+      let text =
+        data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  
+      // 🔥 Xử lý trường hợp Gemini trả về ```json ... ```
+      text = text.replace(/```json|```/g, "").trim();
+  
+      const parsed: HealthSuggestionResponse = JSON.parse(text);
+  
+      setGeneratedSuggestions(parsed);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to generate AI suggestions");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const dataIsLoading =

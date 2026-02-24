@@ -20,6 +20,7 @@ import { useToast } from "@/components/ui/toast";
 import { GoogleIcon } from "@/components/icons";
 import { signIn, signInWithGoogle } from "@/firebase/auth/utils";
 import useMustBeLoggedOut from "@/lib/hooks/use-must-be-logged-out";
+import { useTranslation } from "@/context/LanguageContext";
 
 const LoginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -33,6 +34,7 @@ type LoginFormValues = z.infer<typeof LoginFormSchema>;
 export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -48,14 +50,14 @@ export default function LoginPage() {
       await signIn(data.email, data.password);
       toast({
         title: "Success",
-        description: "You have been logged in.",
+        description: t('login.success'),
       });
       router.push("/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "An unexpected error occurred.",
+        description: error.message || t('login.error'),
       });
     }
   };
@@ -65,14 +67,14 @@ export default function LoginPage() {
       await signInWithGoogle();
       toast({
         title: "Success",
-        description: "You have been logged in with Google.",
+        description: t('login.googleSuccess'),
       });
       router.push("/dashboard");
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "An unexpected error occurred.",
+        description: error.message || t('login.error'),
       });
     }
   };
@@ -81,15 +83,15 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">{t('login.title')}</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account.
+            {t('login.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('login.emailLabel')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -101,14 +103,14 @@ export default function LoginPage() {
               )}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('login.passwordLabel')}</Label>
               <Input id="password" type="password" {...register("password")} />
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password.message}</p>
               )}
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Logging in..." : "Login"}
+              {isSubmitting ? t('login.loadingButton') : t('login.button')}
             </Button>
           </form>
           <div className="relative my-4">
@@ -117,7 +119,7 @@ export default function LoginPage() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
+                {t('login.orContinueWith')}
               </span>
             </div>
           </div>
@@ -127,12 +129,12 @@ export default function LoginPage() {
             onClick={handleGoogleSignIn}
           >
             <GoogleIcon className="mr-2 h-4 w-4" />
-            Google
+            {t('login.googleButton')}
           </Button>
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
+            {t('login.noAccount')}{" "}
             <Link href="/signup" className="underline">
-              Sign up
+              {t('login.signupLink')}
             </Link>
           </div>
         </CardContent>
