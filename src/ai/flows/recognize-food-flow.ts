@@ -41,7 +41,7 @@ export type RecognizeFoodResponse = z.infer<typeof RecognizeFoodResponseSchema>;
 const foodRecognitionPrompt = ai.definePrompt({
   name: 'foodRecognitionPrompt',
   input: { schema: RecognizeFoodRequestSchema },
-  model: 'gemini-1.5-flash-latest',
+  model: 'gemini-pro-vision',
   prompt: `You are an expert nutritionist. Your task is to analyze the image of a meal provided by the user and identify all the food items present.
 
 For each food item you identify, provide its name and an estimated calorie count for a standard serving size shown in the picture.

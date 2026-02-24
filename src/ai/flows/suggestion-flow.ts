@@ -68,7 +68,7 @@ export type HealthSuggestionResponse = z.infer<
 const suggestionPrompt = ai.definePrompt({
   name: 'healthSuggestionPrompt',
   input: { schema: HealthSuggestionRequestSchema },
-  model: 'gemini-1.5-flash-latest',
+  model: 'gemini-pro',
   prompt: `You are a friendly and encouraging AI health assistant. Your goal is to provide personalized, actionable, and safe health suggestions based on the user's data.
 
 Analyze the following user data:
