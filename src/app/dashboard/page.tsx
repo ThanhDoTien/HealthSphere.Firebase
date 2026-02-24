@@ -19,6 +19,7 @@ import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
 import AddWeightForm from '@/components/dashboard/AddWeightForm';
 import { useTranslation } from '@/context/LanguageContext';
+import BmiMeter from '@/components/dashboard/BmiMeter';
 
 const weightChartConfig = {
   weight: {
@@ -200,6 +201,10 @@ export default function DashboardPage() {
           {t('dashboard.summary')}
         </p>
       </header>
+
+      <div className="px-4 sm:px-6">
+        {userProfile && <BmiMeter height={userProfile.height} weight={userProfile.weight} />}
+      </div>
 
       <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
         <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
