@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -26,7 +26,6 @@ import {
 } from '@/ai/flows/suggestion-flow';
 import {
   Loader2,
-  Wand2,
   Utensils,
   Dumbbell,
   Lightbulb,
@@ -131,44 +130,49 @@ export default function AiPage() {
 
   const { data: suggestionData, isLoading: suggestionLoading } = useDoc<HealthSuggestionResponse>(suggestionDocRef);
 
-  useEffect(() => {
-    const generateAndSaveSuggestions = async () => {
-      if (!userProfile || !user || !today) return;
+  // Đây là hàm xử lý logic AI mà bạn muốn sửa.
+  // Nó sẽ được gọi tự động khi dữ liệu sẵn sàng.
+  const handleGenerateSuggestions = useCallback(async () => {
+    if (!userProfile || !user || !today || !suggestionDocRef) {
+      return;
+    }
 
-      setIsGenerating(true);
-      setError(null);
+    setIsGenerating(true);
+    setError(null);
 
-      const request: HealthSuggestionRequest = {
-        userProfile: {
-          goal: userProfile.goal,
-          weight: userProfile.weight,
-          height: userProfile.height,
-          age: userProfile.age,
-          gender: userProfile.gender,
-        },
-        dailySummary,
-        recentActivities: recentActivityData?.map((a) => a.name) || [],
-        language: locale,
-      };
-
-      try {
-        const result = await getHealthSuggestions(request);
-        if (suggestionDocRef) {
-          await setDoc(suggestionDocRef, result);
-        }
-      } catch (err: any) {
-        console.error("AI ERROR:", err);
-        setError(err.message || t('ai.errorMessage'));
-      } finally {
-        setIsGenerating(false);
-      }
+    const request: HealthSuggestionRequest = {
+      userProfile: {
+        goal: userProfile.goal,
+        weight: userProfile.weight,
+        height: userProfile.height,
+        age: userProfile.age,
+        gender: userProfile.gender,
+      },
+      dailySummary,
+      recentActivities: recentActivityData?.map((a) => a.name) || [],
+      language: locale,
     };
 
+    try {
+      const result = await getHealthSuggestions(request);
+      // Cập nhật hoặc tạo mới gợi ý cho ngày hôm nay
+      await setDoc(suggestionDocRef, result);
+    } catch (err: any) {
+      console.error("AI ERROR:", err);
+      setError(err.message || t('ai.errorMessage'));
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [userProfile, user, today, suggestionDocRef, dailySummary, recentActivityData, locale, t]);
+
+
+  useEffect(() => {
+    // Tự động tạo gợi ý khi dữ liệu đã tải xong hoặc khi đổi ngôn ngữ.
     if (!dataIsLoading && userProfile) {
-      generateAndSaveSuggestions();
+      handleGenerateSuggestions();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataIsLoading, userProfile, dailySummary, recentActivityData, locale, today, user, firestore]);
+  }, [dataIsLoading, userProfile, locale, handleGenerateSuggestions]);
 
   const pageIsLoading = dataIsLoading || suggestionLoading;
 
@@ -230,7 +234,7 @@ export default function AiPage() {
           {(pageIsLoading || isGenerating) && (
             <div className="flex items-center justify-center gap-2 text-muted-foreground py-8">
               <Loader2 className="h-5 w-5 animate-spin" />
-              <span>{pageIsLoading ? t('ai.loadingData') : t('ai.loadingButton')}</span>
+              <span>{pageIsLoading && !isGenerating ? t('ai.loadingData') : t('ai.loadingButton')}</span>
             </div>
           )}
 
