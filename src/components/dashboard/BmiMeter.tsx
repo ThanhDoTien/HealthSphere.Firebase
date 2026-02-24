@@ -12,31 +12,31 @@ interface BmiMeterProps {
 const BMI_CATEGORIES = {
   UNDERWEIGHT: {
     labelKey: 'dashboard.bmi.underweight',
-    bgColor: 'bg-blue-400',
+    color: '#60a5fa', // Equivalent to bg-blue-400
     textColor: 'text-blue-400',
     max: 18.5,
   },
   NORMAL: {
     labelKey: 'dashboard.bmi.normal',
-    bgColor: 'bg-green-500',
+    color: '#22c55e', // Equivalent to bg-green-500
     textColor: 'text-green-500',
     max: 24.9,
   },
   OVERWEIGHT: {
     labelKey: 'dashboard.bmi.overweight',
-    bgColor: 'bg-yellow-400',
+    color: '#facc15', // Equivalent to bg-yellow-400
     textColor: 'text-yellow-400',
     max: 29.9,
   },
   OBESE: {
     labelKey: 'dashboard.bmi.obese',
-    bgColor: 'bg-orange-500',
+    color: '#f97316', // Equivalent to bg-orange-500
     textColor: 'text-orange-500',
     max: 39.9,
   },
   SEVERELY_OBESE: {
     labelKey: 'dashboard.bmi.severelyObese',
-    bgColor: 'bg-red-500',
+    color: '#ef4444', // Equivalent to bg-red-500
     textColor: 'text-red-500',
     max: Infinity,
   },
@@ -50,33 +50,65 @@ const getBmiStatus = (bmi: number) => {
   return BMI_CATEGORIES.SEVERELY_OBESE;
 };
 
-// Maps a BMI value (10-45) to a rotation angle (-90 to 90)
-const calculateRotation = (bmi: number) => {
-  const minBmi = 10;
-  const maxBmi = 45;
-  const clampedBmi = Math.max(minBmi, Math.min(bmi, maxBmi));
-  const percentage = (clampedBmi - minBmi) / (maxBmi - minBmi);
-  return percentage * 180 - 90;
-};
 
 export default function BmiMeter({ height, weight }: BmiMeterProps) {
   const { t } = useTranslation();
 
-  const { bmi, status, rotation } = useMemo(() => {
+  const { bmi, status } = useMemo(() => {
     if (!height || !weight || height <= 0 || weight <= 0) {
-      return { bmi: 0, status: null, rotation: -90 };
+      return { bmi: 0, status: null };
     }
     const heightInMeters = height / 100;
     const bmiValue = weight / (heightInMeters * heightInMeters);
     const bmiStatus = getBmiStatus(bmiValue);
-    const bmiRotation = calculateRotation(bmiValue);
 
     return {
       bmi: bmiValue,
       status: bmiStatus,
-      rotation: bmiRotation,
     };
   }, [height, weight]);
+
+  // SVG Gauge constants
+  const minBmi = 10;
+  const maxBmi = 45;
+  const radius = 80;
+  const strokeWidth = 20;
+  const centerX = 120;
+  const centerY = 100;
+
+  const mapBmiToAngle = (bmiValue: number) => {
+    const clampedBmi = Math.max(minBmi, Math.min(bmiValue, maxBmi));
+    // Map BMI range (10-45) to angle range (-90 to 90 degrees) for rotation
+    const percentage = (clampedBmi - minBmi) / (maxBmi - minBmi);
+    return percentage * 180 - 90;
+  };
+  
+  const bmiRotation = mapBmiToAngle(bmi);
+  
+  const segments = [
+    { category: BMI_CATEGORIES.UNDERWEIGHT, min: 10, max: 18.5 },
+    { category: BMI_CATEGORIES.NORMAL, min: 18.5, max: 25 },
+    { category: BMI_CATEGORIES.OVERWEIGHT, min: 25, max: 30 },
+    { category: BMI_CATEGORIES.OBESE, min: 30, max: 40 },
+    { category: BMI_CATEGORIES.SEVERELY_OBESE, min: 40, max: 45 },
+  ];
+
+  const polarToCartesian = (angle: number) => {
+    const angleRad = ((angle - 90) * Math.PI) / 180.0; // Adjust for SVG coordinate system (0 is up)
+    return {
+      x: centerX + radius * Math.cos(angleRad),
+      y: centerY + radius * Math.sin(angleRad),
+    };
+  };
+
+  const describeArc = (startAngle: number, endAngle: number) => {
+    const start = polarToCartesian(startAngle);
+    const end = polarToCartesian(endAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+    // The sweep flag is 1 for clockwise
+    const d = `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`;
+    return d;
+  };
 
   return (
     <Card>
@@ -91,36 +123,38 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4">
-            {/* BMI Gauge */}
-            <div className="relative h-[120px] w-[240px] overflow-hidden">
-              <div className="absolute bottom-0 left-0 right-0 top-0 flex">
-                <div className={`h-full w-1/5 ${BMI_CATEGORIES.UNDERWEIGHT.bgColor} rounded-tl-full`}></div>
-                <div className={`h-full w-1/5 ${BMI_CATEGORIES.NORMAL.bgColor}`}></div>
-                <div className={`h-full w-1/5 ${BMI_CATEGORIES.OVERWEIGHT.bgColor}`}></div>
-                <div className={`h-full w-1/5 ${BMI_CATEGORIES.OBESE.bgColor}`}></div>
-                <div className={`h-full w-1/5 ${BMI_CATEGORIES.SEVERELY_OBESE.bgColor} rounded-tr-full`}></div>
-              </div>
-              {/* White overlay to create the arc */}
-              <div className="absolute bottom-[-60px] left-1/2 h-[180px] w-[180px] -translate-x-1/2 rounded-full bg-card"></div>
+            <div className="relative w-[240px] h-[120px]">
+              <svg width="240" height="120" viewBox="0 0 240 120" className="absolute top-0 left-0">
+                <g strokeLinecap="round">
+                  {segments.map((segment) => {
+                    const startAngle = mapBmiToAngle(segment.min);
+                    const endAngle = mapBmiToAngle(segment.max);
+                    return (
+                      <path
+                        key={segment.category.labelKey}
+                        d={describeArc(startAngle, endAngle)}
+                        fill="none"
+                        stroke={segment.category.color}
+                        strokeWidth={strokeWidth}
+                      />
+                    );
+                  })}
+                </g>
+                {/* Needle */}
+                <g transform={`rotate(${bmiRotation}, ${centerX}, ${centerY})`}>
+                    <path d={`M ${centerX} ${centerY - 5} L ${centerX} ${centerY - radius - 10}`} stroke="hsl(var(--foreground))" strokeWidth="2" />
+                    <circle cx={centerX} cy={centerY} r="4" fill="hsl(var(--foreground))" />
+                </g>
+              </svg>
 
-              {/* Needle */}
-              <div
-                className="absolute bottom-0 left-1/2 h-24 w-1 origin-bottom transition-transform duration-700"
-                style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }}
-              >
-                <div className="h-full w-full rounded-t-full bg-foreground"></div>
-              </div>
-              {/* Needle pivot */}
-              <div className="absolute bottom-[-10px] left-1/2 h-5 w-5 -translate-x-1/2 rounded-full border-4 border-foreground bg-card"></div>
-            </div>
-
-            {/* BMI Value and Status */}
-            <div className="text-center">
-              <div className="text-4xl font-bold tracking-tighter">
-                {bmi.toFixed(1)}
-              </div>
-              <div className={`font-semibold ${status.textColor}`}>
-                {t(status.labelKey)}
+              {/* BMI Value and Status Text */}
+              <div className="absolute bottom-[-10px] w-full text-center">
+                <div className="text-4xl font-bold tracking-tighter">
+                  {bmi.toFixed(1)}
+                </div>
+                <div className={`font-semibold ${status.textColor}`}>
+                  {t(status.labelKey)}
+                </div>
               </div>
             </div>
           </div>
