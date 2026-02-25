@@ -6,15 +6,27 @@
     "hint": "health lifestyle"
   },
   "feature_track": {
+    "src": "https://picsum.photos/seed/feature-track/800/600",
+    "width": 800,
+    "height": 600,
+    "hint": "data chart"
+  },
+  "feature_nutrition": {
+    "src": "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/pexels-foodie-factor-162291-566566%20(1).jpg?alt=media&token=ee87c787-d128-4713-b472-457c20559089",
+    "width": 800,
+    "height": 600,
+    "hint": "healthy food"
+  },
+  "feature_workout": {
     "src": "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/pexels-jonathanborba-3076510.jpg?alt=media&token=bd8523ea-560c-4617-9ae6-595ee1c561c8",
     "width": 800,
     "height": 600,
     "hint": "gym workout"
   },
-  "feature_ai": {
-    "src": "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/pexels-foodie-factor-162291-566566%20(1).jpg?alt=media&token=ee87c787-d128-4713-b472-457c20559089",
+  "feature_community": {
+    "src": "https://picsum.photos/seed/feature-community/800/600",
     "width": 800,
     "height": 600,
-    "hint": "healthy food"
+    "hint": "people talking"
   }
 }

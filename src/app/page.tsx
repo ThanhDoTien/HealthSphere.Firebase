@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useTranslation } from "@/context/LanguageContext";
 import { Logo } from "@/components/Logo";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Globe, BarChart2, BrainCircuit } from "lucide-react";
+import { Globe, BarChart2, Utensils, Dumbbell, Users } from "lucide-react";
 import imageData from '@/app/lib/placeholder-images.json';
 
 export default function HomePage() {
@@ -19,11 +19,23 @@ export default function HomePage() {
       image: imageData.feature_track,
     },
     {
-      icon: BrainCircuit,
-      title: t('home.features.ai.title'),
-      description: t('home.features.ai.description'),
-      image: imageData.feature_ai,
+      icon: Utensils,
+      title: t('home.features.nutrition.title'),
+      description: t('home.features.nutrition.description'),
+      image: imageData.feature_nutrition,
     },
+    {
+      icon: Dumbbell,
+      title: t('home.features.workout.title'),
+      description: t('home.features.workout.description'),
+      image: imageData.feature_workout,
+    },
+    {
+      icon: Users,
+      title: t('home.features.community.title'),
+      description: t('home.features.community.description'),
+      image: imageData.feature_community,
+    }
   ];
 
   return (
@@ -102,7 +114,7 @@ export default function HomePage() {
         {/* Features Section */}
         <section className="border-t py-12 sm:py-16">
           <div className="container mx-auto px-4">
-            <div className="mx-auto grid max-w-none grid-cols-1 gap-x-12 gap-y-16 md:grid-cols-2 lg:max-w-4xl">
+            <div className="mx-auto grid max-w-none grid-cols-1 gap-x-12 gap-y-16 md:grid-cols-2 lg:max-w-5xl">
               {features.map((feature) => (
                 <div key={feature.title} className="flex flex-col items-center text-center">
                    <div className="relative h-64 w-full overflow-hidden rounded-lg shadow-lg">
