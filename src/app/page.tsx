@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useTranslation } from "@/context/LanguageContext";
 import { Logo } from "@/components/Logo";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Globe, BarChart2, Utensils, Dumbbell, Users } from "lucide-react";
+import { Globe, BarChart2, Utensils, Dumbbell, Bed } from "lucide-react";
 import imageData from '@/app/lib/placeholder-images.json';
 
 export default function HomePage() {
@@ -31,10 +31,10 @@ export default function HomePage() {
       image: imageData.feature_workout,
     },
     {
-      icon: Users,
-      title: t('home.features.community.title'),
-      description: t('home.features.community.description'),
-      image: imageData.feature_community,
+      icon: Bed,
+      title: t('home.features.sleep.title'),
+      description: t('home.features.sleep.description'),
+      image: imageData.feature_sleep,
     }
   ];
 

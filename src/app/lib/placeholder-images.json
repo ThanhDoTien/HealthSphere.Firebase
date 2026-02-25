@@ -23,10 +23,10 @@
     "height": 600,
     "hint": "gym workout"
   },
-  "feature_community": {
-    "src": "https://picsum.photos/seed/feature-community/800/600",
+  "feature_sleep": {
+    "src": "https://picsum.photos/seed/feature-sleep/800/600",
     "width": 800,
     "height": 600,
-    "hint": "people talking"
+    "hint": "person sleeping"
   }
 }
