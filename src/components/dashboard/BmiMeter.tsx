@@ -12,30 +12,35 @@ interface BmiMeterProps {
 const BMI_CATEGORIES = {
   UNDERWEIGHT: {
     labelKey: 'dashboard.bmi.underweight',
+    adviceKey: 'dashboard.bmi.advice.underweight',
     color: '#60a5fa',
     textColor: 'text-blue-400',
     max: 18.5,
   },
   NORMAL: {
     labelKey: 'dashboard.bmi.normal',
+    adviceKey: 'dashboard.bmi.advice.normal',
     color: '#22c55e',
     textColor: 'text-green-500',
     max: 24.9,
   },
   OVERWEIGHT: {
     labelKey: 'dashboard.bmi.overweight',
+    adviceKey: 'dashboard.bmi.advice.overweight',
     color: '#facc15',
     textColor: 'text-yellow-400',
     max: 29.9,
   },
   OBESE: {
     labelKey: 'dashboard.bmi.obese',
+    adviceKey: 'dashboard.bmi.advice.obese',
     color: '#f97316',
     textColor: 'text-orange-500',
     max: 34.9,
   },
   SEVERELY_OBESE: {
     labelKey: 'dashboard.bmi.severelyObese',
+    adviceKey: 'dashboard.bmi.advice.severelyObese',
     color: '#ef4444',
     textColor: 'text-red-500',
     max: Infinity,
@@ -67,11 +72,11 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
     };
   }, [height, weight]);
 
-  // SVG Gauge constants
+  // SVG Gauge constants (compact version)
   const minBmi = 15;
   const maxBmi = 40;
-  const radius = 70; // Slightly smaller radius to fit better
-  const strokeWidth = 16; // Slightly thinner stroke
+  const radius = 70;
+  const strokeWidth = 16;
   const centerX = 120;
   const centerY = 90;
 
@@ -91,7 +96,6 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
     { category: BMI_CATEGORIES.SEVERELY_OBESE },
   ];
 
-  // 👉 CHIA ĐỀU GÓC Ở ĐÂY
   const segmentAngle = 180 / segments.length;
 
   const polarToCartesian = (angle: number) => {
@@ -152,13 +156,16 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
               </svg>
             </div>
 
-            <div className="text-center -mt-2">
+            <div className="text-center -mt-2 space-y-1">
               <div className="text-2xl font-bold tracking-tighter">
                 {bmi.toFixed(1)}
               </div>
               <div className={`text-sm font-semibold ${status.textColor}`}>
                 {t(status.labelKey)}
               </div>
+              <p className="max-w-[180px] text-[10px] leading-tight text-muted-foreground italic">
+                {t(status.adviceKey)}
+              </p>
             </div>
           </div>
         )}
