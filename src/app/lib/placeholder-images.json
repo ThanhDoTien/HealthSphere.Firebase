@@ -24,7 +24,7 @@
     "hint": "gym workout"
   },
   "feature_sleep": {
-    "src": "https://picsum.photos/seed/feature-sleep/800/600",
+    "src": "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/why-is-sleep-important.jpg?alt=media&token=fa31b0d3-2a6a-463a-888d-cb39221163a9",
     "width": 800,
     "height": 600,
     "hint": "person sleeping"

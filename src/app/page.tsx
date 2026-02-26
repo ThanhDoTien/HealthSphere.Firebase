@@ -77,7 +77,7 @@ export default function HomePage() {
             <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
               <span className="text-primary">Health</span>Sphere
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground font-medium">
               {t('home.subtitle')}
             </p>
             <div className="mt-8 flex justify-center gap-4">
@@ -86,7 +86,7 @@ export default function HomePage() {
               </Button>
             </div>
           </div>
-           <div className="absolute inset-0 z-0 opacity-20">
+           <div className="absolute inset-0 z-0 opacity-40">
               <Image
                 src={imageData.home_hero.src}
                 alt="Healthy lifestyle"
@@ -95,7 +95,7 @@ export default function HomePage() {
                 priority
                 data-ai-hint={imageData.home_hero.hint}
               />
-               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
           </div>
         </section>
 
