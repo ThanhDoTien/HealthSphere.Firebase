@@ -1,3 +1,4 @@
+
 {
   "home.login": "Login",
   "home.signup": "Sign Up",
@@ -199,6 +200,7 @@
   "dialog.ai_meal.cameraError": "Camera Access Required",
   "dialog.ai_meal.cameraErrorDescription": "Please allow camera access in your browser to use this feature.",
   "dialog.ai_meal.captureButton": "Capture Photo",
+  "dialog.ai_meal.uploadButton": "Upload from Device",
   "dialog.ai_meal.analyzing": "Analyzing your meal...",
   "dialog.ai_meal.analysisResult": "Analysis Result",
   "dialog.ai_meal.total": "Total",

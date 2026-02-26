@@ -1,3 +1,4 @@
+
 {
   "home.login": "Đăng nhập",
   "home.signup": "Đăng ký",
@@ -199,6 +200,7 @@
   "dialog.ai_meal.cameraError": "Yêu cầu quyền truy cập Camera",
   "dialog.ai_meal.cameraErrorDescription": "Vui lòng cho phép truy cập camera trong trình duyệt của bạn để sử dụng tính năng này.",
   "dialog.ai_meal.captureButton": "Chụp ảnh",
+  "dialog.ai_meal.uploadButton": "Tải lên từ thiết bị",
   "dialog.ai_meal.analyzing": "Đang phân tích bữa ăn của bạn...",
   "dialog.ai_meal.analysisResult": "Kết quả phân tích",
   "dialog.ai_meal.total": "Tổng cộng",

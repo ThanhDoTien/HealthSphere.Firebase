@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { Camera, Loader2, ChevronsRight, RotateCcw } from 'lucide-react';
+import { Camera, Loader2, ChevronsRight, RotateCcw, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import {
@@ -50,6 +51,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
   const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [open, setOpen] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -63,7 +65,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
     const videoElement = videoRef.current;
 
     const getCameraPermission = async () => {
-      if (open) {
+      if (open && !capturedImage) {
         try {
           stream = await navigator.mediaDevices.getUserMedia({ video: true });
           if (videoElement) {
@@ -73,19 +75,13 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
         } catch (error) {
           console.error('Error accessing camera:', error);
           setHasCameraPermission(false);
-          toast({
-            variant: 'destructive',
-            title: t('dialog.ai_meal.cameraError'),
-            description: t('dialog.ai_meal.cameraErrorDescription'),
-          });
-          setOpen(false);
+          // Don't show toast error immediately as user might prefer upload
         }
       }
     };
     getCameraPermission();
     
     return () => {
-        // Stop camera stream when component unmounts or dialog closes
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
         }
@@ -93,7 +89,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
             videoElement.srcObject = null;
         }
     }
-  }, [open, toast, t]);
+  }, [open, capturedImage, toast, t]);
 
   const handleCapture = () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -109,6 +105,19 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
     const imageDataUrl = canvas.toDataURL('image/jpeg');
     setCapturedImage(imageDataUrl);
     handleAnalyze(imageDataUrl);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setCapturedImage(result);
+        handleAnalyze(result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleAnalyze = async (imageDataUrl: string) => {
@@ -181,6 +190,9 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
     setAnalysisResult(null);
     setIsAnalyzing(false);
     setOpen(false);
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -201,6 +213,13 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
           <DialogTitle>{t('dialog.ai_meal.title')}</DialogTitle>
         </DialogHeader>
         <canvas ref={canvasRef} className="hidden" />
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          accept="image/*"
+          onChange={handleFileUpload}
+        />
         <div className="space-y-4 py-4">
            {!capturedImage ? (
                 <div className="space-y-4">
@@ -208,17 +227,23 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
                        <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
                     </div>
                     {hasCameraPermission === false && (
-                         <Alert variant="destructive">
+                         <Alert variant="default" className="border-yellow-500/50 bg-yellow-500/5">
                             <AlertTitle>{t('dialog.ai_meal.cameraError')}</AlertTitle>
                             <AlertDescription>
                                 {t('dialog.ai_meal.cameraErrorDescription')}
                             </AlertDescription>
                         </Alert>
                     )}
-                    <Button onClick={handleCapture} className="w-full" disabled={hasCameraPermission === false}>
-                        <Camera className="mr-2 h-4 w-4" />
-                        {t('dialog.ai_meal.captureButton')}
-                    </Button>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Button onClick={handleCapture} disabled={hasCameraPermission === false}>
+                            <Camera className="mr-2 h-4 w-4" />
+                            {t('dialog.ai_meal.captureButton')}
+                        </Button>
+                        <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
+                            <Upload className="mr-2 h-4 w-4" />
+                            {t('dialog.ai_meal.uploadButton')}
+                        </Button>
+                    </div>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -237,10 +262,10 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
                        <div className="space-y-4">
                             {analysisResult.identifiedFoods.length > 0 ? (
                                 <Card>
-                                    <CardHeader>
+                                    <CardHeader className="p-4">
                                         <CardTitle className="text-lg">{t('dialog.ai_meal.analysisResult')}</CardTitle>
                                     </CardHeader>
-                                    <CardContent className="space-y-2">
+                                    <CardContent className="space-y-2 p-4 pt-0">
                                         {analysisResult.identifiedFoods.map((food, index) => (
                                             <div key={index} className="flex justify-between text-sm">
                                                 <span>{food.name}</span>
@@ -266,7 +291,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
                 </div>
             )}
         </div>
-        <DialogFooter className="grid grid-cols-2 gap-2 sm:grid-cols-2">
+        <DialogFooter className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {analysisResult && analysisResult.identifiedFoods.length > 0 ? (
                 <>
                  <div className="grid w-full items-center gap-1.5">
@@ -289,13 +314,13 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
                 </Button>
                 </>
             ) : capturedImage ? (
-                 <Button variant="outline" onClick={() => setCapturedImage(null)} className="col-span-2">
+                 <Button variant="outline" onClick={() => { setCapturedImage(null); setAnalysisResult(null); }} className="col-span-full">
                     <RotateCcw className="mr-2 h-4 w-4" />
                     {t('dialog.ai_meal.tryAgainButton')}
                 </Button>
             ) : null }
             
-             <DialogClose asChild className="col-span-2">
+             <DialogClose asChild className="col-span-full">
                 <Button variant="ghost">
                     {t('form.common.cancel')}
                 </Button>
