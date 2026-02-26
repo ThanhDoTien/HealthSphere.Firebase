@@ -1,4 +1,3 @@
-
 {
   "home.login": "Login",
   "home.signup": "Sign Up",
@@ -213,6 +212,8 @@
   "dialog.ai_meal.analysisError": "The AI could not analyze the image. Please try again.",
   "dialog.ai_meal.noFoodToast": "No food detected",
   "dialog.ai_meal.noFoodToastDescription": "The AI could not detect any food in the image. Please try again.",
+  "common.filter.last7": "Last 7 days",
+  "common.filter.last30": "Last 30 days",
   "forums.title": "Community Forums",
   "forums.description": "Connect, share, and get motivated with others.",
   "forums.newPost": "New Post",

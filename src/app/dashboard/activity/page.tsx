@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -19,6 +19,13 @@ import AddActivityForm from '@/components/dashboard/AddActivityForm';
 import { Loader2 } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { useTranslation } from '@/context/LanguageContext';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Activity = {
   name: string;
@@ -32,6 +39,8 @@ export default function ActivityPage() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const { t } = useTranslation();
+
+  const [activityFilter, setActivityFilter] = useState('30');
 
   const activityChartConfig = useMemo(() => ({
     calories: {
@@ -66,6 +75,8 @@ export default function ActivityPage() {
       }
     });
 
+    const limitCount = parseInt(activityFilter);
+
     return Object.keys(dailyCalories)
       .map((date) => ({
         date: new Date(date + 'T00:00').toLocaleDateString('en-US', {
@@ -78,8 +89,8 @@ export default function ActivityPage() {
       .sort(
         (a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime()
       )
-      .slice(-30);
-  }, [activityData]);
+      .slice(-limitCount);
+  }, [activityData, activityFilter]);
 
   const dailyActivities = useMemo(() => {
     if (!activityData) return {};
@@ -101,11 +112,22 @@ export default function ActivityPage() {
   return (
     <div className="p-4 sm:p-6">
       <Card>
-        <CardHeader>
-          <CardTitle>{t('activity.title')}</CardTitle>
-          <CardDescription>
-            {t('activity.description')}
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>{t('activity.title')}</CardTitle>
+            <CardDescription>
+              {t('activity.description')}
+            </CardDescription>
+          </div>
+          <Select value={activityFilter} onValueChange={setActivityFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">{t('common.filter.last7')}</SelectItem>
+              <SelectItem value="30">{t('common.filter.last30')}</SelectItem>
+            </SelectContent>
+          </Select>
         </CardHeader>
         <CardContent className="space-y-6">
           {isLoading && !activityData ? (

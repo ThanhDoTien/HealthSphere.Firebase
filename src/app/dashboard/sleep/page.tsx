@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -19,6 +19,13 @@ import AddSleepForm from '@/components/dashboard/AddSleepForm';
 import { Loader2 } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { useTranslation } from '@/context/LanguageContext';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Sleep = {
   duration: number;
@@ -30,6 +37,8 @@ export default function SleepPage() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const { t } = useTranslation();
+
+  const [sleepFilter, setSleepFilter] = useState('30');
 
   const sleepChartConfig = useMemo(() => ({
     duration: {
@@ -53,6 +62,8 @@ export default function SleepPage() {
   const chartData = useMemo(() => {
     if (!sleepData) return [];
 
+    const limitCount = parseInt(sleepFilter);
+
     return sleepData
       .map((d) => ({
         date: new Date(d.date + 'T00:00').toLocaleDateString('en-US', {
@@ -65,8 +76,8 @@ export default function SleepPage() {
       .sort(
         (a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime()
       )
-      .slice(-30);
-  }, [sleepData]);
+      .slice(-limitCount);
+  }, [sleepData, sleepFilter]);
 
   const dailySleep = useMemo(() => {
     if (!sleepData) return {};
@@ -88,11 +99,22 @@ export default function SleepPage() {
   return (
     <div className="p-4 sm:p-6">
       <Card>
-        <CardHeader>
-          <CardTitle>{t('sleep.title')}</CardTitle>
-          <CardDescription>
-            {t('sleep.description')}
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>{t('sleep.title')}</CardTitle>
+            <CardDescription>
+              {t('sleep.description')}
+            </CardDescription>
+          </div>
+          <Select value={sleepFilter} onValueChange={setSleepFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">{t('common.filter.last7')}</SelectItem>
+              <SelectItem value="30">{t('common.filter.last30')}</SelectItem>
+            </SelectContent>
+          </Select>
         </CardHeader>
         <CardContent className="space-y-6">
           {isLoading && !sleepData ? (

@@ -47,6 +47,13 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import LogMealWithAiDialog from '@/components/dashboard/LogMealWithAiDialog';
 import { useTranslation } from '@/context/LanguageContext';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Meal = {
   name: string;
@@ -61,6 +68,8 @@ export default function CaloriesPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const { t } = useTranslation();
+
+  const [calorieFilter, setCalorieFilter] = useState('30');
 
   const calorieChartConfig = useMemo(() => ({
     calories: {
@@ -99,6 +108,8 @@ export default function CaloriesPage() {
       }
     });
 
+    const limitCount = parseInt(calorieFilter);
+
     return Object.keys(dailyCalories)
       .map((date) => ({
         date: new Date(date + 'T00:00').toLocaleDateString('en-US', {
@@ -111,8 +122,8 @@ export default function CaloriesPage() {
       .sort(
         (a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime()
       )
-      .slice(-30);
-  }, [mealData]);
+      .slice(-limitCount);
+  }, [mealData, calorieFilter]);
 
   const dailyMeals = useMemo(() => {
     if (!mealData) return {};
@@ -168,11 +179,22 @@ export default function CaloriesPage() {
   return (
     <div className="p-4 sm:p-6">
       <Card>
-        <CardHeader>
-          <CardTitle>{t('calories.title')}</CardTitle>
-          <CardDescription>
-            {t('calories.description')}
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>{t('calories.title')}</CardTitle>
+            <CardDescription>
+              {t('calories.description')}
+            </CardDescription>
+          </div>
+          <Select value={calorieFilter} onValueChange={setCalorieFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">{t('common.filter.last7')}</SelectItem>
+              <SelectItem value="30">{t('common.filter.last30')}</SelectItem>
+            </SelectContent>
+          </Select>
         </CardHeader>
         <CardContent className="space-y-6">
           {isLoading && !mealData ? (

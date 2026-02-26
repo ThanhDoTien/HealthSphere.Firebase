@@ -1,4 +1,3 @@
-
 {
   "home.login": "Đăng nhập",
   "home.signup": "Đăng ký",
@@ -213,6 +212,8 @@
   "dialog.ai_meal.analysisError": "AI không thể phân tích hình ảnh. Vui lòng thử lại.",
   "dialog.ai_meal.noFoodToast": "Không phát hiện thấy thức ăn",
   "dialog.ai_meal.noFoodToastDescription": "AI không thể phát hiện bất kỳ thực phẩm nào trong ảnh. Vui lòng thử lại.",
+  "common.filter.last7": "7 ngày gần nhất",
+  "common.filter.last30": "30 ngày gần nhất",
   "forums.title": "Diễn đàn cộng đồng",
   "forums.description": "Kết nối, chia sẻ và cùng nhau tạo động lực.",
   "forums.newPost": "Bài viết mới",
