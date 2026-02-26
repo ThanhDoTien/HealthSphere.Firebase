@@ -1,3 +1,4 @@
+
 {
   "home.login": "Login",
   "home.signup": "Sign Up",
@@ -84,7 +85,9 @@
   "dashboard.weight.sinceLast": "{value}kg since last entry",
   "dashboard.weight.fromYesterday": "{value}kg from yesterday",
   "dashboard.weightTrackingTitle": "Weight Tracking",
-  "dashboard.weightTrackingDescription": "Last 30 entries",
+  "dashboard.weightTrackingDescription": "View your progress over time.",
+  "dashboard.weightFilter.last7": "Last 7 entries",
+  "dashboard.weightFilter.last30": "Last 30 entries",
   "dashboard.aiSuggestionsTitle": "AI Suggestions",
   "dashboard.aiSuggestionsDescription": "Based on your goals and activities.",
   "dashboard.recipeSuggestion": "Recipe Suggestion",

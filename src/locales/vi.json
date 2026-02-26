@@ -1,3 +1,4 @@
+
 {
   "home.login": "Đăng nhập",
   "home.signup": "Đăng ký",
@@ -84,7 +85,9 @@
   "dashboard.weight.sinceLast": "{value}kg so với lần nhập cuối",
   "dashboard.weight.fromYesterday": "{value}kg so với hôm qua",
   "dashboard.weightTrackingTitle": "Theo dõi cân nặng",
-  "dashboard.weightTrackingDescription": "30 lần ghi gần nhất",
+  "dashboard.weightTrackingDescription": "Xem tiến trình của bạn theo thời gian.",
+  "dashboard.weightFilter.last7": "7 lần ghi gần nhất",
+  "dashboard.weightFilter.last30": "30 lần ghi gần nhất",
   "dashboard.aiSuggestionsTitle": "Gợi ý từ AI",
   "dashboard.aiSuggestionsDescription": "Dựa trên mục tiêu và hoạt động của bạn.",
   "dashboard.recipeSuggestion": "Gợi ý công thức",

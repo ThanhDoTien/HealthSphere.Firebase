@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -20,6 +21,13 @@ import { type ChartConfig } from '@/components/ui/chart';
 import AddWeightForm from '@/components/dashboard/AddWeightForm';
 import { useTranslation } from '@/context/LanguageContext';
 import BmiMeter from '@/components/dashboard/BmiMeter';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const weightChartConfig = {
   weight: {
@@ -34,6 +42,8 @@ export default function DashboardPage() {
   const [today, setToday] = useState('');
   const [yesterday, setYesterday] = useState('');
   const { t } = useTranslation();
+
+  const [weightFilter, setWeightFilter] = useState('30');
 
   useEffect(() => {
     // This runs only on the client, after hydration, avoiding mismatch
@@ -115,8 +125,9 @@ export default function DashboardPage() {
 
   const chartData = useMemo(() => {
     if (!weightData) return [];
-    // The data is fetched in descending order, so we reverse it for the chart
+    const limitCount = parseInt(weightFilter);
     return weightData
+      .slice(0, limitCount)
       .map((d) => ({
         date: new Date(d.date + 'T00:00').toLocaleDateString('en-US', {
           month: 'short',
@@ -125,7 +136,7 @@ export default function DashboardPage() {
         weight: d.weight,
       }))
       .reverse();
-  }, [weightData]);
+  }, [weightData, weightFilter]);
 
   // Today's totals
   const caloriesConsumed = useMemo(() => {
@@ -256,9 +267,20 @@ export default function DashboardPage() {
             </Card>
           </div>
           <Card>
-            <CardHeader>
-              <CardTitle>{t('dashboard.weightTrackingTitle')}</CardTitle>
-              <CardDescription>{t('dashboard.weightTrackingDescription')}</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="space-y-1">
+                <CardTitle>{t('dashboard.weightTrackingTitle')}</CardTitle>
+                <CardDescription>{t('dashboard.weightTrackingDescription')}</CardDescription>
+              </div>
+              <Select value={weightFilter} onValueChange={setWeightFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">{t('dashboard.weightFilter.last7')}</SelectItem>
+                  <SelectItem value="30">{t('dashboard.weightFilter.last30')}</SelectItem>
+                </SelectContent>
+              </Select>
             </CardHeader>
             <CardContent className="space-y-4">
               <BarChart
