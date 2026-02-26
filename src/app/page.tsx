@@ -86,7 +86,7 @@ export default function HomePage() {
               </Button>
             </div>
           </div>
-           <div className="absolute inset-0 z-0 opacity-40">
+           <div className="absolute inset-0 z-0 opacity-90">
               <Image
                 src={imageData.home_hero.src}
                 alt="Healthy lifestyle"
