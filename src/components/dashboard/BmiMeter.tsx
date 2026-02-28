@@ -158,7 +158,7 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
 
             <div className="text-center -mt-2 space-y-1">
               <div className="text-2xl font-bold tracking-tighter">
-                {bmi.toFixed(1)}
+                BMI: {bmi.toFixed(1)}
               </div>
               <div className={`text-sm font-semibold ${status.textColor}`}>
                 {t(status.labelKey)}
