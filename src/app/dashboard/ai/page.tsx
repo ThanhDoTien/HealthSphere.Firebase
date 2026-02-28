@@ -20,8 +20,6 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import {
-  getHealthSuggestions,
-  type HealthSuggestionRequest,
   type HealthSuggestionResponse,
 } from '@/ai/flows/suggestion-flow';
 import {
@@ -29,10 +27,11 @@ import {
   Utensils,
   Dumbbell,
   Lightbulb,
+  RefreshCcw,
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useTranslation } from '@/context/LanguageContext';
-
+import { Button } from '@/components/ui/button';
 
 export default function AiPage() {
   const { user, userProfile, loading: userLoading } = useUser();
@@ -130,7 +129,6 @@ export default function AiPage() {
 
   const { data: suggestionData, isLoading: suggestionLoading } = useDoc<HealthSuggestionResponse>(suggestionDocRef);
 
-  
   const handleGenerateSuggestions = useCallback(async () => {
     if (!userProfile || !user || !today || !suggestionDocRef) return;
   
@@ -138,86 +136,45 @@ export default function AiPage() {
     setError(null);
   
     const prompt = `
-    You are a health assistant AI.
-    
-    Return ONLY valid JSON (no markdown, no explanation).
-    
-    Schema:
-    {
-      "generalTip": string,
-      "mealSuggestions": [
-        { "name": string, "calories": number, "recipe": string }
-      ],
-      "workoutSuggestion": [
-        { 
-          "name": string, 
-          "description": string 
-        }
-      ]
-    }
-    
-    IMPORTANT:
-    - workout description MUST be formatted in HTML
-    - Use <ul><li> for steps OR <br/> for line breaks
-    - Each exercise must be easy to read (multiple lines, not one paragraph)
-    
-    Example:
-    "workoutSuggestion": [
-      {
-        "name": "Full Body Workout",
-        "description": "<ul><li>Push-ups: 10 reps</li><li>Squats: 15 reps</li><li>Plank: 30 seconds</li></ul>"
-      }
-    ]
-    
-    User profile:
-    - Goal: ${userProfile.goal}
-    - Weight: ${userProfile.weight}
-    - Height: ${userProfile.height}
-    - Age: ${userProfile.age}
-    - Gender: ${userProfile.gender}
-    
-    Daily summary:
-    - Calories in: ${dailySummary.caloriesConsumed}
-    - Calories out: ${dailySummary.caloriesBurned}
-    - Sleep: ${dailySummary.sleepHours}
-    
-    Recent activities: ${recentActivityData?.map(a => a.name).join(', ') || 'None'}
-    
-    Language: ${locale}
-    
-    Generate realistic, clean, readable suggestions.
+    You are a health assistant AI. 
+    User Profile: Goal: ${userProfile.goal}, Weight: ${userProfile.weight}, Height: ${userProfile.height}, Age: ${userProfile.age}, Gender: ${userProfile.gender}.
+    Daily summary: Calories in: ${dailySummary.caloriesConsumed}, Calories out: ${dailySummary.caloriesBurned}, Sleep: ${dailySummary.sleepHours}.
+    Recent activities: ${recentActivityData?.map(a => a.name).join(', ') || 'None'}.
+    Language: ${locale}.
+
+    Return ONLY valid JSON (no markdown).
+    Schema: { "generalTip": string, "mealSuggestions": [{ "name": string, "calories": number, "recipe": string }], "workoutSuggestion": [{ "name": string, "description": string }] }
     `;
   
     try {
       const res = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyBKqU7wBv58ZGE501N8ydSTbLXGNolOdC4",
+        "https://healthspherebackend--studio-8164753205-5553c.asia-southeast1.hosted.app/chat",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            contents: [
-              {
-                parts: [{ text: prompt }],
-              },
-            ],
+            message: prompt,
           }),
         }
       );
   
+      if (!res.ok) throw new Error("Failed to connect to backend server");
+
       const data = await res.json();
+      
+      // Handle different possible backend response formats
+      let suggestions;
+      if (typeof data === 'string') {
+        suggestions = JSON.parse(data.replace(/```json|```/g, "").trim());
+      } else if (data.message && typeof data.message === 'string') {
+        suggestions = JSON.parse(data.message.replace(/```json|```/g, "").trim());
+      } else {
+        suggestions = data;
+      }
   
-      let text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  
-      if (!text) throw new Error("Empty AI response");
-  
-      // 🔥 FIX: remove markdown ```json ```
-      text = text.replace(/```json|```/g, "").trim();
-  
-      const parsed = JSON.parse(text);
-  
-      await setDoc(suggestionDocRef, parsed);
+      await setDoc(suggestionDocRef, suggestions);
     } catch (err: any) {
       console.error("AI ERROR:", err);
       setError(err.message || t('ai.errorMessage'));
@@ -227,25 +184,35 @@ export default function AiPage() {
   }, [userProfile, user, today, suggestionDocRef, dailySummary, recentActivityData, locale, t]);
 
   useEffect(() => {
-    // Tự động tạo gợi ý khi dữ liệu đã tải xong hoặc khi đổi ngôn ngữ.
-    if (!dataIsLoading && userProfile) {
+    // Tự động tạo nếu chưa có dữ liệu và không đang tải
+    if (!dataIsLoading && userProfile && !suggestionData && !isGenerating && !error) {
       handleGenerateSuggestions();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataIsLoading, userProfile, locale, handleGenerateSuggestions]);
+  }, [dataIsLoading, userProfile, suggestionData, handleGenerateSuggestions, isGenerating, error]);
 
   const pageIsLoading = dataIsLoading || suggestionLoading;
 
   return (
     <div className="p-4 sm:p-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {t('ai.title')}
-          </CardTitle>
-          <CardDescription>
-            {t('ai.description')}
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              {t('ai.title')}
+            </CardTitle>
+            <CardDescription>
+              {t('ai.description')}
+            </CardDescription>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleGenerateSuggestions}
+            disabled={isGenerating || dataIsLoading}
+          >
+            {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-2 h-4 w-4" />}
+            {t('ai.generateButton')}
+          </Button>
         </CardHeader>
         <CardContent className="space-y-6">
           {userProfile && (
@@ -347,29 +314,29 @@ export default function AiPage() {
               </div>
 
               <div>
-  <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
-    <Dumbbell className="h-6 w-6 text-orange-500" />
-    {t('ai.workoutTitle')}
-  </h3>
+                <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
+                  <Dumbbell className="h-6 w-6 text-orange-500" />
+                  {t('ai.workoutTitle')}
+                </h3>
 
-  <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
-    {suggestionData.workoutSuggestion.map((exercise) => (
-      <Card key={exercise.name} className="h-full">
-        <CardHeader>
-          <CardTitle>{exercise.name}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div
-            className="prose prose-sm text-sm text-muted-foreground"
-            dangerouslySetInnerHTML={{
-              __html: exercise.description,
-            }}
-          />
-        </CardContent>
-      </Card>
-    ))}
-  </div>
-</div>
+                <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
+                  {suggestionData.workoutSuggestion.map((exercise) => (
+                    <Card key={exercise.name} className="h-full">
+                      <CardHeader>
+                        <CardTitle>{exercise.name}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div
+                          className="prose prose-sm text-sm text-muted-foreground"
+                          dangerouslySetInnerHTML={{
+                            __html: exercise.description,
+                          }}
+                        />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </CardContent>
