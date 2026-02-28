@@ -148,7 +148,7 @@ export default function AiPage() {
   
     try {
       const res = await fetch(
-        "https://healthspherebackend--studio-8164753205-5553c.asia-southeast1.hosted.app/chat",
+        "https://healthspherebackend--studio-8164753205-5553c.asia-southeast1.hosted.app/ai",
         {
           method: "POST",
           headers: {
