@@ -1,12 +1,13 @@
 'use server';
 /**
  * @fileOverview Generates health suggestions by calling an external backend API.
- * This file acts as a server-side bridge to avoid CORS issues.
+ * This file acts as a server-side bridge to avoid CORS issues and provides robust error handling.
+ * 
+ * - getHealthSuggestions - A function that proxies the request to the external health AI backend.
+ * - HealthSuggestionRequest - The schema for the input data.
+ * - HealthSuggestionResponse - The schema for the expected AI suggestions.
  */
 
-import { z } from 'zoc'; // Note: Re-checking imports, should be 'zod' but looking at prev context
-
-// Correcting the import to zod if it was a typo in previous iterations
 import { z } from 'zod';
 
 const HealthSuggestionRequestSchema = z.object({
@@ -45,6 +46,10 @@ const HealthSuggestionResponseSchema = z.object({
 });
 export type HealthSuggestionResponse = z.infer<typeof HealthSuggestionResponseSchema>;
 
+/**
+ * Calls the external backend to generate health suggestions.
+ * Handles various response formats (raw JSON, stringified JSON, or wrapped messages).
+ */
 export async function getHealthSuggestions(
   input: HealthSuggestionRequest
 ): Promise<HealthSuggestionResponse> {
@@ -81,19 +86,16 @@ export async function getHealthSuggestions(
     );
 
     if (!res.ok) {
-      // Cố gắng đọc nội dung lỗi từ backend để debug
       let errorDetail = '';
       try {
-        const errorText = await res.text();
-        errorDetail = errorText.slice(0, 200); // Lấy 200 ký tự đầu tiên
+        errorDetail = await res.text();
       } catch (e) {}
-      
-      throw new Error(`Backend error ${res.status}: ${errorDetail || 'Internal Server Error'}`);
+      throw new Error(`Backend server error: HTTP ${res.status} ${errorDetail.slice(0, 100)}`);
     }
 
     const data = await res.json();
     
-    // Trích xuất JSON linh hoạt
+    // Attempt to find the result in various common response fields
     let rawResult;
     if (typeof data === 'string') {
       rawResult = JSON.parse(data.replace(/```json|```/g, "").trim());
@@ -112,7 +114,7 @@ export async function getHealthSuggestions(
     return HealthSuggestionResponseSchema.parse(rawResult);
 
   } catch (e: any) {
-    console.error('AI Flow Error:', e);
+    console.error('AI Proxy Error:', e);
     throw new Error(e.message || 'Failed to generate suggestions.');
   }
 }
