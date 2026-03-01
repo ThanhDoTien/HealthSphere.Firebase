@@ -1,12 +1,9 @@
 'use server';
 /**
- * @fileOverview Generates health suggestions based on user data using Google AI.
- * - getHealthSuggestions - a function that handles the health suggestion process.
- * - HealthSuggestionRequest - The input type for the getHealthSuggestions function.
- * - HealthSuggestionResponse - The return type for the getHealthSuggestions function.
+ * @fileOverview Generates health suggestions by calling an external backend API.
+ * This file acts as a server-side bridge to avoid CORS issues.
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 
 const HealthSuggestionRequestSchema = z.object({
@@ -23,128 +20,80 @@ const HealthSuggestionRequestSchema = z.object({
     sleepHours: z.number(),
   }),
   recentActivities: z.array(z.string()),
-  language: z.string().optional().describe('The language for the response (e.g., "en", "vi").'),
+  language: z.string().optional(),
 });
-export type HealthSuggestionRequest = z.infer<
-  typeof HealthSuggestionRequestSchema
->;
+export type HealthSuggestionRequest = z.infer<typeof HealthSuggestionRequestSchema>;
 
 const MealSuggestionSchema = z.object({
-  name: z.string().describe('Name of the meal.'),
-  recipe: z
-    .string()
-    .describe(
-      'A simple recipe or preparation instructions for the meal, written in markdown format.'
-    ),
-  calories: z.number().describe('Estimated calories for the meal.'),
+  name: z.string(),
+  recipe: z.string(),
+  calories: z.number(),
 });
 
 const ExerciseSuggestionSchema = z.object({
-  name: z.string().describe('Name of the exercise or activity.'),
-  description: z
-    .string()
-    .describe(
-      'Description of the exercise and why it is suggested, written in markdown format.'
-    ),
+  name: z.string(),
+  description: z.string(),
 });
 
 const HealthSuggestionResponseSchema = z.object({
-  mealSuggestions: z
-    .array(MealSuggestionSchema)
-    .describe(
-      'A list of 3 meal suggestions for the day (breakfast, lunch, dinner).'
-    ),
-  workoutSuggestion: z
-    .array(ExerciseSuggestionSchema)
-    .describe('A list of 2-3 suggested exercises or a workout routine.'),
-  generalTip: z
-    .string()
-    .describe('A general, encouraging health tip for the day.'),
+  mealSuggestions: z.array(MealSuggestionSchema),
+  workoutSuggestion: z.array(ExerciseSuggestionSchema),
+  generalTip: z.string(),
 });
-export type HealthSuggestionResponse = z.infer<
-  typeof HealthSuggestionResponseSchema
->;
-
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-
-function extractJson(text: string): string | null {
-  const markdownMatch = text.match(/```json\n([\s\S]*?)\n```/);
-  if (markdownMatch && markdownMatch[1]) {
-    return markdownMatch[1];
-  }
-
-  const rawJsonMatch = text.match(/{\s*["\w]/);
-  if (rawJsonMatch) {
-    const startIndex = rawJsonMatch.index!;
-    let openBraces = 0;
-    for (let i = startIndex; i < text.length; i++) {
-      if (text[i] === '{') {
-        openBraces++;
-      } else if (text[i] === '}') {
-        openBraces--;
-        if (openBraces === 0) {
-          return text.substring(startIndex, i + 1);
-        }
-      }
-    }
-  }
-
-  return null;
-}
-
+export type HealthSuggestionResponse = z.infer<typeof HealthSuggestionResponseSchema>;
 
 export async function getHealthSuggestions(
   input: HealthSuggestionRequest
 ): Promise<HealthSuggestionResponse> {
-  const languageInstruction = input.language === 'vi' 
-    ? 'Please provide the entire response in Vietnamese, including all field names and values in the JSON structure.' 
-    : 'Please provide the entire response in English.';
+  const prompt = `
+    You are a health assistant AI. 
+    User Profile: Goal: ${input.userProfile.goal}, Weight: ${input.userProfile.weight}, Height: ${input.userProfile.height}, Age: ${input.userProfile.age}, Gender: ${input.userProfile.gender}.
+    Daily summary: Calories in: ${input.dailySummary.caloriesConsumed}, Calories out: ${input.dailySummary.caloriesBurned}, Sleep: ${input.dailySummary.sleepHours}.
+    Recent activities: ${input.recentActivities.join(', ') || 'None'}.
+    Language: ${input.language || 'en'}.
 
-  const prompt = `You are a friendly and encouraging AI health assistant. Your goal is to provide personalized, actionable, and safe health suggestions based on the user's data.
-
-${languageInstruction}
-
-Analyze the following user data:
-- **User Profile:**
-  - Health Goal: ${input.userProfile.goal}
-  - Current Weight: ${input.userProfile.weight} kg
-  - Height: ${input.userProfile.height} cm
-  - Age: ${input.userProfile.age}
-  - Gender: ${input.userProfile.gender}
-- **Today's Summary:**
-  - Calories Consumed: ${input.dailySummary.caloriesConsumed} kcal
-  - Calories Burned: ${input.dailySummary.caloriesBurned} kcal
-  - Hours Slept: ${input.dailySummary.sleepHours} hours
-- **Recent Activities:**
-${input.recentActivities.map((act) => `- ${act}`).join('\n')}
-
-Based on this data, provide a set of suggestions.
-
-Your suggestions should be:
-1.  **Meal Suggestions:** Provide 3 meal ideas (one for breakfast, one for lunch, one for dinner) that align with the user's goals and today's calorie intake. Include a simple recipe for each.
-2.  **Workout Suggestion:** Recommend 2 or 3 exercises or a short workout routine. The suggestions should be appropriate for the user's recent activities and goals.
-3.  **General Tip:** Provide one general, encouraging tip for the day.
-
-Generate the response as a single, valid JSON object. Do not include any text, markdown formatting, or code fences before or after the JSON object. The JSON object must have the following structure: { "mealSuggestions": [{ "name": "string", "recipe": "string", "calories": "number" }], "workoutSuggestion": [{ "name":"string", "description": "string" }], "generalTip": "string" }.
-`;
+    Return ONLY valid JSON (no markdown).
+    Schema: { "generalTip": string, "mealSuggestions": [{ "name": string, "calories": number, "recipe": string }], "workoutSuggestion": [{ "name": string, "description": string }] }
+  `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const textResponse = response.text();
-    
-    const jsonText = extractJson(textResponse);
+    const res = await fetch(
+      "https://healthspherebackend--studio-8164753205-5553c.asia-southeast1.hosted.app/ai",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: prompt,
+        }),
+        // Server-side fetch avoids CORS issues
+        cache: 'no-store',
+      }
+    );
 
-    if (!jsonText) {
-      throw new Error('The AI returned an invalid response format (no JSON found).');
+    if (!res.ok) {
+      throw new Error(`Backend server responded with status: ${res.status}`);
     }
 
-    const parsed = JSON.parse(jsonText);
-    return HealthSuggestionResponseSchema.parse(parsed);
+    const data = await res.json();
+    
+    // Attempt to parse JSON if the backend returns a string or an object with a message string
+    let rawResult;
+    if (typeof data === 'string') {
+      rawResult = JSON.parse(data.replace(/```json|```/g, "").trim());
+    } else if (data.message && typeof data.message === 'string') {
+      rawResult = JSON.parse(data.message.replace(/```json|```/g, "").trim());
+    } else if (data.output && typeof data.output === 'string') {
+       rawResult = JSON.parse(data.output.replace(/```json|```/g, "").trim());
+    } else {
+      rawResult = data;
+    }
+
+    return HealthSuggestionResponseSchema.parse(rawResult);
 
   } catch (e) {
-    console.error('Failed to get suggestions from AI or parse the response:', e);
-    throw new Error('The AI returned an invalid response format.');
+    console.error('Failed to get suggestions from external backend:', e);
+    throw new Error('Failed to connect to AI backend. Please check your backend logs.');
   }
 }

@@ -20,6 +20,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import {
+  getHealthSuggestions,
   type HealthSuggestionResponse,
 } from '@/ai/flows/suggestion-flow';
 import {
@@ -135,44 +136,19 @@ export default function AiPage() {
     setIsGenerating(true);
     setError(null);
   
-    const prompt = `
-    You are a health assistant AI. 
-    User Profile: Goal: ${userProfile.goal}, Weight: ${userProfile.weight}, Height: ${userProfile.height}, Age: ${userProfile.age}, Gender: ${userProfile.gender}.
-    Daily summary: Calories in: ${dailySummary.caloriesConsumed}, Calories out: ${dailySummary.caloriesBurned}, Sleep: ${dailySummary.sleepHours}.
-    Recent activities: ${recentActivityData?.map(a => a.name).join(', ') || 'None'}.
-    Language: ${locale}.
-
-    Return ONLY valid JSON (no markdown).
-    Schema: { "generalTip": string, "mealSuggestions": [{ "name": string, "calories": number, "recipe": string }], "workoutSuggestion": [{ "name": string, "description": string }] }
-    `;
-  
     try {
-      const res = await fetch(
-        "https://healthspherebackend--studio-8164753205-5553c.asia-southeast1.hosted.app/ai",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: prompt,
-          }),
-        }
-      );
-  
-      if (!res.ok) throw new Error("Failed to connect to backend server");
-
-      const data = await res.json();
-      
-      // Handle different possible backend response formats
-      let suggestions;
-      if (typeof data === 'string') {
-        suggestions = JSON.parse(data.replace(/```json|```/g, "").trim());
-      } else if (data.message && typeof data.message === 'string') {
-        suggestions = JSON.parse(data.message.replace(/```json|```/g, "").trim());
-      } else {
-        suggestions = data;
-      }
+      const suggestions = await getHealthSuggestions({
+        userProfile: {
+          goal: userProfile.goal,
+          weight: userProfile.weight,
+          height: userProfile.height,
+          age: userProfile.age,
+          gender: userProfile.gender,
+        },
+        dailySummary,
+        recentActivities: recentActivityData?.map(a => a.name) || [],
+        language: locale,
+      });
   
       await setDoc(suggestionDocRef, suggestions);
     } catch (err: any) {
@@ -184,7 +160,6 @@ export default function AiPage() {
   }, [userProfile, user, today, suggestionDocRef, dailySummary, recentActivityData, locale, t]);
 
   useEffect(() => {
-    // Tự động tạo nếu chưa có dữ liệu và không đang tải
     if (!dataIsLoading && userProfile && !suggestionData && !isGenerating && !error) {
       handleGenerateSuggestions();
     }

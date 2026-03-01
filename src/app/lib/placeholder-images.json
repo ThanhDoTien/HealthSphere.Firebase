@@ -6,7 +6,7 @@
     "hint": "health lifestyle"
   },
   "feature_track": {
-    "src": "https://picsum.photos/seed/column-chart-track/800/600",
+    "src": "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/weight-track.png?alt=media&token=973086d7-0eff-44aa-84d1-f2910dadc59f",
     "width": 800,
     "height": 600,
     "hint": "data chart"
