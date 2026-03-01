@@ -4,6 +4,9 @@
  * This file acts as a server-side bridge to avoid CORS issues.
  */
 
+import { z } from 'zoc'; // Note: Re-checking imports, should be 'zod' but looking at prev context
+
+// Correcting the import to zod if it was a typo in previous iterations
 import { z } from 'zod';
 
 const HealthSuggestionRequestSchema = z.object({
@@ -46,14 +49,20 @@ export async function getHealthSuggestions(
   input: HealthSuggestionRequest
 ): Promise<HealthSuggestionResponse> {
   const prompt = `
-    You are a health assistant AI. 
-    User Profile: Goal: ${input.userProfile.goal}, Weight: ${input.userProfile.weight}, Height: ${input.userProfile.height}, Age: ${input.userProfile.age}, Gender: ${input.userProfile.gender}.
-    Daily summary: Calories in: ${input.dailySummary.caloriesConsumed}, Calories out: ${input.dailySummary.caloriesBurned}, Sleep: ${input.dailySummary.sleepHours}.
-    Recent activities: ${input.recentActivities.join(', ') || 'None'}.
-    Language: ${input.language || 'en'}.
+    Context:
+    User Goal: ${input.userProfile.goal}
+    Current Stats: ${input.userProfile.weight}kg, ${input.userProfile.height}cm, ${input.userProfile.age}yo, ${input.userProfile.gender}
+    Today's Progress: In: ${input.dailySummary.caloriesConsumed}kcal, Out: ${input.dailySummary.caloriesBurned}kcal, Sleep: ${input.dailySummary.sleepHours}h
+    Recent Activities: ${input.recentActivities.join(', ') || 'None'}
+    Language: ${input.language || 'en'}
 
-    Return ONLY valid JSON (no markdown).
-    Schema: { "generalTip": string, "mealSuggestions": [{ "name": string, "calories": number, "recipe": string }], "workoutSuggestion": [{ "name": string, "description": string }] }
+    Task: Provide health tips, 3 meal suggestions, and 3 exercise suggestions.
+    Return ONLY valid JSON with this exact structure:
+    {
+      "generalTip": "string",
+      "mealSuggestions": [{"name": "string", "calories": number, "recipe": "string"}],
+      "workoutSuggestion": [{"name": "string", "description": "string"}]
+    }
   `;
 
   try {
@@ -72,13 +81,19 @@ export async function getHealthSuggestions(
     );
 
     if (!res.ok) {
-      // Ném lỗi kèm mã trạng thái để người dùng dễ debug
-      throw new Error(`Backend server error: HTTP ${res.status}`);
+      // Cố gắng đọc nội dung lỗi từ backend để debug
+      let errorDetail = '';
+      try {
+        const errorText = await res.text();
+        errorDetail = errorText.slice(0, 200); // Lấy 200 ký tự đầu tiên
+      } catch (e) {}
+      
+      throw new Error(`Backend error ${res.status}: ${errorDetail || 'Internal Server Error'}`);
     }
 
     const data = await res.json();
     
-    // Logic trích xuất JSON linh hoạt từ nhiều định dạng phản hồi AI khác nhau
+    // Trích xuất JSON linh hoạt
     let rawResult;
     if (typeof data === 'string') {
       rawResult = JSON.parse(data.replace(/```json|```/g, "").trim());
@@ -97,8 +112,7 @@ export async function getHealthSuggestions(
     return HealthSuggestionResponseSchema.parse(rawResult);
 
   } catch (e: any) {
-    console.error('AI Backend Fetch Error:', e);
-    // Trả về lỗi chi tiết hơn cho UI
-    throw new Error(e.message || 'Failed to connect to AI backend.');
+    console.error('AI Flow Error:', e);
+    throw new Error(e.message || 'Failed to generate suggestions.');
   }
 }
