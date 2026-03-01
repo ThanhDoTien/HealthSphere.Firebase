@@ -48,11 +48,11 @@ export type HealthSuggestionResponse = z.infer<typeof HealthSuggestionResponseSc
 
 /**
  * Calls the external backend to generate health suggestions.
- * Handles various response formats (raw JSON, stringified JSON, or wrapped messages).
  */
 export async function getHealthSuggestions(
   input: HealthSuggestionRequest
 ): Promise<HealthSuggestionResponse> {
+  // Chuỗi prompt chi tiết chứa đầy đủ ngữ cảnh sức khỏe của người dùng
   const prompt = `
     Context:
     User Goal: ${input.userProfile.goal}
@@ -79,23 +79,20 @@ export async function getHealthSuggestions(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: prompt,
+          message: prompt, // Gửi dưới dạng key 'message' như bạn yêu cầu
         }),
         cache: 'no-store',
       }
     );
 
     if (!res.ok) {
-      let errorDetail = '';
-      try {
-        errorDetail = await res.text();
-      } catch (e) {}
-      throw new Error(`Backend server error: HTTP ${res.status} ${errorDetail.slice(0, 100)}`);
+      const errorText = await res.text();
+      throw new Error(`Backend server error: HTTP ${res.status} ${errorText}`);
     }
 
     const data = await res.json();
     
-    // Attempt to find the result in various common response fields
+    // Logic linh hoạt để trích xuất JSON từ nhiều định dạng phản hồi khác nhau
     let rawResult;
     if (typeof data === 'string') {
       rawResult = JSON.parse(data.replace(/```json|```/g, "").trim());
