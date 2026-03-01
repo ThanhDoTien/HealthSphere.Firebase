@@ -67,18 +67,18 @@ export async function getHealthSuggestions(
         body: JSON.stringify({
           message: prompt,
         }),
-        // Server-side fetch avoids CORS issues
         cache: 'no-store',
       }
     );
 
     if (!res.ok) {
-      throw new Error(`Backend server responded with status: ${res.status}`);
+      // Ném lỗi kèm mã trạng thái để người dùng dễ debug
+      throw new Error(`Backend server error: HTTP ${res.status}`);
     }
 
     const data = await res.json();
     
-    // Attempt to parse JSON if the backend returns a string or an object with a message string
+    // Logic trích xuất JSON linh hoạt từ nhiều định dạng phản hồi AI khác nhau
     let rawResult;
     if (typeof data === 'string') {
       rawResult = JSON.parse(data.replace(/```json|```/g, "").trim());
@@ -86,14 +86,19 @@ export async function getHealthSuggestions(
       rawResult = JSON.parse(data.message.replace(/```json|```/g, "").trim());
     } else if (data.output && typeof data.output === 'string') {
        rawResult = JSON.parse(data.output.replace(/```json|```/g, "").trim());
+    } else if (data.result && typeof data.result === 'string') {
+       rawResult = JSON.parse(data.result.replace(/```json|```/g, "").trim());
+    } else if (data.output) {
+       rawResult = data.output;
     } else {
       rawResult = data;
     }
 
     return HealthSuggestionResponseSchema.parse(rawResult);
 
-  } catch (e) {
-    console.error('Failed to get suggestions from external backend:', e);
-    throw new Error('Failed to connect to AI backend. Please check your backend logs.');
+  } catch (e: any) {
+    console.error('AI Backend Fetch Error:', e);
+    // Trả về lỗi chi tiết hơn cho UI
+    throw new Error(e.message || 'Failed to connect to AI backend.');
   }
 }
