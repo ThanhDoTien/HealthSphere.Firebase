@@ -13,11 +13,11 @@ import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc, deleteDoc } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
 import AddActivityForm from '@/components/dashboard/AddActivityForm';
-import { Loader2, Zap } from 'lucide-react';
+import { Loader2, Zap, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { useTranslation } from '@/context/LanguageContext';
 import {
@@ -28,6 +28,33 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import EditActivityForm from '@/components/dashboard/EditActivityForm';
+import { useToast } from '@/components/ui/toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type Activity = {
   name: string;
@@ -46,8 +73,12 @@ export default function ActivityPage() {
   const { user, userProfile, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const { t } = useTranslation();
+  const { toast } = useToast();
 
   const [activityFilter, setActivityFilter] = useState('30');
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<WithId<Activity> | null>(null);
 
   const activityChartConfig = useMemo(() => ({
     calories: {
@@ -82,7 +113,6 @@ export default function ActivityPage() {
   const baseBurn = useMemo(() => {
     if (!userProfile) return { bmr: 0, tdee: 0 };
     
-    // Sử dụng cân nặng mới nhất nếu có, nếu không dùng trong profile
     const currentWeight = latestWeightData?.[0]?.weight || userProfile.weight;
     
     const bmr = calculateBMR(
@@ -142,11 +172,44 @@ export default function ActivityPage() {
     return groupedActivities;
   }, [activityData]);
 
+  const handleDeleteActivity = () => {
+    if (!selectedActivity || !user) return;
+    const activityDocRef = doc(
+      firestore,
+      `users/${user.uid}/activities/${selectedActivity.id}`
+    );
+
+    deleteDoc(activityDocRef)
+      .then(() => {
+        toast({
+          title: t('form.common.success'),
+          description: t('activity.deleteSuccess'),
+        });
+      })
+      .catch((error) => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: activityDocRef.path,
+            operation: 'delete',
+          })
+        );
+        toast({
+          variant: 'destructive',
+          title: t('form.common.error'),
+          description: t('activity.deleteError'),
+        });
+      })
+      .finally(() => {
+        setIsDeleteDialogOpen(false);
+        setSelectedActivity(null);
+      });
+  };
+
   const isLoading = userLoading || activityLoading;
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      {/* Harris-Benedict Base Burn Card */}
       <Card className="border-accent/20 bg-accent/5">
         <CardHeader className="flex flex-row items-center gap-4 space-y-0">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent">
@@ -237,9 +300,40 @@ export default function ActivityPage() {
                               {activity.duration} {t('activity.unit.minutes')}
                             </p>
                           </div>
-                          <p className="font-semibold">
-                            {activity.caloriesBurned} kcal
-                          </p>
+                          <div className="flex items-center gap-4">
+                            <p className="font-semibold">
+                              {activity.caloriesBurned} kcal
+                            </p>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <span className="sr-only">Open menu</span>
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedActivity(activity);
+                                    setIsEditDialogOpen(true);
+                                  }}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  {t('form.common.edit')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={() => {
+                                    setSelectedActivity(activity);
+                                    setIsDeleteDialogOpen(true);
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  {t('form.common.delete')}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </li>
                       ))}
                     </ul>
@@ -254,6 +348,46 @@ export default function ActivityPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('activity.editTitle')}</DialogTitle>
+          </DialogHeader>
+          {selectedActivity && user && (
+            <EditActivityForm
+              userId={user.uid}
+              activity={selectedActivity}
+              onSuccess={() => setIsEditDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Alert Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('activity.deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('activity.deleteDescription', { name: selectedActivity?.name || '' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('form.common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteActivity}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {t('activity.deleteConfirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
