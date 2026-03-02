@@ -80,8 +80,8 @@ export async function getHealthSuggestions(
         headers: {
           "Content-Type": "application/json",
         },
-        // Sửa lại chính xác tên biến 'promt' theo yêu cầu của bạn
-        body: JSON.stringify({ promt: prompt }),
+        // Đã sửa 'promt' thành 'prompt' theo yêu cầu của bạn
+        body: JSON.stringify({ prompt: prompt }),
         cache: "no-store",
       }
     );
