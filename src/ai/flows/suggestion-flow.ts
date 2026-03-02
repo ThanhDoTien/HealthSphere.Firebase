@@ -80,7 +80,8 @@ export async function getHealthSuggestions(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: prompt }),
+        // Sửa lại chính xác tên biến 'promt' theo yêu cầu của bạn
+        body: JSON.stringify({ promt: prompt }),
         cache: "no-store",
       }
     );
@@ -93,6 +94,7 @@ export async function getHealthSuggestions(
     const data = await res.json();
     
     let rawResult;
+    // Xử lý các định dạng dữ liệu trả về khác nhau từ AI
     if (typeof data === 'string') {
       rawResult = JSON.parse(data.replace(/```json|```/g, "").trim());
     } else if (data.message && typeof data.message === 'string') {
