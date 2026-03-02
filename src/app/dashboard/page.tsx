@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -31,6 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { type HealthSuggestionResponse } from '@/ai/flows/suggestion-flow';
+import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
 
 const weightChartConfig = {
   weight: {
@@ -38,6 +40,11 @@ const weightChartConfig = {
     color: '#F2994A',
   },
 } satisfies ChartConfig;
+
+type WeightLog = {
+  weight: number;
+  date: string;
+};
 
 export default function DashboardPage() {
   const { user, userProfile } = useUser();
@@ -58,6 +65,15 @@ export default function DashboardPage() {
       collection(firestore, 'users', user.uid, 'weights'),
       orderBy('date', 'desc'),
       limit(30)
+    );
+  }, [firestore, user]);
+
+  const latestWeightQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'weights'),
+      orderBy('date', 'desc'),
+      limit(1)
     );
   }, [firestore, user]);
 
@@ -90,7 +106,8 @@ export default function DashboardPage() {
     return doc(firestore, 'users', user.uid, 'todaysuggestions', today);
   }, [firestore, user, today]);
 
-  const { data: weightData } = useCollection(weightQuery);
+  const { data: weightData } = useCollection<WeightLog>(weightQuery);
+  const { data: latestWeightData } = useCollection<WeightLog>(latestWeightQuery);
   const { data: mealData } = useCollection(mealsQuery);
   const { data: activityData } = useCollection(activitiesQuery);
   const { data: sleepData } = useCollection(sleepQuery);
@@ -116,17 +133,25 @@ export default function DashboardPage() {
     return mealData.reduce((sum, meal) => sum + meal.calories, 0);
   }, [mealData]);
 
+  const baseTDEE = useMemo(() => {
+    if (!userProfile) return 0;
+    const currentWeight = latestWeightData?.[0]?.weight || userProfile.weight;
+    const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
+    return calculateTDEE(bmr, userProfile.activityLevel);
+  }, [userProfile, latestWeightData]);
+
   const caloriesBurned = useMemo(() => {
-    if (!activityData) return 0;
-    return activityData.reduce((sum, activity) => sum + activity.caloriesBurned, 0);
-  }, [activityData]);
+    const activityBurn = activityData ? activityData.reduce((sum, activity) => sum + activity.caloriesBurned, 0) : 0;
+    // Tổng calo đốt cháy = TDEE cơ bản (đã tính theo cường độ vận động) + Calo từ tập luyện cụ thể hôm nay
+    return baseTDEE + activityBurn;
+  }, [baseTDEE, activityData]);
 
   const sleepHours = useMemo(() => {
     if (!sleepData || sleepData.length === 0) return 0;
     return sleepData.reduce((sum, sleep) => sum + sleep.duration, 0);
   }, [sleepData]);
 
-  const currentWeight = weightData?.[0]?.weight;
+  const currentWeight = latestWeightData?.[0]?.weight || weightData?.[0]?.weight;
 
   const firstMeal = suggestionData?.mealSuggestions?.[0];
   const firstWorkout = suggestionData?.workoutSuggestion?.[0];
@@ -146,7 +171,7 @@ export default function DashboardPage() {
         <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
             <div className="sm:col-span-2 md:col-span-4 lg:col-span-2 xl:col-span-2">
-              {userProfile && <BmiMeter height={userProfile.height} weight={userProfile.weight} />}
+              {userProfile && <BmiMeter height={userProfile.height} weight={currentWeight || userProfile.weight} />}
             </div>
             <Card>
               <CardHeader className="pb-2">
@@ -157,13 +182,15 @@ export default function DashboardPage() {
                 <div className="text-xs text-muted-foreground">{t('dashboard.comparison.today')}</div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="border-accent/50 bg-accent/5">
               <CardHeader className="pb-2">
-                <CardDescription>{t('dashboard.caloriesBurned')}</CardDescription>
-                <CardTitle className="text-4xl">{caloriesBurned.toLocaleString()}</CardTitle>
+                <CardDescription className="text-accent-foreground/70">{t('dashboard.caloriesBurned')}</CardDescription>
+                <CardTitle className="text-4xl text-accent">{Math.round(caloriesBurned).toLocaleString()}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xs text-muted-foreground">{t('dashboard.comparison.today')}</div>
+                <div className="text-xs text-muted-foreground">
+                  {Math.round(baseTDEE).toLocaleString()} (Base) + {activityData?.reduce((s, a) => s + a.caloriesBurned, 0) || 0} (Activity)
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -233,7 +260,6 @@ export default function DashboardPage() {
                 </div>
               ) : suggestionData ? (
                 <>
-                  {/* PHẦN HIỂN THỊ ẢNH GỢI Ý BỮA ĂN Ở DASHBOARD - BẠN CÓ THỂ TỰ CODE TẠI ĐÂY */}
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -247,8 +273,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                    {/* LOGIC CODE HÌNH ẢNH: Dùng imageKeyword hoặc imageUrl */}
-                    {(firstMeal?.imageUrl || firstMeal?.imageKeyword) && (
+                    {(firstMeal?.imageUrl) && (
                       <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
                         <Image 
                           src={firstMeal.imageUrl || `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80`} 
@@ -261,7 +286,6 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {/* PHẦN HIỂN THỊ ẢNH GỢI Ý BÀI TẬP Ở DASHBOARD - BẠN CÓ THỂ TỰ CODE TẠI ĐÂY */}
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
@@ -275,8 +299,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                    {/* LOGIC CODE HÌNH ẢNH: Dùng imageKeyword hoặc imageUrl */}
-                    {(firstWorkout?.imageUrl || firstWorkout?.imageKeyword) && (
+                    {(firstWorkout?.imageUrl) && (
                       <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
                         <Image 
                           src={firstWorkout.imageUrl || `https://plus.unsplash.com/premium_photo-1663852297267-827c73e7529e?auto=format&fit=crop&w=800&q=80`} 

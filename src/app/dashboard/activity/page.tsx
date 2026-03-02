@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -12,11 +13,11 @@ import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, limit } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
 import AddActivityForm from '@/components/dashboard/AddActivityForm';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Zap } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { useTranslation } from '@/context/LanguageContext';
 import {
@@ -26,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
 
 type Activity = {
   name: string;
@@ -35,8 +37,13 @@ type Activity = {
   userId: string;
 };
 
+type WeightLog = {
+  weight: number;
+  date: string;
+};
+
 export default function ActivityPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, userProfile, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const { t } = useTranslation();
 
@@ -57,9 +64,37 @@ export default function ActivityPage() {
     );
   }, [firestore, user]);
 
+  const weightQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'weights'),
+      orderBy('date', 'desc'),
+      limit(1)
+    );
+  }, [firestore, user]);
+
   const { data: activityData, isLoading: activityLoading } = useCollection<Activity>(
     activityQuery
   );
+
+  const { data: latestWeightData } = useCollection<WeightLog>(weightQuery);
+
+  const baseBurn = useMemo(() => {
+    if (!userProfile) return { bmr: 0, tdee: 0 };
+    
+    // Sử dụng cân nặng mới nhất nếu có, nếu không dùng trong profile
+    const currentWeight = latestWeightData?.[0]?.weight || userProfile.weight;
+    
+    const bmr = calculateBMR(
+      currentWeight,
+      userProfile.height,
+      userProfile.age,
+      userProfile.gender
+    );
+    const tdee = calculateTDEE(bmr, userProfile.activityLevel);
+    
+    return { bmr, tdee };
+  }, [userProfile, latestWeightData]);
 
   const chartData = useMemo(() => {
     if (!activityData) return [];
@@ -110,7 +145,32 @@ export default function ActivityPage() {
   const isLoading = userLoading || activityLoading;
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-4 sm:p-6 space-y-6">
+      {/* Harris-Benedict Base Burn Card */}
+      <Card className="border-accent/20 bg-accent/5">
+        <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent">
+            <Zap className="h-6 w-6" />
+          </div>
+          <div>
+            <CardTitle className="text-xl">{t('activity.baseBurn.title')}</CardTitle>
+            <CardDescription>{t('activity.baseBurn.description')}</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+            <div className="rounded-lg border bg-card p-4 shadow-sm">
+              <p className="text-sm font-medium text-muted-foreground">{t('activity.baseBurn.bmr')}</p>
+              <p className="mt-1 text-2xl font-bold">{Math.round(baseBurn.bmr)} <span className="text-sm font-normal">kcal/day</span></p>
+            </div>
+            <div className="rounded-lg border border-accent bg-card p-4 shadow-sm">
+              <p className="text-sm font-medium text-accent">{t('activity.baseBurn.tdee')}</p>
+              <p className="mt-1 text-3xl font-bold text-accent">{Math.round(baseBurn.tdee)} <span className="text-sm font-normal text-foreground">kcal/day</span></p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
