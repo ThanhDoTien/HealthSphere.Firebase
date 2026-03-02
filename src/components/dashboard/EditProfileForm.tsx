@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, Controller } from "react-hook-form";
@@ -28,6 +29,7 @@ const ProfileFormSchema = z.object({
   weight: z.coerce.number().min(1, { message: "Weight is required." }),
   gender: z.string().min(1, { message: "Gender is required." }),
   goal: z.string().min(1, { message: "Health goal is required." }),
+  activityLevel: z.string().min(1, { message: "Activity level is required." }),
 });
 
 type ProfileFormValues = z.infer<typeof ProfileFormSchema>;
@@ -55,6 +57,7 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
       weight: userProfile.weight || 0,
       gender: userProfile.gender || "",
       goal: userProfile.goal || "",
+      activityLevel: userProfile.activityLevel || "moderate",
     },
   });
 
@@ -131,6 +134,31 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
                 </p>
             )}
         </div>
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="activityLevel">{t('signup.activityLabel')}</Label>
+        <Controller
+          control={control}
+          name="activityLevel"
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('signup.activitySelect')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sedentary">{t('signup.activitySedentary')}</SelectItem>
+                <SelectItem value="light">{t('signup.activityLight')}</SelectItem>
+                <SelectItem value="moderate">{t('signup.activityModerate')}</SelectItem>
+                <SelectItem value="active">{t('signup.activityActive')}</SelectItem>
+                <SelectItem value="extra">{t('signup.activityExtra')}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.activityLevel && (
+          <p className="text-sm text-destructive">{errors.activityLevel.message}</p>
+        )}
       </div>
       
       <div className="grid gap-2">

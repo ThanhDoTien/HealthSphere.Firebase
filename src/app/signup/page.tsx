@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -41,6 +42,7 @@ const SignUpFormSchema = (t: (key: string) => string) => z
     height: z.coerce.number().min(1, { message: "Height is required." }),
     weight: z.coerce.number().min(1, { message: "Weight is required." }),
     goal: z.string().min(1, { message: "Health goal is required." }),
+    activityLevel: z.string().min(1, { message: "Activity level is required." }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: t('signup.error.passwordMismatch'),
@@ -195,6 +197,31 @@ export default function SignUpPage() {
                   </p>
                 )}
               </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="activityLevel">{t('signup.activityLabel')}</Label>
+              <Controller
+                control={control}
+                name="activityLevel"
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('signup.activitySelect')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sedentary">{t('signup.activitySedentary')}</SelectItem>
+                      <SelectItem value="light">{t('signup.activityLight')}</SelectItem>
+                      <SelectItem value="moderate">{t('signup.activityModerate')}</SelectItem>
+                      <SelectItem value="active">{t('signup.activityActive')}</SelectItem>
+                      <SelectItem value="extra">{t('signup.activityExtra')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.activityLevel && (
+                <p className="text-sm text-destructive">{errors.activityLevel.message}</p>
+              )}
             </div>
 
             <div className="grid gap-2">

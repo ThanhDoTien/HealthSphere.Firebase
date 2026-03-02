@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -33,9 +34,14 @@
         "goal": {
           "type": "string",
           "description": "User's primary health goal (e.g., 'Lose weight', 'Gain muscle')."
+        },
+        "activityLevel": {
+          "type": "string",
+          "description": "User's daily activity level for Harris-Benedict calculation.",
+          "enum": ["sedentary", "light", "moderate", "active", "extra"]
         }
       },
-      "required": ["name", "email", "age", "height", "weight", "gender", "goal"]
+      "required": ["name", "email", "age", "height", "weight", "gender", "goal", "activityLevel"]
     },
     "WeightLog": {
       "title": "WeightLog",
@@ -150,7 +156,8 @@
             "weight": { "type": "number" },
             "height": { "type": "number" },
             "age": { "type": "number" },
-            "gender": { "type": "string" }
+            "gender": { "type": "string" },
+            "activityLevel": { "type": "string" }
           }
         },
         "dailySummary": {
@@ -179,9 +186,10 @@
             "properties": {
               "name": { "type": "string" },
               "recipe": { "type": "string" },
-              "calories": { "type": "number" }
+              "calories": { "type": "number" },
+              "imageUrl": { "type": "string" }
             },
-            "required": ["name", "recipe", "calories"]
+            "required": ["name", "recipe", "calories", "imageUrl"]
           }
         },
         "workoutSuggestion": {
@@ -190,9 +198,10 @@
             "type": "object",
             "properties": {
               "name": { "type": "string" },
-              "description": { "type": "string" }
+              "description": { "type": "string" },
+              "imageUrl": { "type": "string" }
             },
-            "required": ["name", "description"]
+            "required": ["name", "description", "imageUrl"]
           }
         },
         "generalTip": { "type": "string" }

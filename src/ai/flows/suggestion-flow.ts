@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates health suggestions by calling an external backend API.
@@ -16,6 +17,7 @@ const HealthSuggestionRequestSchema = z.object({
     height: z.number(),
     age: z.number(),
     gender: z.string(),
+    activityLevel: z.string().optional(),
   }),
   dailySummary: z.object({
     caloriesConsumed: z.number(),
@@ -54,6 +56,7 @@ export async function getHealthSuggestions(
     Context:
     User Goal: ${input.userProfile.goal}
     Current Stats: ${input.userProfile.weight}kg, ${input.userProfile.height}cm, ${input.userProfile.age}yo, ${input.userProfile.gender}
+    Activity Level: ${input.input.userProfile.activityLevel || 'moderate'} (Factor this into Harris-Benedict formula for TDEE)
     Today's Progress: In: ${input.dailySummary.caloriesConsumed}kcal, Out: ${input.dailySummary.caloriesBurned}kcal, Sleep: ${input.dailySummary.sleepHours}h
     Recent Activities: ${input.recentActivities.join(', ') || 'None'}
     Language: ${input.language || 'en'}
@@ -61,11 +64,12 @@ export async function getHealthSuggestions(
     Task: Provide health tips, 3 meal suggestions, and 3 exercise suggestions. 
     
     IMPORTANT RULES:
-    1. Suggestions must be CONCISE (max 2 sentences each).
-    2. For each suggestion, you MUST provide a REAL, WORKING direct image URL from Unsplash. 
-       Use the format: https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=800&q=80
-       Search for specific keywords like "healthy salad", "yoga workout", "running shoes", etc.
-    3. Return ONLY valid JSON with this exact structure:
+    1. For burned calories estimation: Use the Harris-Benedict formula to calculate BMR and TDEE.
+    2. Suggestions must be CONCISE (max 2 sentences each). DO NOT use line-clamp or cut text.
+    3. For EACH suggestion, you MUST provide a REAL, WORKING direct image URL from Unsplash. 
+       Format: https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=800&q=80
+       Search specific keywords: "healthy salad", "grilled chicken", "yoga workout", etc.
+    4. Return ONLY valid JSON with this exact structure:
     {
       "generalTip": "string",
       "mealSuggestions": [{"name": "string", "calories": number, "recipe": "string", "imageUrl": "string"}],

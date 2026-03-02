@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -145,6 +146,7 @@ export default function AiPage() {
           height: userProfile.height,
           age: userProfile.age,
           gender: userProfile.gender,
+          activityLevel: userProfile.activityLevel,
         },
         dailySummary,
         recentActivities: recentActivityData?.map(a => a.name) || [],
@@ -257,9 +259,9 @@ export default function AiPage() {
                   </div>
                   <div>
                     <CardTitle className="text-lg">{t('ai.tipTitle')}</CardTitle>
-                    <CardDescription className="text-base">
+                    <div className="text-base leading-relaxed text-foreground">
                       {suggestionData.generalTip}
-                    </CardDescription>
+                    </div>
                   </div>
                 </CardHeader>
               </Card>
@@ -271,7 +273,7 @@ export default function AiPage() {
                 </h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.mealSuggestions.map((meal) => (
-                    <Card key={meal.name} className="overflow-hidden">
+                    <Card key={meal.name} className="overflow-hidden flex flex-col h-full">
                       {meal.imageUrl && (
                         <div className="relative aspect-video w-full bg-muted">
                           <Image
@@ -284,15 +286,13 @@ export default function AiPage() {
                         </div>
                       )}
                       <CardHeader>
-                        <CardTitle>{meal.name}</CardTitle>
+                        <CardTitle className="text-lg">{meal.name}</CardTitle>
                         <CardDescription>
                           ~{meal.calories} kcal
                         </CardDescription>
                       </CardHeader>
-                      <CardContent>
-                        <div
-                          className="text-sm text-muted-foreground"
-                        >
+                      <CardContent className="flex-1">
+                        <div className="text-sm text-muted-foreground leading-relaxed">
                           {meal.recipe}
                         </div>
                       </CardContent>
@@ -309,7 +309,7 @@ export default function AiPage() {
 
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.workoutSuggestion.map((exercise) => (
-                    <Card key={exercise.name} className="h-full overflow-hidden">
+                    <Card key={exercise.name} className="overflow-hidden flex flex-col h-full">
                       {exercise.imageUrl && (
                         <div className="relative aspect-video w-full bg-muted">
                           <Image
@@ -322,12 +322,10 @@ export default function AiPage() {
                         </div>
                       )}
                       <CardHeader>
-                        <CardTitle>{exercise.name}</CardTitle>
+                        <CardTitle className="text-lg">{exercise.name}</CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <div
-                          className="text-sm text-muted-foreground"
-                        >
+                      <CardContent className="flex-1">
+                        <div className="text-sm text-muted-foreground leading-relaxed">
                           {exercise.description}
                         </div>
                       </CardContent>
