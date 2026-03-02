@@ -1,3 +1,4 @@
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -22,6 +23,18 @@ const nextConfig = {
         protocol: "https",
         hostname: "firebasestorage.googleapis.com",
       },
+      {
+        protocol: "https",
+        hostname: "example.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "plus.unsplash.com",
+      }
     ],
   },
 };

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates health suggestions by calling an external backend API.
@@ -80,7 +81,6 @@ export async function getHealthSuggestions(
         headers: {
           "Content-Type": "application/json",
         },
-        // Đã sửa 'promt' thành 'prompt' theo yêu cầu của bạn
         body: JSON.stringify({ prompt: prompt }),
         cache: "no-store",
       }
