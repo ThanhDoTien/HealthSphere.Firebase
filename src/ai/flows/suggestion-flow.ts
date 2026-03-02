@@ -33,14 +33,14 @@ const MealSuggestionSchema = z.object({
   recipe: z.string(),
   calories: z.number(),
   imageUrl: z.string().optional(),
-  imageKeyword: z.string().describe('Từ khóa tiếng Anh ngắn để tìm kiếm ảnh trên Unsplash (vd: "grilled salmon", "green salad").'),
+  imageKeyword: z.string().describe('Từ khóa tiếng Anh ngắn để tìm kiếm ảnh (vd: "grilled salmon").'),
 });
 
 const ExerciseSuggestionSchema = z.object({
   name: z.string(),
   description: z.string(),
   imageUrl: z.string().optional(),
-  imageKeyword: z.string().describe('Từ khóa tiếng Anh ngắn để tìm kiếm ảnh bài tập trên Unsplash (vd: "yoga stretch", "pushups").'),
+  imageKeyword: z.string().describe('Từ khóa tiếng Anh ngắn để tìm kiếm ảnh (vd: "yoga stretch").'),
 });
 
 const HealthSuggestionResponseSchema = z.object({
@@ -68,8 +68,8 @@ export async function getHealthSuggestions(
     1. TÍNH TOÁN CALO: Sử dụng công thức Harris-Benedict để tính BMR và TDEE dựa trên thông số người dùng và Cường độ luyện tập. Gợi ý calo phải phù hợp với mục tiêu (Giảm cân/Tăng cân/Duy trì).
     2. NỘI DUNG: Viết NGẮN GỌN (tối đa 2 câu mỗi mục). Không dùng dấu xuống dòng trong text.
     3. HÌNH ẢNH: 
-       - Trả về "imageKeyword" là từ khóa tiếng Anh cực ngắn (2-3 từ) để tìm ảnh trên Unsplash.
-       - Trả về "imageUrl" là một URL Unsplash mẫu có ID (nếu có thể đoán) hoặc để trống nếu bạn chỉ cung cấp keyword.
+       - Trả về "imageKeyword" là từ khóa tiếng Anh cực ngắn (2-3 từ).
+       - Trả về "imageUrl" theo định dạng: https://pollinations.ai/p/[keyword]?width=800&height=600&model=flux (Thay [keyword] bằng imageKeyword viết liền bằng dấu gạch ngang, ví dụ: "healthy-salad-bowl").
     4. Định dạng trả về duy nhất là JSON:
     {
       "generalTip": "string",
