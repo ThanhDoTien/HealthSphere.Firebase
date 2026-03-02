@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -266,6 +265,7 @@ export default function AiPage() {
                 </CardHeader>
               </Card>
 
+              {/* PHẦN HIỂN THỊ ẢNH GỢI Ý BỮA ĂN - BẠN CÓ THỂ TỰ CODE TẠI ĐÂY */}
               <div>
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
                   <Utensils className="h-6 w-6 text-accent" />
@@ -301,6 +301,7 @@ export default function AiPage() {
                 </div>
               </div>
 
+              {/* PHẦN HIỂN THỊ ẢNH GỢI Ý BÀI TẬP - BẠN CÓ THỂ TỰ CODE TẠI ĐÂY */}
               <div>
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
                   <Dumbbell className="h-6 w-6 text-orange-500" />

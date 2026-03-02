@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -234,7 +233,7 @@ export default function DashboardPage() {
                 </div>
               ) : suggestionData ? (
                 <>
-                  {/* Meal Suggestion */}
+                  {/* PHẦN HIỂN THỊ ẢNH GỢI Ý BỮA ĂN Ở DASHBOARD - BẠN CÓ THỂ TỰ CODE TẠI ĐÂY */}
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -261,7 +260,7 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {/* Exercise Suggestion */}
+                  {/* PHẦN HIỂN THỊ ẢNH GỢI Ý BÀI TẬP Ở DASHBOARD - BẠN CÓ THỂ TỰ CODE TẠI ĐÂY */}
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
