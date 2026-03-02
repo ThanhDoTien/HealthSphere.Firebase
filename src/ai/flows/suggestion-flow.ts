@@ -1,7 +1,6 @@
 'use server';
 /**
  * @fileOverview Generates health suggestions by calling an external backend API.
- * This file acts as a server-side bridge to avoid CORS issues and provides robust error handling.
  * 
  * - getHealthSuggestions - A function that proxies the request to the external health AI backend.
  * - HealthSuggestionRequest - The schema for the input data.
@@ -32,13 +31,13 @@ const MealSuggestionSchema = z.object({
   name: z.string(),
   recipe: z.string(),
   calories: z.number(),
-  imageUrl: z.string().optional().describe('URL of the meal image from a high-quality source like Unsplash.'),
+  imageUrl: z.string().optional().describe('Direct link to a high-quality food image from Unsplash.'),
 });
 
 const ExerciseSuggestionSchema = z.object({
   name: z.string(),
   description: z.string(),
-  imageUrl: z.string().optional().describe('URL of the exercise image from a high-quality source like Unsplash.'),
+  imageUrl: z.string().optional().describe('Direct link to a high-quality exercise or fitness image from Unsplash.'),
 });
 
 const HealthSuggestionResponseSchema = z.object({
@@ -48,9 +47,6 @@ const HealthSuggestionResponseSchema = z.object({
 });
 export type HealthSuggestionResponse = z.infer<typeof HealthSuggestionResponseSchema>;
 
-/**
- * Calls the external backend to generate health suggestions.
- */
 export async function getHealthSuggestions(
   input: HealthSuggestionRequest
 ): Promise<HealthSuggestionResponse> {
@@ -63,8 +59,13 @@ export async function getHealthSuggestions(
     Language: ${input.language || 'en'}
 
     Task: Provide health tips, 3 meal suggestions, and 3 exercise suggestions. 
-    IMPORTANT: For each suggestion, find and provide a REAL, high-quality photo URL from Unsplash (e.g., https://images.unsplash.com/photo-...) that accurately represents the meal or exercise.
-    Return ONLY valid JSON with this exact structure:
+    
+    IMPORTANT RULES:
+    1. Suggestions must be CONCISE (max 2 sentences each).
+    2. For each suggestion, you MUST provide a REAL, WORKING direct image URL from Unsplash. 
+       Use the format: https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=800&q=80
+       Search for specific keywords like "healthy salad", "yoga workout", "running shoes", etc.
+    3. Return ONLY valid JSON with this exact structure:
     {
       "generalTip": "string",
       "mealSuggestions": [{"name": "string", "calories": number, "recipe": "string", "imageUrl": "string"}],
@@ -87,12 +88,13 @@ export async function getHealthSuggestions(
 
     if (!res.ok) {
       const errorText = await res.text();
-      throw new Error(`Backend server error: HTTP ${res.status} ${errorText}`);
+      throw new Error(`Backend error: ${res.status}`);
     }
 
     const data = await res.json();
     
     let rawResult;
+    // Flexible parsing for various AI backend response formats
     if (typeof data === 'string') {
       rawResult = JSON.parse(data.replace(/```json|```/g, "").trim());
     } else if (data.message && typeof data.message === 'string') {

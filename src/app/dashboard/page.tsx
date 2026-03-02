@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Flame, Lightbulb, Utensils, Dumbbell, Loader2 } from 'lucide-react';
+import { Utensils, Dumbbell, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -129,7 +128,6 @@ export default function DashboardPage() {
 
   const currentWeight = weightData?.[0]?.weight;
 
-  // Lấy gợi ý đầu tiên để hiển thị rút gọn ở Dashboard
   const firstMeal = suggestionData?.mealSuggestions?.[0];
   const firstWorkout = suggestionData?.workoutSuggestion?.[0];
 
@@ -244,18 +242,19 @@ export default function DashboardPage() {
                       <div className="flex-1">
                         <p className="font-medium text-sm text-primary">{t('dashboard.recipeSuggestion')}</p>
                         <p className="text-sm font-semibold mt-1">{firstMeal?.name}</p>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {firstMeal?.recipe.replace(/<[^>]*>?/gm, '')}
                         </p>
                       </div>
                     </div>
                     {firstMeal?.imageUrl && (
-                      <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border">
+                      <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
                         <Image 
                           src={firstMeal.imageUrl} 
                           alt={firstMeal.name} 
                           fill 
                           className="object-cover" 
+                          unoptimized
                         />
                       </div>
                     )}
@@ -270,18 +269,19 @@ export default function DashboardPage() {
                       <div className="flex-1">
                         <p className="font-medium text-sm text-accent">{t('dashboard.exerciseSuggestion')}</p>
                         <p className="text-sm font-semibold mt-1">{firstWorkout?.name}</p>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {firstWorkout?.description.replace(/<[^>]*>?/gm, '')}
                         </p>
                       </div>
                     </div>
                     {firstWorkout?.imageUrl && (
-                      <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border">
+                      <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
                         <Image 
                           src={firstWorkout.imageUrl} 
                           alt={firstWorkout.name} 
                           fill 
-                          className="object-cover" 
+                          className="object-cover"
+                          unoptimized
                         />
                       </div>
                     )}

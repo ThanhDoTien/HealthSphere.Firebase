@@ -273,12 +273,13 @@ export default function AiPage() {
                   {suggestionData.mealSuggestions.map((meal) => (
                     <Card key={meal.name} className="overflow-hidden">
                       {meal.imageUrl && (
-                        <div className="relative aspect-video w-full">
+                        <div className="relative aspect-video w-full bg-muted">
                           <Image
                             src={meal.imageUrl}
                             alt={meal.name}
                             fill
                             className="object-cover"
+                            unoptimized
                           />
                         </div>
                       )}
@@ -290,9 +291,10 @@ export default function AiPage() {
                       </CardHeader>
                       <CardContent>
                         <div
-                          className="prose prose-sm text-sm text-muted-foreground"
-                          dangerouslySetInnerHTML={{ __html: meal.recipe }}
-                        />
+                          className="text-sm text-muted-foreground"
+                        >
+                          {meal.recipe}
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -309,12 +311,13 @@ export default function AiPage() {
                   {suggestionData.workoutSuggestion.map((exercise) => (
                     <Card key={exercise.name} className="h-full overflow-hidden">
                       {exercise.imageUrl && (
-                        <div className="relative aspect-video w-full">
+                        <div className="relative aspect-video w-full bg-muted">
                           <Image
                             src={exercise.imageUrl}
                             alt={exercise.name}
                             fill
                             className="object-cover"
+                            unoptimized
                           />
                         </div>
                       )}
@@ -323,11 +326,10 @@ export default function AiPage() {
                       </CardHeader>
                       <CardContent>
                         <div
-                          className="prose prose-sm text-sm text-muted-foreground"
-                          dangerouslySetInnerHTML={{
-                            __html: exercise.description,
-                          }}
-                        />
+                          className="text-sm text-muted-foreground"
+                        >
+                          {exercise.description}
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
