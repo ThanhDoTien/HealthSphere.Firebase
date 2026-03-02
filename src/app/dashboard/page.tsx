@@ -1,8 +1,8 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Flame, Lightbulb } from 'lucide-react';
+import { Flame, Lightbulb, Utensils, Dumbbell, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 import {
   Card,
@@ -12,10 +12,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useUser } from '@/firebase/auth/use-user';
-import { useFirestore } from '@/firebase/provider';
+import { useFirestore, useDoc } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy, limit, where } from 'firebase/firestore';
+import { collection, query, orderBy, limit, where, doc } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
 import AddWeightForm from '@/components/dashboard/AddWeightForm';
@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { type HealthSuggestionResponse } from '@/ai/flows/suggestion-flow';
 
 const weightChartConfig = {
   weight: {
@@ -46,7 +47,6 @@ export default function DashboardPage() {
   const [weightFilter, setWeightFilter] = useState('30');
 
   useEffect(() => {
-    // This runs only on the client, after hydration, avoiding mismatch
     const todayDate = new Date();
     setToday(todayDate.toISOString().split('T')[0]);
     const yesterdayDate = new Date();
@@ -54,7 +54,6 @@ export default function DashboardPage() {
     setYesterday(yesterdayDate.toISOString().split('T')[0]);
   }, []);
 
-  // Weight query (last 30 entries)
   const weightQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -64,7 +63,6 @@ export default function DashboardPage() {
     );
   }, [firestore, user]);
 
-  // Queries for today's data
   const mealsQuery = useMemoFirebase(() => {
     if (!user || !today) return null;
     return query(
@@ -89,39 +87,16 @@ export default function DashboardPage() {
     );
   }, [firestore, user, today]);
 
-  // Queries for yesterday's data
-  const yesterdayMealsQuery = useMemoFirebase(() => {
-    if (!user || !yesterday) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'meals'),
-      where('date', '==', yesterday)
-    );
-  }, [firestore, user, yesterday]);
-
-  const yesterdayActivitiesQuery = useMemoFirebase(() => {
-    if (!user || !yesterday) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'activities'),
-      where('date', '==', yesterday)
-    );
-  }, [firestore, user, yesterday]);
-
-  const yesterdaySleepQuery = useMemoFirebase(() => {
-    if (!user || !yesterday) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'sleep'),
-      where('date', '==', yesterday)
-    );
-  }, [firestore, user, yesterday]);
-
+  const suggestionDocRef = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return doc(firestore, 'users', user.uid, 'todaysuggestions', today);
+  }, [firestore, user, today]);
 
   const { data: weightData } = useCollection(weightQuery);
   const { data: mealData } = useCollection(mealsQuery);
   const { data: activityData } = useCollection(activitiesQuery);
   const { data: sleepData } = useCollection(sleepQuery);
-  const { data: yesterdayMealData } = useCollection(yesterdayMealsQuery);
-  const { data: yesterdayActivityData } = useCollection(yesterdayActivitiesQuery);
-  const { data: yesterdaySleepData } = useCollection(yesterdaySleepQuery);
+  const { data: suggestionData, isLoading: suggestionLoading } = useDoc<HealthSuggestionResponse>(suggestionDocRef);
 
   const chartData = useMemo(() => {
     if (!weightData) return [];
@@ -138,7 +113,6 @@ export default function DashboardPage() {
       .reverse();
   }, [weightData, weightFilter]);
 
-  // Today's totals
   const caloriesConsumed = useMemo(() => {
     if (!mealData) return 0;
     return mealData.reduce((sum, meal) => sum + meal.calories, 0);
@@ -154,53 +128,10 @@ export default function DashboardPage() {
     return sleepData.reduce((sum, sleep) => sum + sleep.duration, 0);
   }, [sleepData]);
 
-  // Yesterday's totals
-  const yesterdayCaloriesConsumed = useMemo(() => {
-    if (!yesterdayMealData) return 0;
-    return yesterdayMealData.reduce((sum, meal) => sum + meal.calories, 0);
-  }, [yesterdayMealData]);
-  
-  const yesterdayCaloriesBurned = useMemo(() => {
-    if (!yesterdayActivityData) return 0;
-    return yesterdayActivityData.reduce((sum, activity) => sum + activity.caloriesBurned, 0);
-  }, [yesterdayActivityData]);
-
-  const yesterdaySleepHours = useMemo(() => {
-    if (!yesterdaySleepData || yesterdaySleepData.length === 0) return 0;
-    return yesterdaySleepData.reduce((sum, sleep) => sum + sleep.duration, 0);
-  }, [yesterdaySleepData]);
-  
-  const getComparisonText = (current: number, previous: number, unit: string) => {
-    const diff = current - previous;
-    if (diff === 0) return t('dashboard.comparison.same');
-    const value = `${diff > 0 ? '+' : ''}${unit === 'hours' ? diff.toFixed(1) : diff.toLocaleString()}`;
-    return t('dashboard.comparison.fromYesterday', { value, unit });
-  };
-
   const currentWeight = weightData?.[0]?.weight;
 
-  const weightChangeText = useMemo(() => {
-    if (!weightData) return t('dashboard.weight.noTrend');
-
-    const todayEntry = weightData.find(w => w.date === today);
-    const yesterdayEntry = weightData.find(w => w.date === yesterday);
-
-    if (todayEntry && yesterdayEntry) {
-        const diff = todayEntry.weight - yesterdayEntry.weight;
-        if (diff === 0) return t('dashboard.comparison.same');
-        return t('dashboard.weight.fromYesterday', { value: `${diff > 0 ? '+' : ''}${diff.toFixed(1)}` });
-    }
-
-    if (weightData.length > 1) {
-        const latest = weightData[0];
-        const previous = weightData[1];
-        const diff = latest.weight - previous.weight;
-        if (diff === 0) return t('dashboard.weight.noChange');
-        return t('dashboard.weight.sinceLast', { value: `${diff > 0 ? '+' : ''}${diff.toFixed(1)}` });
-    }
-    
-    return t('dashboard.weight.noTrend');
-  }, [weightData, today, yesterday, t]);
+  const firstMeal = suggestionData?.mealSuggestions?.[0];
+  const firstWorkout = suggestionData?.workoutSuggestion?.[0];
 
   return (
     <div className="flex flex-col">
@@ -225,9 +156,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-4xl">{caloriesConsumed.toLocaleString()}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xs text-muted-foreground">
-                  {yesterdayMealData && yesterdayMealData.length > 0 ? getComparisonText(caloriesConsumed, yesterdayCaloriesConsumed, 'kcal') : t('dashboard.comparison.today')}
-                </div>
+                <div className="text-xs text-muted-foreground">{t('dashboard.comparison.today')}</div>
               </CardContent>
             </Card>
             <Card>
@@ -236,9 +165,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-4xl">{caloriesBurned.toLocaleString()}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xs text-muted-foreground">
-                  {yesterdayActivityData && yesterdayActivityData.length > 0 ? getComparisonText(caloriesBurned, yesterdayCaloriesBurned, 'kcal') : t('dashboard.comparison.today')}
-                </div>
+                <div className="text-xs text-muted-foreground">{t('dashboard.comparison.today')}</div>
               </CardContent>
             </Card>
             <Card>
@@ -247,9 +174,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-4xl">{sleepHours.toFixed(1)}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xs text-muted-foreground">
-                  {yesterdaySleepData && yesterdaySleepData.length > 0 ? getComparisonText(sleepHours, yesterdaySleepHours, 'hours') : t('dashboard.comparison.today')}
-                </div>
+                <div className="text-xs text-muted-foreground">{t('dashboard.comparison.today')}</div>
               </CardContent>
             </Card>
             <Card>
@@ -261,7 +186,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-xs text-muted-foreground">
-                  {weightChangeText}
+                  {weightData && weightData.length > 0 ? t('dashboard.comparison.today') : t('dashboard.weight.noTrend')}
                 </div>
               </CardContent>
             </Card>
@@ -294,6 +219,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
         <div className="grid auto-rows-max items-start gap-4 md:gap-8">
           <Card>
             <CardHeader>
@@ -302,31 +228,78 @@ export default function DashboardPage() {
                 {t('dashboard.aiSuggestionsDescription')}
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4">
-              <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <Lightbulb className="h-5 w-5" />
+            <CardContent className="grid gap-6">
+              {suggestionLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium">{t('dashboard.recipeSuggestion')}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {t('dashboard.recipeSuggestionText')}
+              ) : suggestionData ? (
+                <>
+                  {/* Meal Suggestion */}
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <Utensils className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm text-primary">{t('dashboard.recipeSuggestion')}</p>
+                        <p className="text-sm font-semibold mt-1">{firstMeal?.name}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                          {firstMeal?.recipe.replace(/<[^>]*>?/gm, '')}
+                        </p>
+                      </div>
+                    </div>
+                    {firstMeal?.imageUrl && (
+                      <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border">
+                        <Image 
+                          src={firstMeal.imageUrl} 
+                          alt={firstMeal.name} 
+                          fill 
+                          className="object-cover" 
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Exercise Suggestion */}
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                        <Dumbbell className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm text-accent">{t('dashboard.exerciseSuggestion')}</p>
+                        <p className="text-sm font-semibold mt-1">{firstWorkout?.name}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                          {firstWorkout?.description.replace(/<[^>]*>?/gm, '')}
+                        </p>
+                      </div>
+                    </div>
+                    {firstWorkout?.imageUrl && (
+                      <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border">
+                        <Image 
+                          src={firstWorkout.imageUrl} 
+                          alt={firstWorkout.name} 
+                          fill 
+                          className="object-cover" 
+                        />
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-xs text-muted-foreground mb-4">
+                    {t('dashboard.aiSuggestionsDescription')}
                   </p>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/dashboard/ai">{t('bottomNav.ai')}</Link>
+                  </Button>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
-                  <Flame className="h-5 w-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium">{t('dashboard.exerciseSuggestion')}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {t('dashboard.exerciseSuggestionText')}
-                  </p>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
+          
           <Card>
             <CardHeader>
               <CardTitle>{t('dashboard.todaysActivitiesTitle')}</CardTitle>
@@ -337,13 +310,13 @@ export default function DashboardPage() {
             <CardContent className="grid gap-4">
                {activityData && activityData.length > 0 ? (
                 activityData.map((activity) => (
-                    <div key={activity.id} className="flex items-center">
+                    <div key={activity.id} className="flex items-center text-sm">
                         <div>{activity.name}</div>
                         <div className="ml-auto font-semibold">{activity.caloriesBurned} kcal</div>
                     </div>
                 ))
             ) : (
-                <p className="text-sm text-muted-foreground">{t('dashboard.noActivities')}</p>
+                <p className="text-xs text-muted-foreground">{t('dashboard.noActivities')}</p>
             )}
             </CardContent>
           </Card>
