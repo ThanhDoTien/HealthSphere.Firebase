@@ -32,13 +32,15 @@ const MealSuggestionSchema = z.object({
   name: z.string(),
   recipe: z.string(),
   calories: z.number(),
-  imageUrl: z.string().optional().describe('Direct link to a high-quality food image from Unsplash.'),
+  imageUrl: z.string().optional(),
+  imageKeyword: z.string().describe('Từ khóa tiếng Anh ngắn để tìm kiếm ảnh trên Unsplash (vd: "grilled salmon", "green salad").'),
 });
 
 const ExerciseSuggestionSchema = z.object({
   name: z.string(),
   description: z.string(),
-  imageUrl: z.string().optional().describe('Direct link to a high-quality exercise or fitness image from Unsplash.'),
+  imageUrl: z.string().optional(),
+  imageKeyword: z.string().describe('Từ khóa tiếng Anh ngắn để tìm kiếm ảnh bài tập trên Unsplash (vd: "yoga stretch", "pushups").'),
 });
 
 const HealthSuggestionResponseSchema = z.object({
@@ -55,24 +57,24 @@ export async function getHealthSuggestions(
     Context:
     User Goal: ${input.userProfile.goal}
     Current Stats: ${input.userProfile.weight}kg, ${input.userProfile.height}cm, ${input.userProfile.age}yo, ${input.userProfile.gender}
-    Activity Level: ${input.userProfile.activityLevel || 'moderate'} (Factor this into Harris-Benedict formula for TDEE)
+    Activity Level: ${input.userProfile.activityLevel || 'moderate'}
     Today's Progress: In: ${input.dailySummary.caloriesConsumed}kcal, Out: ${input.dailySummary.caloriesBurned}kcal, Sleep: ${input.dailySummary.sleepHours}h
     Recent Activities: ${input.recentActivities.join(', ') || 'None'}
     Language: ${input.language || 'en'}
 
-    Task: Provide health tips, 3 meal suggestions, and 3 exercise suggestions. 
+    Task: Cung cấp mẹo sức khỏe, 3 gợi ý bữa ăn và 3 gợi ý bài tập. 
     
-    IMPORTANT RULES:
-    1. For burned calories estimation: Use the Harris-Benedict formula to calculate BMR and TDEE based on stats and Activity Level.
-    2. Suggestions must be CONCISE (max 2 sentences each). NO line-clamp or cut text.
-    3. For EACH suggestion, you MUST provide a REAL, WORKING direct image URL from Unsplash. 
-       Format: https://images.unsplash.com/photo-[ID]?auto=format&fit=crop&w=800&q=80
-       Search specific keywords: "healthy salad", "grilled chicken", "yoga workout", etc.
-    4. Return ONLY valid JSON with this exact structure:
+    QUY TẮC QUAN TRỌNG:
+    1. TÍNH TOÁN CALO: Sử dụng công thức Harris-Benedict để tính BMR và TDEE dựa trên thông số người dùng và Cường độ luyện tập. Gợi ý calo phải phù hợp với mục tiêu (Giảm cân/Tăng cân/Duy trì).
+    2. NỘI DUNG: Viết NGẮN GỌN (tối đa 2 câu mỗi mục). Không dùng dấu xuống dòng trong text.
+    3. HÌNH ẢNH: 
+       - Trả về "imageKeyword" là từ khóa tiếng Anh cực ngắn (2-3 từ) để tìm ảnh trên Unsplash.
+       - Trả về "imageUrl" là một URL Unsplash mẫu có ID (nếu có thể đoán) hoặc để trống nếu bạn chỉ cung cấp keyword.
+    4. Định dạng trả về duy nhất là JSON:
     {
       "generalTip": "string",
-      "mealSuggestions": [{"name": "string", "calories": number, "recipe": "string", "imageUrl": "string"}],
-      "workoutSuggestion": [{"name": "string", "description": "string", "imageUrl": "string"}]
+      "mealSuggestions": [{"name": "string", "calories": number, "recipe": "string", "imageKeyword": "string", "imageUrl": "string"}],
+      "workoutSuggestion": [{"name": "string", "description": "string", "imageKeyword": "string", "imageUrl": "string"}]
     }
   `;
 
@@ -90,7 +92,6 @@ export async function getHealthSuggestions(
     );
 
     if (!res.ok) {
-      const errorText = await res.text();
       throw new Error(`Backend error: ${res.status}`);
     }
 
@@ -103,8 +104,6 @@ export async function getHealthSuggestions(
       rawResult = JSON.parse(data.message.replace(/```json|```/g, "").trim());
     } else if (data.output && typeof data.output === 'string') {
        rawResult = JSON.parse(data.output.replace(/```json|```/g, "").trim());
-    } else if (data.result && typeof data.result === 'string') {
-       rawResult = JSON.parse(data.result.replace(/```json|```/g, "").trim());
     } else if (data.output) {
        rawResult = data.output;
     } else {

@@ -154,7 +154,6 @@ export default function AiPage() {
   
       await setDoc(suggestionDocRef, suggestions);
     } catch (err: any) {
-      console.error("AI ERROR:", err);
       setError(err.message || t('ai.errorMessage'));
     } finally {
       setIsGenerating(false);
@@ -274,10 +273,11 @@ export default function AiPage() {
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.mealSuggestions.map((meal) => (
                     <Card key={meal.name} className="overflow-hidden flex flex-col h-full">
-                      {meal.imageUrl && (
+                      {/* LOGIC CODE HÌNH ẢNH: Bạn có thể dùng imageKeyword để gọi Unsplash API tại đây */}
+                      {(meal.imageUrl || meal.imageKeyword) && (
                         <div className="relative aspect-video w-full bg-muted">
                           <Image
-                            src={meal.imageUrl}
+                            src={meal.imageUrl || `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80`}
                             alt={meal.name}
                             fill
                             className="object-cover"
@@ -311,10 +311,11 @@ export default function AiPage() {
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.workoutSuggestion.map((exercise) => (
                     <Card key={exercise.name} className="overflow-hidden flex flex-col h-full">
-                      {exercise.imageUrl && (
+                      {/* LOGIC CODE HÌNH ẢNH: Bạn có thể dùng imageKeyword để gọi Unsplash API tại đây */}
+                      {(exercise.imageUrl || exercise.imageKeyword) && (
                         <div className="relative aspect-video w-full bg-muted">
                           <Image
-                            src={exercise.imageUrl}
+                            src={exercise.imageUrl || `https://plus.unsplash.com/premium_photo-1663852297267-827c73e7529e?auto=format&fit=crop&w=800&q=80`}
                             alt={exercise.name}
                             fill
                             className="object-cover"

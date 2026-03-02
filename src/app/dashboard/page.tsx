@@ -247,11 +247,12 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                    {firstMeal?.imageUrl && (
+                    {/* LOGIC CODE HÌNH ẢNH: Dùng imageKeyword hoặc imageUrl */}
+                    {(firstMeal?.imageUrl || firstMeal?.imageKeyword) && (
                       <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
                         <Image 
-                          src={firstMeal.imageUrl} 
-                          alt={firstMeal.name} 
+                          src={firstMeal.imageUrl || `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80`} 
+                          alt={firstMeal.name || 'Meal suggestion'} 
                           fill 
                           className="object-cover" 
                           unoptimized
@@ -274,11 +275,12 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                    {firstWorkout?.imageUrl && (
+                    {/* LOGIC CODE HÌNH ẢNH: Dùng imageKeyword hoặc imageUrl */}
+                    {(firstWorkout?.imageUrl || firstWorkout?.imageKeyword) && (
                       <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
                         <Image 
-                          src={firstWorkout.imageUrl} 
-                          alt={firstWorkout.name} 
+                          src={firstWorkout.imageUrl || `https://plus.unsplash.com/premium_photo-1663852297267-827c73e7529e?auto=format&fit=crop&w=800&q=80`} 
+                          alt={firstWorkout.name || 'Exercise suggestion'} 
                           fill 
                           className="object-cover"
                           unoptimized
