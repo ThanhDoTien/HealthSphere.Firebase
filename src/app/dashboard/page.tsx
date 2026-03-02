@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Flame, Lightbulb, Utensils, Dumbbell, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import {
   Card,
@@ -11,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore, useDoc } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
@@ -41,7 +43,6 @@ export default function DashboardPage() {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
   const [today, setToday] = useState('');
-  const [yesterday, setYesterday] = useState('');
   const { t } = useTranslation();
 
   const [weightFilter, setWeightFilter] = useState('30');
@@ -49,9 +50,6 @@ export default function DashboardPage() {
   useEffect(() => {
     const todayDate = new Date();
     setToday(todayDate.toISOString().split('T')[0]);
-    const yesterdayDate = new Date();
-    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-    setYesterday(yesterdayDate.toISOString().split('T')[0]);
   }, []);
 
   const weightQuery = useMemoFirebase(() => {
@@ -130,6 +128,7 @@ export default function DashboardPage() {
 
   const currentWeight = weightData?.[0]?.weight;
 
+  // Lấy gợi ý đầu tiên để hiển thị rút gọn ở Dashboard
   const firstMeal = suggestionData?.mealSuggestions?.[0];
   const firstWorkout = suggestionData?.workoutSuggestion?.[0];
 
