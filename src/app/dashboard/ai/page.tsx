@@ -1,5 +1,6 @@
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import {
   Card,
   CardContent,
@@ -270,7 +271,17 @@ export default function AiPage() {
                 </h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.mealSuggestions.map((meal) => (
-                    <Card key={meal.name}>
+                    <Card key={meal.name} className="overflow-hidden">
+                      {meal.imageUrl && (
+                        <div className="relative aspect-video w-full">
+                          <Image
+                            src={meal.imageUrl}
+                            alt={meal.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
                       <CardHeader>
                         <CardTitle>{meal.name}</CardTitle>
                         <CardDescription>
@@ -296,7 +307,17 @@ export default function AiPage() {
 
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.workoutSuggestion.map((exercise) => (
-                    <Card key={exercise.name} className="h-full">
+                    <Card key={exercise.name} className="h-full overflow-hidden">
+                      {exercise.imageUrl && (
+                        <div className="relative aspect-video w-full">
+                          <Image
+                            src={exercise.imageUrl}
+                            alt={exercise.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
                       <CardHeader>
                         <CardTitle>{exercise.name}</CardTitle>
                       </CardHeader>
