@@ -1,13 +1,11 @@
 'use server';
 /**
- * @fileOverview Hệ thống tư vấn sức khỏe sử dụng Gemini 2.5 Flash Image (Nano Banana 2).
+ * @fileOverview Hệ thống tư vấn sức khỏe kết nối với Backend AI bên ngoài (Express + Genkit).
  * 
- * - getHealthSuggestions - Thực hiện lập kế hoạch và tạo ảnh Base64.
- * - Đã sửa lỗi JSON Mode bằng cách parse thủ công văn bản trả về.
+ * - getHealthSuggestions - Gửi yêu cầu đến API backend và nhận kết quả tư vấn kèm ảnh.
  */
 
-import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 // --- Định nghĩa Schemas ---
 
@@ -34,14 +32,14 @@ const MealSuggestionSchema = z.object({
   name: z.string(),
   recipe: z.string(),
   calories: z.number(),
-  imagePrompt: z.string().describe('Detailed English prompt for high-quality food photography.'),
+  imagePrompt: z.string(),
   imageUrl: z.string().optional(),
 });
 
 const ExerciseSuggestionSchema = z.object({
   name: z.string(),
   description: z.string(),
-  imagePrompt: z.string().describe('Detailed English prompt for high-quality fitness demonstration.'),
+  imagePrompt: z.string(),
   imageUrl: z.string().optional(),
 });
 
@@ -52,24 +50,27 @@ const HealthSuggestionResponseSchema = z.object({
 });
 export type HealthSuggestionResponse = z.infer<typeof HealthSuggestionResponseSchema>;
 
-// --- Đăng ký Prompt với Genkit ---
+// URL của Backend Express của bạn
+const BACKEND_URL = process.env.BACKEND_API_URL || 'http://localhost:8080/ai';
 
-const healthReasoningPrompt = ai.definePrompt({
-  name: 'healthReasoningPrompt',
-  model: 'googleai/gemini-2.5-flash-image', 
-  input: { schema: HealthSuggestionRequestSchema },
-  // Không dùng output schema trực tiếp ở đây vì lỗi JSON Mode
-  prompt: `Bạn là một chuyên gia sức khỏe AI cao cấp. 
-  Dựa trên dữ liệu thực tế (Harris-Benedict đã được tính sẵn):
-  - Mục tiêu: {{{userProfile.goal}}}
-  - Chỉ số: {{{userProfile.weight}}}kg, {{{userProfile.height}}}cm, {{{userProfile.age}}}tuổi, Giới tính: {{{userProfile.gender}}}
-  - Cường độ vận động: {{{userProfile.activityLevel}}}
-  - Tiến độ hôm nay: Nạp {{{dailySummary.caloriesConsumed}}}kcal, Đã đốt tổng cộng {{{dailySummary.caloriesBurned}}}kcal, Ngủ {{{dailySummary.sleepHours}}}h
+/**
+ * Hàm gọi API Backend AI bên ngoài.
+ */
+export async function getHealthSuggestions(
+  input: HealthSuggestionRequest
+): Promise<HealthSuggestionResponse> {
+  // Tạo prompt văn bản từ dữ liệu đầu vào
+  const prompt = `Bạn là một chuyên gia sức khỏe AI cao cấp. 
+  Dựa trên dữ liệu thực tế:
+  - Mục tiêu: ${input.userProfile.goal}
+  - Chỉ số: ${input.userProfile.weight}kg, ${input.userProfile.height}cm, ${input.userProfile.age}tuổi, Giới tính: ${input.userProfile.gender}
+  - Cường độ vận động: ${input.userProfile.activityLevel || 'moderate'}
+  - Tiến độ hôm nay: Nạp ${input.dailySummary.caloriesConsumed}kcal, Đã đốt tổng cộng ${input.dailySummary.caloriesBurned}kcal, Ngủ ${input.dailySummary.sleepHours}h
   
   Nhiệm vụ:
   1. Đưa ra lời khuyên dựa trên lượng calo thực tế. Hãy khuyến khích người dùng nếu họ đang đi đúng hướng.
   2. Đề xuất 3 bữa ăn (Sáng, Trưa, Tối) và 2 bài tập phù hợp nhất với mục tiêu.
-  3. Viết nội dung ngắn gọn bằng ngôn ngữ: {{{language}}}.
+  3. Viết nội dung ngắn gọn bằng ngôn ngữ: ${input.language || 'vi'}.
   4. Viết 'imagePrompt' bằng tiếng Anh cực kỳ chi tiết cho AI tạo ảnh (Ví dụ: "Top-down view of a healthy meal, professional food photography").
 
   TRẢ VỀ KẾT QUẢ DƯỚI DẠNG MỘT ĐỐI TƯỢNG JSON DUY NHẤT. KHÔNG BAO GỒM CÁC KHỐI MÃ (CODE FENCES) HOẶC VĂN BẢN THỪA.
@@ -78,63 +79,30 @@ const healthReasoningPrompt = ai.definePrompt({
     "generalTip": "...",
     "mealSuggestions": [{"name": "...", "recipe": "...", "calories": 0, "imagePrompt": "..."}],
     "workoutSuggestion": [{"name": "...", "description": "...", "imagePrompt": "..."}]
-  }`,
-});
+  }`;
 
-// --- Hàm Wrapper Server Action ---
-
-export async function getHealthSuggestions(
-  input: HealthSuggestionRequest
-): Promise<HealthSuggestionResponse> {
-  // 1. Phân tích với Gemini 2.5 Flash Image
-  const response = await healthReasoningPrompt(input);
-  const text = response.text;
-  
-  let suggestions: HealthSuggestionResponse;
   try {
-    // Làm sạch chuỗi JSON nếu AI vô tình thêm markdown
-    const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    suggestions = JSON.parse(cleanJson);
-  } catch (e) {
-    console.error("Lỗi parse JSON từ AI:", text);
-    throw new Error("AI trả về định dạng không hợp lệ. Vui lòng thử lại.");
+    const response = await fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt }),
+      // Không cache để luôn lấy dữ liệu mới nhất
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      const errorMsg = await response.text();
+      throw new Error(`AI Backend Error: ${response.status} - ${errorMsg}`);
+    }
+
+    const suggestions = await response.json();
+    
+    // Kiểm chứng dữ liệu trả về với Zod để đảm bảo an toàn
+    return HealthSuggestionResponseSchema.parse(suggestions);
+  } catch (error) {
+    console.error("Lỗi khi kết nối với Backend AI:", error);
+    throw new Error("Không thể kết nối với máy chủ AI. Vui lòng kiểm tra lại backend.");
   }
-
-  // 2. Tạo hình ảnh minh họa song song bằng Imagen 4 (Base64)
-  const mealImagePromises = suggestions.mealSuggestions.map(async (meal) => {
-    try {
-      const { media } = await ai.generate({
-        model: 'googleai/imagen-4.0-fast-generate-001',
-        prompt: meal.imagePrompt,
-      });
-      return { ...meal, imageUrl: media?.url };
-    } catch (e) {
-      console.error("Lỗi tạo ảnh bữa ăn:", e);
-      return meal;
-    }
-  });
-
-  const workoutImagePromises = suggestions.workoutSuggestion.map(async (workout) => {
-    try {
-      const { media } = await ai.generate({
-        model: 'googleai/imagen-4.0-fast-generate-001',
-        prompt: workout.imagePrompt,
-      });
-      return { ...workout, imageUrl: media?.url };
-    } catch (e) {
-      console.error("Lỗi tạo ảnh bài tập:", e);
-      return workout;
-    }
-  });
-
-  const [mealResults, workoutResults] = await Promise.all([
-    Promise.all(mealImagePromises),
-    Promise.all(workoutImagePromises),
-  ]);
-
-  return {
-    ...suggestions,
-    mealSuggestions: mealResults,
-    workoutSuggestion: workoutResults,
-  };
 }
