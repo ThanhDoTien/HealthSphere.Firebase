@@ -142,7 +142,6 @@ export default function DashboardPage() {
 
   const caloriesBurned = useMemo(() => {
     const activityBurn = activityData ? activityData.reduce((sum, activity) => sum + activity.caloriesBurned, 0) : 0;
-    // Tổng calo đốt cháy = TDEE cơ bản (đã tính theo cường độ vận động) + Calo từ tập luyện cụ thể hôm nay
     return baseTDEE + activityBurn;
   }, [baseTDEE, activityData]);
 
@@ -269,14 +268,14 @@ export default function DashboardPage() {
                         <p className="font-medium text-sm text-primary">{t('dashboard.recipeSuggestion')}</p>
                         <p className="text-sm font-semibold mt-1">{firstMeal?.name}</p>
                         <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                          {firstMeal?.recipe.replace(/<[^>]*>?/gm, '')}
+                          {firstMeal?.recipe?.replace(/<[^>]*>?/gm, '')}
                         </div>
                       </div>
                     </div>
                     {(firstMeal?.imageUrl) && (
                       <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
                         <Image 
-                          src={firstMeal.imageUrl || `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80`} 
+                          src={firstMeal.imageUrl} 
                           alt={firstMeal.name || 'Meal suggestion'} 
                           fill 
                           className="object-cover" 
@@ -295,14 +294,14 @@ export default function DashboardPage() {
                         <p className="font-medium text-sm text-accent">{t('dashboard.exerciseSuggestion')}</p>
                         <p className="text-sm font-semibold mt-1">{firstWorkout?.name}</p>
                         <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                          {firstWorkout?.description.replace(/<[^>]*>?/gm, '')}
+                          {firstWorkout?.description?.replace(/<[^>]*>?/gm, '')}
                         </div>
                       </div>
                     </div>
                     {(firstWorkout?.imageUrl) && (
                       <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
                         <Image 
-                          src={firstWorkout.imageUrl || `https://plus.unsplash.com/premium_photo-1663852297267-827c73e7529e?auto=format&fit=crop&w=800&q=80`} 
+                          src={firstWorkout.imageUrl} 
                           alt={firstWorkout.name || 'Exercise suggestion'} 
                           fill 
                           className="object-cover"

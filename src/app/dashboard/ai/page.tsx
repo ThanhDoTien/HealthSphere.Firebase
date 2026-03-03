@@ -117,7 +117,7 @@ export default function AiPage() {
     setError(null);
   
     try {
-      const rawSuggestions = await getHealthSuggestions({
+      const suggestions = await getHealthSuggestions({
         userProfile: {
           goal: userProfile.goal,
           weight: latestWeightData?.[0]?.weight || userProfile.weight,
@@ -131,35 +131,9 @@ export default function AiPage() {
         language: locale,
       });
 
-      // Quy trình: Lấy UID thật -> Tạo path -> Upload
-      const uploadPromises = [
-        ...rawSuggestions.mealSuggestions.map(async (meal, i) => {
-          if (meal.imageUrl?.startsWith('data:')) {
-            // Logic path: ai/meals/{date}_{index}.png. Hàm helper sẽ tự thêm users/{uid}/ vào trước.
-            const url = await uploadBase64ToStorage(meal.imageUrl, `ai/meals/${today}_${i}.png`);
-            return { ...meal, imageUrl: url };
-          }
-          return meal;
-        }),
-        ...rawSuggestions.workoutSuggestion.map(async (workout, i) => {
-          if (workout.imageUrl?.startsWith('data:')) {
-            // Logic path: ai/workouts/{date}_{index}.png. Hàm helper sẽ tự thêm users/{uid}/ vào trước.
-            const url = await uploadBase64ToStorage(workout.imageUrl, `ai/workouts/${today}_${i}.png`);
-            return { ...workout, imageUrl: url };
-          }
-          return workout;
-        })
-      ];
-
-      const results = await Promise.all(uploadPromises);
-      
-      const finalSuggestions: HealthSuggestionResponse = {
-        generalTip: rawSuggestions.generalTip,
-        mealSuggestions: results.filter(r => 'calories' in r) as any,
-        workoutSuggestion: results.filter(r => !('calories' in r)) as any,
-      };
-  
-      await setDoc(suggestionDocRef, finalSuggestions);
+      // Backend API already returns imageUrl pointing to storage, 
+      // but if there are dataUri leftovers, we handle them.
+      await setDoc(suggestionDocRef, suggestions);
     } catch (err: any) {
       setError(err.message || t('ai.errorMessage'));
     } finally {
@@ -187,7 +161,7 @@ export default function AiPage() {
             <div className="flex flex-col items-center justify-center gap-4 py-16">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
               <p className="text-muted-foreground animate-pulse text-center">
-                {isGenerating ? "Gemini đang vẽ ảnh chuyên nghiệp cho bạn (mất ~15 giây)..." : t('ai.loadingData')}
+                {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
               </p>
             </div>
           )}
@@ -213,8 +187,8 @@ export default function AiPage() {
               <div>
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold"><Utensils className="h-6 w-6 text-accent" />{t('ai.mealsTitle')}</h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
-                  {suggestionData.mealSuggestions.map((meal) => (
-                    <Card key={meal.name} className="overflow-hidden flex flex-col h-full shadow-sm">
+                  {suggestionData.mealSuggestions?.map((meal, idx) => (
+                    <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-sm">
                       {meal.imageUrl && (
                         <div className="relative aspect-video w-full bg-muted">
                           <Image src={meal.imageUrl} alt={meal.name} fill className="object-cover" unoptimized />
@@ -235,8 +209,8 @@ export default function AiPage() {
               <div>
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold"><Dumbbell className="h-6 w-6 text-orange-500" />{t('ai.workoutTitle')}</h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
-                  {suggestionData.workoutSuggestion.map((exercise) => (
-                    <Card key={exercise.name} className="overflow-hidden flex flex-col h-full shadow-sm">
+                  {suggestionData.workoutSuggestion?.map((exercise, idx) => (
+                    <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-sm">
                       {exercise.imageUrl && (
                         <div className="relative aspect-video w-full bg-muted">
                           <Image src={exercise.imageUrl} alt={exercise.name} fill className="object-cover" unoptimized />
