@@ -90,7 +90,6 @@ export default function AiPage() {
     const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
     if (mealData) summary.caloriesConsumed = mealData.reduce((sum, meal) => sum + meal.calories, 0);
     
-    // Tính toán calo đốt cháy dựa trên Harris-Benedict + hoạt động cụ thể
     if (userProfile) {
       const currentWeight = latestWeightData?.[0]?.weight || userProfile.weight;
       const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
@@ -184,7 +183,7 @@ export default function AiPage() {
             <div className="flex flex-col items-center justify-center gap-4 py-16">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
               <p className="text-muted-foreground animate-pulse text-center">
-                {isGenerating ? "Gemini Nano Banana đang vẽ ảnh chuyên nghiệp cho bạn (mất ~15 giây)..." : t('ai.loadingData')}
+                {isGenerating ? "Gemini đang vẽ ảnh chuyên nghiệp cho bạn (mất ~15 giây)..." : t('ai.loadingData')}
               </p>
             </div>
           )}
@@ -198,7 +197,12 @@ export default function AiPage() {
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Lightbulb className="h-6 w-6" />
                   </div>
-                  <div><CardTitle className="text-lg">{t('ai.tipTitle')}</CardTitle><div className="text-base leading-relaxed">{suggestionData.generalTip}</div></div>
+                  <div>
+                    <CardTitle className="text-lg">{t('ai.tipTitle')}</CardTitle>
+                    <div className="text-base leading-relaxed whitespace-pre-line mt-2">
+                      {suggestionData.generalTip}
+                    </div>
+                  </div>
                 </CardHeader>
               </Card>
 
@@ -212,8 +216,13 @@ export default function AiPage() {
                           <Image src={meal.imageUrl} alt={meal.name} fill className="object-cover" unoptimized />
                         </div>
                       )}
-                      <CardHeader><CardTitle className="text-lg">{meal.name}</CardTitle><CardDescription>~{meal.calories} kcal</CardDescription></CardHeader>
-                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed">{meal.recipe}</CardContent>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{meal.name}</CardTitle>
+                        <CardDescription>~{meal.calories} kcal</CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                        {meal.recipe}
+                      </CardContent>
                     </Card>
                   ))}
                 </div>
@@ -229,8 +238,12 @@ export default function AiPage() {
                           <Image src={exercise.imageUrl} alt={exercise.name} fill className="object-cover" unoptimized />
                         </div>
                       )}
-                      <CardHeader><CardTitle className="text-lg">{exercise.name}</CardTitle></CardHeader>
-                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed">{exercise.description}</CardContent>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{exercise.name}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                        {exercise.description}
+                      </CardContent>
                     </Card>
                   ))}
                 </div>
