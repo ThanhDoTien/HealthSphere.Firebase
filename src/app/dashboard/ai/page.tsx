@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -15,8 +16,6 @@ import {
   collection,
   query,
   where,
-  orderBy,
-  limit,
   doc,
   setDoc,
 } from 'firebase/firestore';
@@ -24,6 +23,7 @@ import {
   getHealthSuggestions,
   type HealthSuggestionResponse,
 } from '@/ai/flows/suggestion-flow';
+import { uploadBase64ToStorage } from '@/firebase/storage/utils';
 import {
   Loader2,
   Utensils,
@@ -73,56 +73,17 @@ export default function AiPage() {
     );
   }, [firestore, user, today]);
 
-  const recentActivitiesQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'activities'),
-      orderBy('date', 'desc'),
-      limit(5)
-    );
-  }, [firestore, user]);
-
   const { data: mealData, isLoading: mealLoading } = useCollection(mealsQuery);
-  const { data: activityData, isLoading: activityLoading } =
-    useCollection(activitiesQuery);
-  const { data: sleepData, isLoading: sleepLoading } =
-    useCollection(sleepQuery);
-  const { data: recentActivityData, isLoading: recentActivityLoading } = useCollection(recentActivitiesQuery);
+  const { data: activityData, isLoading: activityLoading } = useCollection(activitiesQuery);
+  const { data: sleepData, isLoading: sleepLoading } = useCollection(sleepQuery);
   
   const dailySummary = useMemo(() => {
-    const summary = {
-      caloriesConsumed: 0,
-      caloriesBurned: 0,
-      sleepHours: 0,
-    };
-
-    if (mealData) {
-      summary.caloriesConsumed = mealData.reduce(
-        (sum, meal) => sum + meal.calories,
-        0
-      );
-    }
-    if (activityData) {
-      summary.caloriesBurned = activityData.reduce(
-        (sum, activity) => sum + activity.caloriesBurned,
-        0
-      );
-    }
-    if (sleepData) {
-      summary.sleepHours = sleepData.reduce(
-        (sum, sleep) => sum + sleep.duration,
-        0
-      );
-    }
+    const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
+    if (mealData) summary.caloriesConsumed = mealData.reduce((sum, meal) => sum + meal.calories, 0);
+    if (activityData) summary.caloriesBurned = activityData.reduce((sum, activity) => sum + activity.caloriesBurned, 0);
+    if (sleepData) summary.sleepHours = sleepData.reduce((sum, sleep) => sum + sleep.duration, 0);
     return summary;
   }, [mealData, activityData, sleepData]);
-
-  const dataIsLoading =
-    userLoading ||
-    mealLoading ||
-    activityLoading ||
-    sleepLoading ||
-    recentActivityLoading;
 
   const suggestionDocRef = useMemoFirebase(() => {
     if (!user || !today) return null;
@@ -138,7 +99,8 @@ export default function AiPage() {
     setError(null);
   
     try {
-      const suggestions = await getHealthSuggestions({
+      // 1. Gọi AI gen gợi ý và ảnh Base64
+      const rawSuggestions = await getHealthSuggestions({
         userProfile: {
           goal: userProfile.goal,
           weight: userProfile.weight,
@@ -148,105 +110,70 @@ export default function AiPage() {
           activityLevel: userProfile.activityLevel,
         },
         dailySummary,
-        recentActivities: recentActivityData?.map(a => a.name) || [],
+        recentActivities: [],
         language: locale,
       });
+
+      // 2. Upload từng ảnh Base64 lên Firebase Storage và lấy URL thật
+      const uploadPromises = [
+        ...rawSuggestions.mealSuggestions.map(async (meal, i) => {
+          if (meal.imageUrl?.startsWith('data:')) {
+            const url = await uploadBase64ToStorage(meal.imageUrl, `users/${user.uid}/ai/meals/${today}_${i}.png`);
+            return { ...meal, imageUrl: url };
+          }
+          return meal;
+        }),
+        ...rawSuggestions.workoutSuggestion.map(async (workout, i) => {
+          if (workout.imageUrl?.startsWith('data:')) {
+            const url = await uploadBase64ToStorage(workout.imageUrl, `users/${user.uid}/ai/workouts/${today}_${i}.png`);
+            return { ...workout, imageUrl: url };
+          }
+          return workout;
+        })
+      ];
+
+      const results = await Promise.all(uploadPromises);
+      
+      const finalSuggestions: HealthSuggestionResponse = {
+        generalTip: rawSuggestions.generalTip,
+        mealSuggestions: results.filter(r => 'calories' in r) as any,
+        workoutSuggestion: results.filter(r => !('calories' in r)) as any,
+      };
   
-      await setDoc(suggestionDocRef, suggestions);
+      await setDoc(suggestionDocRef, finalSuggestions);
     } catch (err: any) {
       setError(err.message || t('ai.errorMessage'));
     } finally {
       setIsGenerating(false);
     }
-  }, [userProfile, user, today, suggestionDocRef, dailySummary, recentActivityData, locale, t]);
+  }, [userProfile, user, today, suggestionDocRef, dailySummary, locale, t]);
 
-  useEffect(() => {
-    if (!dataIsLoading && userProfile && !suggestionData && !isGenerating && !error) {
-      handleGenerateSuggestions();
-    }
-  }, [dataIsLoading, userProfile, suggestionData, handleGenerateSuggestions, isGenerating, error]);
-
-  const pageIsLoading = dataIsLoading || suggestionLoading;
+  const pageIsLoading = userLoading || mealLoading || activityLoading || sleepLoading || suggestionLoading;
 
   return (
     <div className="p-4 sm:p-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              {t('ai.title')}
-            </CardTitle>
-            <CardDescription>
-              {t('ai.description')}
-            </CardDescription>
+            <CardTitle className="flex items-center gap-2">{t('ai.title')}</CardTitle>
+            <CardDescription>{t('ai.description')}</CardDescription>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleGenerateSuggestions}
-            disabled={isGenerating || dataIsLoading}
-          >
+          <Button variant="outline" size="sm" onClick={handleGenerateSuggestions} disabled={isGenerating || pageIsLoading}>
             {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-2 h-4 w-4" />}
             {t('ai.generateButton')}
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {userProfile && (
-            <Card className="bg-muted/30">
-              <CardHeader>
-                <CardTitle className="text-lg">{t('ai.snapshotTitle')}</CardTitle>
-                <CardDescription>
-                  {t('ai.snapshotDescription')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground">{t('ai.height')}</span>
-                  <span className="font-semibold">{userProfile.height} cm</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground">{t('ai.weight')}</span>
-                  <span className="font-semibold">{userProfile.weight} kg</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground">{t('ai.goal')}</span>
-                  <span className="font-semibold">{userProfile.goal}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground">{t('ai.caloriesIn')}</span>
-                  <span className="font-semibold">
-                    {dailySummary.caloriesConsumed.toFixed(0)} kcal
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground">{t('ai.caloriesOut')}</span>
-                  <span className="font-semibold">
-                    {dailySummary.caloriesBurned.toFixed(0)} kcal
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground">{t('ai.sleep')}</span>
-                  <span className="font-semibold">
-                    {dailySummary.sleepHours.toFixed(1)} {t('sleep.unit.hours')}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
           {(pageIsLoading || isGenerating) && (
-            <div className="flex items-center justify-center gap-2 text-muted-foreground py-8">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              <span>{pageIsLoading && !isGenerating ? t('ai.loadingData') : t('ai.loadingButton')}</span>
+            <div className="flex flex-col items-center justify-center gap-4 py-16">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <p className="text-muted-foreground animate-pulse">
+                {isGenerating ? "Imagen 4 đang vẽ ảnh chất lượng cao cho bạn (mất ~15 giây)..." : t('ai.loadingData')}
+              </p>
             </div>
           )}
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertTitle>{t('ai.errorTitle')}</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+          {error && <Alert variant="destructive"><AlertTitle>{t('ai.errorTitle')}</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
 
           {!isGenerating && !pageIsLoading && suggestionData && (
             <div className="space-y-8 pt-4">
@@ -255,82 +182,39 @@ export default function AiPage() {
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Lightbulb className="h-6 w-6" />
                   </div>
-                  <div>
-                    <CardTitle className="text-lg">{t('ai.tipTitle')}</CardTitle>
-                    <div className="text-base leading-relaxed text-foreground">
-                      {suggestionData.generalTip}
-                    </div>
-                  </div>
+                  <div><CardTitle className="text-lg">{t('ai.tipTitle')}</CardTitle><div className="text-base leading-relaxed">{suggestionData.generalTip}</div></div>
                 </CardHeader>
               </Card>
 
-              {/* PHẦN HIỂN THỊ ẢNH GỢI Ý BỮA ĂN - BẠN CÓ THỂ TỰ CODE TẠI ĐÂY */}
               <div>
-                <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
-                  <Utensils className="h-6 w-6 text-accent" />
-                  {t('ai.mealsTitle')}
-                </h3>
+                <h3 className="mb-4 flex items-center gap-2 text-xl font-bold"><Utensils className="h-6 w-6 text-accent" />{t('ai.mealsTitle')}</h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.mealSuggestions.map((meal) => (
                     <Card key={meal.name} className="overflow-hidden flex flex-col h-full">
-                      {/* LOGIC CODE HÌNH ẢNH: Bạn có thể dùng imageKeyword để gọi Unsplash API tại đây */}
-                      {(meal.imageUrl || meal.imageKeyword) && (
+                      {meal.imageUrl && (
                         <div className="relative aspect-video w-full bg-muted">
-                          <Image
-                            src={meal.imageUrl || `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80`}
-                            alt={meal.name}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
+                          <Image src={meal.imageUrl} alt={meal.name} fill className="object-cover" unoptimized />
                         </div>
                       )}
-                      <CardHeader>
-                        <CardTitle className="text-lg">{meal.name}</CardTitle>
-                        <CardDescription>
-                          ~{meal.calories} kcal
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="flex-1">
-                        <div className="text-sm text-muted-foreground leading-relaxed">
-                          {meal.recipe}
-                        </div>
-                      </CardContent>
+                      <CardHeader><CardTitle className="text-lg">{meal.name}</CardTitle><CardDescription>~{meal.calories} kcal</CardDescription></CardHeader>
+                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed">{meal.recipe}</CardContent>
                     </Card>
                   ))}
                 </div>
               </div>
 
-              {/* PHẦN HIỂN THỊ ẢNH GỢI Ý BÀI TẬP - BẠN CÓ THỂ TỰ CODE TẠI ĐÂY */}
               <div>
-                <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
-                  <Dumbbell className="h-6 w-6 text-orange-500" />
-                  {t('ai.workoutTitle')}
-                </h3>
-
+                <h3 className="mb-4 flex items-center gap-2 text-xl font-bold"><Dumbbell className="h-6 w-6 text-orange-500" />{t('ai.workoutTitle')}</h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.workoutSuggestion.map((exercise) => (
                     <Card key={exercise.name} className="overflow-hidden flex flex-col h-full">
-                      {/* LOGIC CODE HÌNH ẢNH: Bạn có thể dùng imageKeyword để gọi Unsplash API tại đây */}
-                      {(exercise.imageUrl || exercise.imageKeyword) && (
+                      {exercise.imageUrl && (
                         <div className="relative aspect-video w-full bg-muted">
-                          <Image
-                            src={exercise.imageUrl || `https://plus.unsplash.com/premium_photo-1663852297267-827c73e7529e?auto=format&fit=crop&w=800&q=80`}
-                            alt={exercise.name}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
+                          <Image src={exercise.imageUrl} alt={exercise.name} fill className="object-cover" unoptimized />
                         </div>
                       )}
-                      <CardHeader>
-                        <CardTitle className="text-lg">{exercise.name}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="flex-1">
-                        <div className="text-sm text-muted-foreground leading-relaxed">
-                          {exercise.description}
-                        </div>
-                      </CardContent>
+                      <CardHeader><CardTitle className="text-lg">{exercise.name}</CardTitle></CardHeader>
+                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed">{exercise.description}</CardContent>
                     </Card>
                   ))}
                 </div>

@@ -1,13 +1,13 @@
+
 'use server';
 /**
- * @fileOverview Generates health suggestions by calling an external backend API.
+ * @fileOverview Generates health suggestions and high-quality images using Genkit.
  * 
- * - getHealthSuggestions - A function that proxies the request to the external health AI backend.
- * - HealthSuggestionRequest - The schema for the input data.
- * - HealthSuggestionResponse - The schema for the expected AI suggestions.
+ * - getHealthSuggestions - A function that orchestrates reasoning and image generation.
  */
 
-import { z } from 'zod';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const HealthSuggestionRequestSchema = z.object({
   userProfile: z.object({
@@ -32,88 +32,75 @@ const MealSuggestionSchema = z.object({
   name: z.string(),
   recipe: z.string(),
   calories: z.number(),
-  imageUrl: z.string().optional(),
-  imageKeyword: z.string().describe('Từ khóa tiếng Anh ngắn để tìm kiếm ảnh (vd: "grilled salmon").'),
+  imagePrompt: z.string().describe('Prompt tiếng Anh chi tiết để Imagen 4 gen ảnh món ăn này.'),
+  imageUrl: z.string().optional(), // Sẽ được điền sau khi gen ảnh
 });
 
 const ExerciseSuggestionSchema = z.object({
   name: z.string(),
   description: z.string(),
-  imageUrl: z.string().optional(),
-  imageKeyword: z.string().describe('Từ khóa tiếng Anh ngắn để tìm kiếm ảnh (vd: "yoga stretch").'),
+  imagePrompt: z.string().describe('Prompt tiếng Anh chi tiết để Imagen 4 gen ảnh bài tập này.'),
+  imageUrl: z.string().optional(), // Sẽ được điền sau khi gen ảnh
 });
 
 const HealthSuggestionResponseSchema = z.object({
+  generalTip: z.string(),
   mealSuggestions: z.array(MealSuggestionSchema),
   workoutSuggestion: z.array(ExerciseSuggestionSchema),
-  generalTip: z.string(),
 });
 export type HealthSuggestionResponse = z.infer<typeof HealthSuggestionResponseSchema>;
 
 export async function getHealthSuggestions(
   input: HealthSuggestionRequest
 ): Promise<HealthSuggestionResponse> {
-  const prompt = `
-    Context:
-    User Goal: ${input.userProfile.goal}
-    Current Stats: ${input.userProfile.weight}kg, ${input.userProfile.height}cm, ${input.userProfile.age}yo, ${input.userProfile.gender}
-    Activity Level: ${input.userProfile.activityLevel || 'moderate'}
-    Today's Progress: In: ${input.dailySummary.caloriesConsumed}kcal, Out: ${input.dailySummary.caloriesBurned}kcal, Sleep: ${input.dailySummary.sleepHours}h
-    Recent Activities: ${input.recentActivities.join(', ') || 'None'}
-    Language: ${input.language || 'en'}
-
-    Task: Cung cấp mẹo sức khỏe, 3 gợi ý bữa ăn và 3 gợi ý bài tập. 
+  // 1. Gửi Prompt lý luận cho Gemini để lấy JSON cấu trúc
+  const reasoningPrompt = ai.definePrompt({
+    name: 'healthReasoning',
+    input: { schema: HealthSuggestionRequestSchema },
+    output: { schema: HealthSuggestionResponseSchema },
+    prompt: `Bạn là một chuyên gia sức khỏe AI cao cấp. 
+    Dựa trên dữ liệu người dùng:
+    - Mục tiêu: {{{userProfile.goal}}}
+    - Chỉ số: {{{userProfile.weight}}}kg, {{{userProfile.height}}}cm, {{{userProfile.age}}}tuổi, Giới tính: {{{userProfile.gender}}}
+    - Cường độ vận động: {{{userProfile.activityLevel}}}
+    - Tiến độ hôm nay: Nạp {{{dailySummary.caloriesConsumed}}}kcal, Đốt {{{dailySummary.caloriesBurned}}}kcal, Ngủ {{{dailySummary.sleepHours}}}h
     
-    QUY TẮC QUAN TRỌNG:
-    1. TÍNH TOÁN CALO: Sử dụng công thức Harris-Benedict để tính BMR và TDEE dựa trên thông số người dùng và Cường độ luyện tập. Gợi ý calo phải phù hợp với mục tiêu (Giảm cân/Tăng cân/Duy trì).
-    2. NỘI DUNG: Viết NGẮN GỌN (tối đa 2 câu mỗi mục). Không dùng dấu xuống dòng trong text.
-    3. HÌNH ẢNH: 
-       - Trả về "imageKeyword" là từ khóa tiếng Anh cực ngắn (2-3 từ).
-       - Trả về "imageUrl" theo định dạng: https://pollinations.ai/p/[keyword]?width=800&height=600&model=flux (Thay [keyword] bằng imageKeyword viết liền bằng dấu gạch ngang, ví dụ: "healthy-salad-bowl").
-    4. Định dạng trả về duy nhất là JSON:
-    {
-      "generalTip": "string",
-      "mealSuggestions": [{"name": "string", "calories": number, "recipe": "string", "imageKeyword": "string", "imageUrl": "string"}],
-      "workoutSuggestion": [{"name": "string", "description": "string", "imageKeyword": "string", "imageUrl": "string"}]
-    }
-  `;
+    Nhiệm vụ:
+    1. Sử dụng công thức Harris-Benedict để tính toán TDEE và đưa ra lời khuyên calo chính xác.
+    2. Đề xuất 3 bữa ăn và 2 bài tập phù hợp.
+    3. Viết nội dung ngắn gọn (tối đa 2 câu mỗi mục) bằng ngôn ngữ: {{{language}}}.
+    4. Đối với mỗi món ăn/bài tập, viết một 'imagePrompt' bằng tiếng Anh cực kỳ chi tiết (ví dụ: "High-quality food photography of a grilled salmon steak with roasted asparagus on a white ceramic plate, soft natural lighting, 4k").`,
+  });
 
-  try {
-    const res = await fetch(
-      "https://healthspherebackend--studio-8164753205-5553c.asia-southeast1.hosted.app/ai",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt: prompt }),
-        cache: "no-store",
-      }
-    );
+  const { output: suggestions } = await reasoningPrompt(input);
+  if (!suggestions) throw new Error("AI failed to generate suggestions.");
 
-    if (!res.ok) {
-      throw new Error(`Backend error: ${res.status}`);
-    }
+  // 2. Gen ảnh Base64 bằng Imagen 4 cho từng mục
+  // Chúng ta sẽ thực hiện song song để tăng tốc
+  const mealImagePromises = suggestions.mealSuggestions.map(async (meal) => {
+    const { media } = await ai.generate({
+      model: 'googleai/imagen-4.0-fast-generate-001',
+      prompt: meal.imagePrompt,
+    });
+    return { ...meal, imageUrl: media?.url }; // media.url là data URI (Base64)
+  });
 
-    const data = await res.json();
-    
-    let rawResult;
-    if (typeof data === 'string') {
-      rawResult = JSON.parse(data.replace(/```json|```/g, "").trim());
-    } else if (data.message && typeof data.message === 'string') {
-      rawResult = JSON.parse(data.message.replace(/```json|```/g, "").trim());
-    } else if (data.output && typeof data.output === 'string') {
-       rawResult = JSON.parse(data.output.replace(/```json|```/g, "").trim());
-    } else if (data.output) {
-       rawResult = data.output;
-    } else {
-      rawResult = data;
-    }
+  const workoutImagePromises = suggestions.workoutSuggestion.map(async (workout) => {
+    const { media } = await ai.generate({
+      model: 'googleai/imagen-4.0-fast-generate-001',
+      prompt: workout.imagePrompt,
+    });
+    return { ...workout, imageUrl: media?.url };
+  });
 
-    return HealthSuggestionResponseSchema.parse(rawResult);
+  const [mealResults, workoutResults] = await Promise.all([
+    Promise.all(mealImagePromises),
+    Promise.all(workoutImagePromises),
+  ]);
 
-  } catch (e: any) {
-    console.error('AI Proxy Error:', e);
-    throw new Error(e.message || 'Failed to generate suggestions.');
-  }
+  return {
+    ...suggestions,
+    mealSuggestions: mealResults,
+    workoutSuggestion: workoutResults,
+  };
 }
