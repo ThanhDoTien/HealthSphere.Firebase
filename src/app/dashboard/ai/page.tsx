@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -130,17 +131,20 @@ export default function AiPage() {
         language: locale,
       });
 
+      // Quy trình: Lấy UID thật -> Tạo path -> Upload
       const uploadPromises = [
         ...rawSuggestions.mealSuggestions.map(async (meal, i) => {
           if (meal.imageUrl?.startsWith('data:')) {
-            const url = await uploadBase64ToStorage(meal.imageUrl, `users/${user.uid}/ai/meals/${today}_${i}.png`);
+            // Logic path: ai/meals/{date}_{index}.png. Hàm helper sẽ tự thêm users/{uid}/ vào trước.
+            const url = await uploadBase64ToStorage(meal.imageUrl, `ai/meals/${today}_${i}.png`);
             return { ...meal, imageUrl: url };
           }
           return meal;
         }),
         ...rawSuggestions.workoutSuggestion.map(async (workout, i) => {
           if (workout.imageUrl?.startsWith('data:')) {
-            const url = await uploadBase64ToStorage(workout.imageUrl, `users/${user.uid}/ai/workouts/${today}_${i}.png`);
+            // Logic path: ai/workouts/{date}_{index}.png. Hàm helper sẽ tự thêm users/{uid}/ vào trước.
+            const url = await uploadBase64ToStorage(workout.imageUrl, `ai/workouts/${today}_${i}.png`);
             return { ...workout, imageUrl: url };
           }
           return workout;
