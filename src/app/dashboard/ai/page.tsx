@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -34,6 +33,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useTranslation } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
+import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
 
 export default function AiPage() {
   const { user, userProfile, loading: userLoading } = useUser();
@@ -65,6 +65,14 @@ export default function AiPage() {
     );
   }, [firestore, user, today]);
 
+  const weightQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'weights'),
+      where('date', '==', today)
+    );
+  }, [firestore, user, today]);
+
   const sleepQuery = useMemoFirebase(() => {
     if (!user || !today) return null;
     return query(
@@ -76,14 +84,24 @@ export default function AiPage() {
   const { data: mealData, isLoading: mealLoading } = useCollection(mealsQuery);
   const { data: activityData, isLoading: activityLoading } = useCollection(activitiesQuery);
   const { data: sleepData, isLoading: sleepLoading } = useCollection(sleepQuery);
+  const { data: latestWeightData } = useCollection(weightQuery);
   
   const dailySummary = useMemo(() => {
     const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
     if (mealData) summary.caloriesConsumed = mealData.reduce((sum, meal) => sum + meal.calories, 0);
-    if (activityData) summary.caloriesBurned = activityData.reduce((sum, activity) => sum + activity.caloriesBurned, 0);
+    
+    // Tính toán calo đốt cháy dựa trên Harris-Benedict + hoạt động cụ thể
+    if (userProfile) {
+      const currentWeight = latestWeightData?.[0]?.weight || userProfile.weight;
+      const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
+      const tdee = calculateTDEE(bmr, userProfile.activityLevel);
+      const activityBurn = activityData ? activityData.reduce((sum, activity) => sum + activity.caloriesBurned, 0) : 0;
+      summary.caloriesBurned = tdee + activityBurn;
+    }
+
     if (sleepData) summary.sleepHours = sleepData.reduce((sum, sleep) => sum + sleep.duration, 0);
     return summary;
-  }, [mealData, activityData, sleepData]);
+  }, [mealData, activityData, sleepData, userProfile, latestWeightData]);
 
   const suggestionDocRef = useMemoFirebase(() => {
     if (!user || !today) return null;
@@ -99,11 +117,10 @@ export default function AiPage() {
     setError(null);
   
     try {
-      // 1. Gọi AI gen gợi ý và ảnh Base64
       const rawSuggestions = await getHealthSuggestions({
         userProfile: {
           goal: userProfile.goal,
-          weight: userProfile.weight,
+          weight: latestWeightData?.[0]?.weight || userProfile.weight,
           height: userProfile.height,
           age: userProfile.age,
           gender: userProfile.gender,
@@ -114,7 +131,6 @@ export default function AiPage() {
         language: locale,
       });
 
-      // 2. Upload từng ảnh Base64 lên Firebase Storage và lấy URL thật
       const uploadPromises = [
         ...rawSuggestions.mealSuggestions.map(async (meal, i) => {
           if (meal.imageUrl?.startsWith('data:')) {
@@ -146,7 +162,7 @@ export default function AiPage() {
     } finally {
       setIsGenerating(false);
     }
-  }, [userProfile, user, today, suggestionDocRef, dailySummary, locale, t]);
+  }, [userProfile, user, today, suggestionDocRef, dailySummary, locale, t, latestWeightData]);
 
   const pageIsLoading = userLoading || mealLoading || activityLoading || sleepLoading || suggestionLoading;
 
@@ -167,8 +183,8 @@ export default function AiPage() {
           {(pageIsLoading || isGenerating) && (
             <div className="flex flex-col items-center justify-center gap-4 py-16">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-muted-foreground animate-pulse">
-                {isGenerating ? "Imagen 4 đang vẽ ảnh chất lượng cao cho bạn (mất ~15 giây)..." : t('ai.loadingData')}
+              <p className="text-muted-foreground animate-pulse text-center">
+                {isGenerating ? "Gemini Nano Banana đang vẽ ảnh chuyên nghiệp cho bạn (mất ~15 giây)..." : t('ai.loadingData')}
               </p>
             </div>
           )}
@@ -190,7 +206,7 @@ export default function AiPage() {
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold"><Utensils className="h-6 w-6 text-accent" />{t('ai.mealsTitle')}</h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.mealSuggestions.map((meal) => (
-                    <Card key={meal.name} className="overflow-hidden flex flex-col h-full">
+                    <Card key={meal.name} className="overflow-hidden flex flex-col h-full shadow-sm">
                       {meal.imageUrl && (
                         <div className="relative aspect-video w-full bg-muted">
                           <Image src={meal.imageUrl} alt={meal.name} fill className="object-cover" unoptimized />
@@ -207,7 +223,7 @@ export default function AiPage() {
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold"><Dumbbell className="h-6 w-6 text-orange-500" />{t('ai.workoutTitle')}</h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.workoutSuggestion.map((exercise) => (
-                    <Card key={exercise.name} className="overflow-hidden flex flex-col h-full">
+                    <Card key={exercise.name} className="overflow-hidden flex flex-col h-full shadow-sm">
                       {exercise.imageUrl && (
                         <div className="relative aspect-video w-full bg-muted">
                           <Image src={exercise.imageUrl} alt={exercise.name} fill className="object-cover" unoptimized />
