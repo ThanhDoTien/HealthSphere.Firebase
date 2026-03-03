@@ -18,5 +18,7 @@ service cloud.firestore {
     match /users/{userId}/{collection}/{docId} {
       allow read, write: if isOwner(userId);
     }
+    
+    // Kích hoạt cập nhật quy tắc bảo mật hệ thống
   }
 }
