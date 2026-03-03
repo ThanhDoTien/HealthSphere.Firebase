@@ -1,7 +1,6 @@
 'use client';
 
 import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
-import { getAuth } from 'firebase/auth';
 import { initializeFirebase } from '@/firebase';
 
 /**
@@ -18,7 +17,37 @@ function hashString(str: string): string {
 }
 
 /**
- * Upload ảnh base64 lên Firebase Storage với cơ chế cache
+ * Upload ảnh base64 trực tiếp lên Firebase Storage
+ * 
+ * @param base64String Ảnh dạng data URI (data:image/png;base64,...)
+ * @param path Đường dẫn lưu trữ (ví dụ: ai/meals/today.png)
+ */
+export async function uploadBase64ToStorage(
+  base64String: string,
+  path: string
+): Promise<string> {
+  const { storage, auth } = initializeFirebase();
+
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('User not logged in');
+  }
+
+  // Đảm bảo path bắt đầu bằng users/{uid}/ để tuân thủ Security Rules
+  const fullPath = path.startsWith('users/') ? path : `users/${user.uid}/${path}`;
+  const storageRef = ref(storage, fullPath);
+
+  // Upload chuỗi base64 (sử dụng định dạng data_url)
+  const snapshot = await uploadString(storageRef, base64String, 'data_url');
+
+  // Lấy Public URL
+  const downloadURL = await getDownloadURL(snapshot.ref);
+
+  return downloadURL;
+}
+
+/**
+ * Upload ảnh base64 lên Firebase Storage với cơ chế cache dựa trên hash
  * 
  * @param base64String Ảnh dạng data URI
  * @param key Chuỗi duy nhất (vd: prompt, tên món ăn, bài tập...)
