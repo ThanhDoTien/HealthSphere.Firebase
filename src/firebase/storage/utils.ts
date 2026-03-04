@@ -4,7 +4,8 @@ import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage'
 import { initializeFirebase } from '@/firebase';
 
 /**
- * Tạo hash đơn giản từ string (dùng làm ID duy nhất cho cache)
+ * Tạo mã Hash Hex từ string (dùng làm ID duy nhất cho cache ảnh)
+ * Phải khớp logic với Backend để tìm được ảnh cũ
  */
 function hashString(str: string): string {
   let hash = 0;
@@ -13,7 +14,7 @@ function hashString(str: string): string {
     hash = (hash << 5) - hash + char;
     hash |= 0;
   }
-  return Math.abs(hash).toString();
+  return Math.abs(hash).toString(16);
 }
 
 /**
@@ -30,7 +31,6 @@ export async function uploadBase64ToStorage(
     throw new Error('User not logged in');
   }
 
-  // Đảm bảo path bắt đầu bằng users/{uid}/ để tuân thủ Security Rules riêng tư
   const fullPath = path.startsWith('users/') ? path : `users/${user.uid}/${path}`;
   const storageRef = ref(storage, fullPath);
 
@@ -39,16 +39,12 @@ export async function uploadBase64ToStorage(
 }
 
 /**
- * Upload ảnh AI vào thư mục CHUNG 'images' với cơ chế cache toàn cục.
- * Nếu ảnh đã tồn tại (dựa trên hash của prompt), trả về URL cũ ngay lập tức.
- * 
- * @param base64String Ảnh dạng data URI
- * @param key Chuỗi duy nhất (vd: prompt) để tạo hash
- * @param folder Thư mục con trong images/ai/
+ * Upload ảnh AI vào thư mục CHUNG 'images' với cơ chế cache.
+ * Sử dụng mã Hash của Prompt để làm tên file.
  */
 export async function uploadBase64WithCache(
   base64String: string,
-  key: string,
+  prompt: string,
   folder: 'meals' | 'exercises' = 'meals'
 ): Promise<string> {
   const { storage, auth } = initializeFirebase();
@@ -57,21 +53,17 @@ export async function uploadBase64WithCache(
     throw new Error('Người dùng chưa đăng nhập');
   }
 
-  // Tạo ID duy nhất từ key (prompt)
-  const hash = hashString(key);
-
-  // SỬ DỤNG ĐƯỜNG DẪN CHUNG 'images' thay vì users/{uid}
+  const hash = hashString(prompt);
   const fullPath = `images/ai/${folder}/${hash}.png`;
   const storageRef = ref(storage, fullPath);
 
   try {
-    // KIỂM TRA CACHE: Thử lấy URL nếu ảnh đã được ai đó tạo trước đó
+    // KIỂM TRA CACHE: Nếu ảnh đã tồn tại, dùng lại luôn
     const existingUrl = await getDownloadURL(storageRef);
     console.log('⚡ AI Image Cache Hit:', fullPath);
     return existingUrl;
   } catch (err) {
-    // Nếu lỗi (nghĩa là ảnh chưa tồn tại), tiến hành upload mới
-    console.log('Generating New AI Image & Saving to Global Pool...');
+    console.log('Generating New AI Image...');
   }
 
   const snapshot = await uploadString(storageRef, base64String, 'data_url');
