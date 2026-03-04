@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -268,7 +267,7 @@ export default function DashboardPage() {
                         <p className="font-medium text-sm text-primary">{t('dashboard.recipeSuggestion')}</p>
                         <p className="text-sm font-semibold mt-1">{firstMeal?.name}</p>
                         <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                          {firstMeal?.recipe?.replace(/<[^>]*>?/gm, '')}
+                          {firstMeal?.recipe?.replace(/<[^>]*>?/gm, '') || ''}
                         </div>
                       </div>
                     </div>
@@ -294,7 +293,7 @@ export default function DashboardPage() {
                         <p className="font-medium text-sm text-accent">{t('dashboard.exerciseSuggestion')}</p>
                         <p className="text-sm font-semibold mt-1">{firstWorkout?.name}</p>
                         <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                          {firstWorkout?.description?.replace(/<[^>]*>?/gm, '')}
+                          {firstWorkout?.description?.replace(/<[^>]*>?/gm, '') || ''}
                         </div>
                       </div>
                     </div>

@@ -3,7 +3,7 @@
  * @fileOverview Hệ thống tư vấn sức khỏe kết nối với Backend AI bên ngoài (Express + Genkit).
  * 
  * VỊ TRÍ CẤU HÌNH BACKEND:
- * - Biến BACKEND_URL bên dưới được lấy từ biến môi trường BACKEND_API_URL.
+ * - Biến BACKEND_URL được lấy từ biến môi trường BACKEND_API_URL.
  */
 
 import { z } from 'zod';
