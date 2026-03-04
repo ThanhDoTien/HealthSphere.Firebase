@@ -1,9 +1,10 @@
-
 'use server';
 /**
  * @fileOverview Hệ thống tư vấn sức khỏe kết nối với Backend AI bên ngoài (Express + Genkit).
  * 
- * - getHealthSuggestions - Gửi yêu cầu đến API backend và nhận kết quả tư vấn kèm ảnh.
+ * VỊ TRÍ CẤU HÌNH BACKEND:
+ * - Biến BACKEND_URL bên dưới định nghĩa địa chỉ máy chủ AI của bạn.
+ * - Mặc định là http://localhost:8080/ai.
  */
 
 import { z } from 'zod';
@@ -51,7 +52,10 @@ const HealthSuggestionResponseSchema = z.object({
 });
 export type HealthSuggestionResponse = z.infer<typeof HealthSuggestionResponseSchema>;
 
-// URL của Backend Express của bạn
+/**
+ * ĐỊA CHỈ BACKEND AI CỦA BẠN
+ * Thay đổi giá trị này nếu bạn triển khai backend lên Cloud (như Cloud Run).
+ */
 const BACKEND_URL = process.env.BACKEND_API_URL || 'http://localhost:8080/ai';
 
 /**
@@ -60,7 +64,7 @@ const BACKEND_URL = process.env.BACKEND_API_URL || 'http://localhost:8080/ai';
 export async function getHealthSuggestions(
   input: HealthSuggestionRequest
 ): Promise<HealthSuggestionResponse> {
-  // Tạo prompt văn bản từ dữ liệu đầu vào
+  // Tạo prompt văn bản chi tiết từ dữ liệu đầu vào để gửi cho Gemini tại Backend
   const prompt = `Bạn là một chuyên gia sức khỏe AI cao cấp. 
   Dựa trên dữ liệu thực tế:
   - Mục tiêu: ${input.userProfile.goal}
@@ -100,7 +104,7 @@ export async function getHealthSuggestions(
 
     const suggestions = await response.json();
     
-    // Kiểm chứng dữ liệu trả về với Zod để đảm bảo an toàn
+    // Kiểm chứng dữ liệu trả về với Zod để đảm bảo an toàn cho Server Component
     return HealthSuggestionResponseSchema.parse(suggestions);
   } catch (error) {
     console.error("Lỗi khi kết nối với Backend AI:", error);
