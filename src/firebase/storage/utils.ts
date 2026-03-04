@@ -5,23 +5,25 @@ import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage'
 import { initializeFirebase } from '@/firebase';
 
 /**
- * Tạo mã Hash Hex từ string (dùng làm ID duy nhất cho cache ảnh)
- * Phải khớp logic giữa các người dùng để tìm được ảnh cũ
+ * Tạo mã Hash ổn định từ string (dùng làm ID duy nhất cho cache ảnh cộng đồng)
+ * Phải đảm bảo prompt giống nhau sẽ ra mã hash giống nhau cho mọi user.
  */
 function hashString(str: string): string {
   let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
+  // Chuẩn hóa chuỗi (xóa khoảng trắng thừa, viết thường) trước khi hash
+  const normalized = str.trim().toLowerCase();
+  for (let i = 0; i < normalized.length; i++) {
+    const char = normalized.charCodeAt(i);
     hash = (hash << 5) - hash + char;
     hash |= 0;
   }
-  return Math.abs(hash).toString(16);
+  return Math.abs(hash).toString(16).padStart(8, '0');
 }
 
 /**
- * Upload ảnh AI vào thư mục CHUNG 'images' với cơ chế cache.
+ * Upload ảnh AI vào thư mục CHUNG 'images/ai/' với cơ chế cache toàn hệ thống.
  * Sử dụng mã Hash của Prompt để làm tên file.
- * Nếu ảnh đã tồn tại, dùng lại URL cũ để tiết kiệm.
+ * Nếu ảnh đã tồn tại, dùng lại URL cũ để tiết kiệm tài nguyên.
  */
 export async function uploadBase64WithCache(
   base64String: string,
@@ -30,28 +32,26 @@ export async function uploadBase64WithCache(
 ): Promise<string> {
   const { storage, auth } = initializeFirebase();
 
-  // Mặc dù là folder chung, vẫn yêu cầu login để tránh spam ghi
   if (!auth.currentUser) {
-    throw new Error('Người dùng chưa đăng nhập');
+    throw new Error('Người dùng cần đăng nhập để thực hiện tác vụ này');
   }
 
-  // Chuẩn hóa prompt để hash đồng nhất
-  const normalizedPrompt = prompt.trim().toLowerCase();
-  const hash = hashString(normalizedPrompt);
+  const hash = hashString(prompt);
   const fullPath = `images/ai/${folder}/${hash}.png`;
   const storageRef = ref(storage, fullPath);
 
   try {
-    // KIỂM TRA CACHE: Nếu ảnh đã tồn tại trong Storage chung, dùng lại luôn
+    // KIỂM TRA CACHE TOÀN CỘNG ĐỒNG: 
+    // Nếu tệp này đã có trong Storage (do user khác đã gen trước đó), dùng luôn URL cũ
     const existingUrl = await getDownloadURL(storageRef);
-    console.log('⚡ Shared AI Image Cache Hit:', fullPath);
+    console.log('⚡ [Global Cache Hit] Image found for prompt hash:', hash);
     return existingUrl;
   } catch (err) {
-    // Nếu không tìm thấy file (lỗi 404), tiến hành upload mới
-    console.log('🚀 No Shared Cache found. Uploading new AI Image to shared folder...');
+    // Lỗi 404 nghĩa là chưa có ai gen ảnh này, tiến hành upload mới
+    console.log('🚀 [Cache Miss] Generating and uploading new shared AI image:', fullPath);
   }
 
-  // Đảm bảo base64String có header data:image/png;base64,...
+  // Upload tệp mới vào kho chung
   const uploadSnapshot = await uploadString(storageRef, base64String, 'data_url');
   return await getDownloadURL(uploadSnapshot.ref);
 }

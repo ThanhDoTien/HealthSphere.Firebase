@@ -131,11 +131,12 @@ export default function AiPage() {
         language: locale,
       });
 
-      // --- Logic Thư Mục Chung (Cache AI Image) ---
-      // Duyệt qua các bữa ăn để lưu ảnh vào Storage chung nếu đó là ảnh Gen mới
+      // --- Logic Thư Mục Chung (Global AI Image Cache) ---
+      // Duyệt qua các bữa ăn để kiểm tra cache hoặc upload mới vào folder 'images' chung
       const mealSuggestionsWithCache = await Promise.all(
         suggestions.mealSuggestions.map(async (meal) => {
           if (meal.imageUrl && meal.imageUrl.startsWith('data:')) {
+            // Lưu vào images/ai/meals/{hash}.png (Cả cộng đồng dùng chung)
             const cachedUrl = await uploadBase64WithCache(meal.imageUrl, meal.imagePrompt, 'meals');
             return { ...meal, imageUrl: cachedUrl };
           }
@@ -143,10 +144,11 @@ export default function AiPage() {
         })
       );
 
-      // Duyệt qua bài tập để lưu ảnh vào Storage chung
+      // Duyệt qua bài tập để kiểm tra cache
       const workoutSuggestionsWithCache = await Promise.all(
         suggestions.workoutSuggestion.map(async (workout) => {
           if (workout.imageUrl && workout.imageUrl.startsWith('data:')) {
+            // Lưu vào images/ai/exercises/{hash}.png
             const cachedUrl = await uploadBase64WithCache(workout.imageUrl, workout.imagePrompt, 'exercises');
             return { ...workout, imageUrl: cachedUrl };
           }
