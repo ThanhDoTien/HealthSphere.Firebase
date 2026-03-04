@@ -35,16 +35,16 @@ import { Button } from '@/components/ui/button';
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
 import { uploadBase64WithCache } from '@/firebase/storage/utils';
 
-// --- ĐỊNH NGHĨA MẢNG LINK ẢNH Ở ĐÂY ---
+// --- MẢNG LINK ẢNH PLACEHOLDER ---
 const MEAL_PLACEHOLDERS = [
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-1.png?alt=media&token=24c5abe9-feac-4951-aa76-def57063735a",
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-2.png?alt=media&token=a6b306ef-5ee5-4c0e-83f0-47cc0e2035b5",
-  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-3.png?alt=media&token=789..." // Dán link 3 vào đây
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-3.png?alt=media&token=5022ef59-583e-4544-9d6b-3c7c8939a204" 
 ];
 
 const WORKOUT_PLACEHOLDERS = [
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-1.png?alt=media&token=bddae351-3649-4372-89a3-0691bee5ee8b",
-  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-2.png?alt=media&token=...", 
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-2.png?alt=media&token=e9eff8f7-aaf3-4fc0-9ca7-fcbeccfa42de", 
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-3.png?alt=media&token=3d548e39-e180-4609-a89b-39b7d76c7119"
 ];
 
