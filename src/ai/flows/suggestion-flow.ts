@@ -3,8 +3,7 @@
  * @fileOverview Hệ thống tư vấn sức khỏe kết nối với Backend AI bên ngoài (Express + Genkit).
  * 
  * VỊ TRÍ CẤU HÌNH BACKEND:
- * - Biến BACKEND_URL bên dưới định nghĩa địa chỉ máy chủ AI của bạn.
- * - Mặc định là http://localhost:8080/ai.
+ * - Biến BACKEND_URL bên dưới được lấy từ biến môi trường BACKEND_API_URL.
  */
 
 import { z } from 'zod';
@@ -54,9 +53,9 @@ export type HealthSuggestionResponse = z.infer<typeof HealthSuggestionResponseSc
 
 /**
  * ĐỊA CHỈ BACKEND AI CỦA BẠN
- * Thay đổi giá trị này nếu bạn triển khai backend lên Cloud (như Cloud Run).
+ * Được lấy trực tiếp từ tệp .env (hoặc cấu hình App Hosting).
  */
-const BACKEND_URL = process.env.BACKEND_API_URL || 'http://localhost:8080/ai';
+const BACKEND_URL = process.env.BACKEND_API_URL!;
 
 /**
  * Hàm gọi API Backend AI bên ngoài.
@@ -108,6 +107,6 @@ export async function getHealthSuggestions(
     return HealthSuggestionResponseSchema.parse(suggestions);
   } catch (error) {
     console.error("Lỗi khi kết nối với Backend AI:", error);
-    throw new Error("Không thể kết nối với máy chủ AI. Vui lòng kiểm tra lại backend.");
+    throw new Error("Không thể kết nối với máy chủ AI. Vui lòng kiểm tra lại cấu hình BACKEND_API_URL.");
   }
 }
