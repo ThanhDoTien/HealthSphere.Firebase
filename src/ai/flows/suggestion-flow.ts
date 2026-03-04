@@ -54,8 +54,9 @@ export type HealthSuggestionResponse = z.infer<typeof HealthSuggestionResponseSc
 /**
  * ĐỊA CHỈ BACKEND AI CỦA BẠN
  * Được lấy trực tiếp từ tệp .env (hoặc cấu hình App Hosting).
+ * Nếu không có biến môi trường, mặc định dùng localhost để debug.
  */
-const BACKEND_URL = process.env.BACKEND_API_URL!;
+const BACKEND_URL = process.env.BACKEND_API_URL || 'http://localhost:8080/ai';
 
 /**
  * Hàm gọi API Backend AI bên ngoài.
@@ -92,7 +93,6 @@ export async function getHealthSuggestions(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ prompt }),
-      // Không cache để luôn lấy dữ liệu mới nhất
       cache: 'no-store',
     });
 
@@ -105,8 +105,9 @@ export async function getHealthSuggestions(
     
     // Kiểm chứng dữ liệu trả về với Zod để đảm bảo an toàn cho Server Component
     return HealthSuggestionResponseSchema.parse(suggestions);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Lỗi khi kết nối với Backend AI:", error);
-    throw new Error("Không thể kết nối với máy chủ AI. Vui lòng kiểm tra lại cấu hình BACKEND_API_URL.");
+    // Trả về lỗi chi tiết hơn để người dùng dễ xử lý
+    throw new Error(error.message || "Không thể kết nối với máy chủ AI. Vui lòng kiểm tra lại cấu hình BACKEND_API_URL.");
   }
 }
