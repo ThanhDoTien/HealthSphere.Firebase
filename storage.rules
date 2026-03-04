@@ -1,14 +1,20 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Quy tắc cho thư mục riêng tư của từng User
+    // Quy tắc cho thư mục riêng tư của từng User (ví dụ: ảnh chụp cá nhân)
     match /users/{userId}/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Quy tắc cho thư mục CHUNG (shared/ai)
-    // Cho phép tất cả người dùng đã đăng nhập ĐỌC và GHI
-    // Điều này giúp cơ chế cache hoạt động cho toàn bộ cộng đồng
+    // Quy tắc cho thư mục CHUNG 'images' 
+    // Cho phép mọi người ĐỌC (public) và người dùng đăng nhập có quyền GHI
+    // Điều này khớp với backend của bạn và hỗ trợ cơ chế cache toàn cộng đồng
+    match /images/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Giữ lại quyền cho thư mục shared cũ để không làm gián đoạn dữ liệu hiện có
     match /shared/ai/{allPaths=**} {
       allow read, write: if request.auth != null;
     }

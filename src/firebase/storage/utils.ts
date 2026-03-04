@@ -39,12 +39,12 @@ export async function uploadBase64ToStorage(
 }
 
 /**
- * Upload ảnh AI vào thư mục CHUNG (shared) với cơ chế cache toàn cục.
- * Nếu ảnh đã tồn tại (dựa trên hash của key), trả về URL cũ ngay lập tức.
+ * Upload ảnh AI vào thư mục CHUNG 'images' với cơ chế cache toàn cục.
+ * Nếu ảnh đã tồn tại (dựa trên hash của prompt), trả về URL cũ ngay lập tức.
  * 
  * @param base64String Ảnh dạng data URI
  * @param key Chuỗi duy nhất (vd: prompt) để tạo hash
- * @param folder Thư mục con trong shared/ai/
+ * @param folder Thư mục con trong images/ai/
  */
 export async function uploadBase64WithCache(
   base64String: string,
@@ -60,8 +60,8 @@ export async function uploadBase64WithCache(
   // Tạo ID duy nhất từ key (prompt)
   const hash = hashString(key);
 
-  // SỬ DỤNG ĐƯỜNG DẪN CHUNG (shared) thay vì users/{uid}
-  const fullPath = `shared/ai/${folder}/${hash}.png`;
+  // SỬ DỤNG ĐƯỜNG DẪN CHUNG 'images' thay vì users/{uid}
+  const fullPath = `images/ai/${folder}/${hash}.png`;
   const storageRef = ref(storage, fullPath);
 
   try {
@@ -71,7 +71,7 @@ export async function uploadBase64WithCache(
     return existingUrl;
   } catch (err) {
     // Nếu lỗi (nghĩa là ảnh chưa tồn tại), tiến hành upload mới
-    console.log('🔥 Generating New AI Image & Saving to Shared Pool...');
+    console.log('Generating New AI Image & Saving to Global Pool...');
   }
 
   const snapshot = await uploadString(storageRef, base64String, 'data_url');
