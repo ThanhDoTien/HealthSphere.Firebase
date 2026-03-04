@@ -131,7 +131,7 @@ export default function AiPage() {
         language: locale,
       });
 
-      // --- LOGIC XỬ LÝ ẢNH VỚI CACHE ---
+      // Xử lý ảnh AI với cơ chế Cache dùng chung (Hash naming)
       const mealSuggestionsWithCache = await Promise.all(
         suggestions.mealSuggestions.map(async (meal) => {
           if (meal.imageUrl && meal.imageUrl.startsWith('data:')) {
@@ -160,7 +160,7 @@ export default function AiPage() {
 
       await setDoc(suggestionDocRef, finalSuggestions);
     } catch (err: any) {
-      console.error("Lỗi trong quá trình tạo gợi ý:", err);
+      console.error("Lỗi tạo gợi ý:", err);
       setError(err.message || t('ai.errorMessage'));
     } finally {
       setIsGenerating(false);
@@ -186,16 +186,9 @@ export default function AiPage() {
           {(pageIsLoading || isGenerating) && (
             <div className="flex flex-col items-center justify-center gap-4 py-16">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <div className="space-y-2 text-center">
-                <p className="text-lg font-medium animate-pulse">
-                  {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
-                </p>
-                {isGenerating && (
-                  <p className="text-sm text-muted-foreground max-w-xs mx-auto italic">
-                    {t('ai.loadingData')}... (Tạo ảnh có thể mất 10-20 giây)
-                  </p>
-                )}
-              </div>
+              <p className="text-lg font-medium animate-pulse">
+                {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
+              </p>
             </div>
           )}
 
@@ -221,22 +214,21 @@ export default function AiPage() {
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold"><Utensils className="h-6 w-6 text-accent" />{t('ai.mealsTitle')}</h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.mealSuggestions?.map((meal, idx) => (
-                    <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md border-accent/10 transition-all hover:shadow-lg">
-                      <div className="relative aspect-video w-full bg-muted flex items-center justify-center">
-                        {meal.imageUrl ? (
-                          <Image src={meal.imageUrl} alt={meal.name} fill className="object-cover" unoptimized />
-                        ) : (
-                          <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
-                            <ImageOff className="h-10 w-10" />
-                            <span className="text-xs uppercase font-semibold">No Image Generated</span>
-                          </div>
-                        )}
+                    <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md transition-all hover:shadow-lg">
+                      <div className="relative aspect-video w-full bg-muted">
+                        <Image 
+                          src={meal.imageUrl || `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com/o/ImagePlacehoder%2Fmeals%2Fdefault-meal.png?alt=media`} 
+                          alt={meal.name} 
+                          fill 
+                          className="object-cover" 
+                          unoptimized 
+                        />
                       </div>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg">{meal.name}</CardTitle>
                         <CardDescription className="font-semibold text-accent">~{meal.calories} kcal</CardDescription>
                       </CardHeader>
-                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed whitespace-pre-line border-t pt-4 mt-auto">
+                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed whitespace-pre-line border-t pt-4">
                         {meal.recipe}
                       </CardContent>
                     </Card>
@@ -248,21 +240,20 @@ export default function AiPage() {
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold"><Dumbbell className="h-6 w-6 text-orange-500" />{t('ai.workoutTitle')}</h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.workoutSuggestion?.map((exercise, idx) => (
-                    <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md border-orange-500/10 transition-all hover:shadow-lg">
-                      <div className="relative aspect-video w-full bg-muted flex items-center justify-center">
-                        {exercise.imageUrl ? (
-                          <Image src={exercise.imageUrl} alt={exercise.name} fill className="object-cover" unoptimized />
-                        ) : (
-                          <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
-                            <ImageOff className="h-10 w-10" />
-                            <span className="text-xs uppercase font-semibold">No Image Generated</span>
-                          </div>
-                        )}
+                    <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md transition-all hover:shadow-lg">
+                      <div className="relative aspect-video w-full bg-muted">
+                        <Image 
+                          src={exercise.imageUrl || `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout.png?alt=media`} 
+                          alt={exercise.name} 
+                          fill 
+                          className="object-cover" 
+                          unoptimized 
+                        />
                       </div>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg">{exercise.name}</CardTitle>
                       </CardHeader>
-                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed whitespace-pre-line border-t pt-4 mt-auto">
+                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed whitespace-pre-line border-t pt-4">
                         {exercise.description}
                       </CardContent>
                     </Card>
