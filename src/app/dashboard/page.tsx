@@ -45,6 +45,19 @@ type WeightLog = {
   date: string;
 };
 
+// --- DÙNG MẢNG ĐỂ XOAY VÒNG ẢNH TRÊN DASHBOARD ---
+const DASHBOARD_MEAL_PLACEHOLDERS = [
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-2.png?alt=media&token=a6b306ef-5ee5-4c0e-83f0-47cc0e2035b5",
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-1.png?alt=media&token=24c5abe9-feac-4951-aa76-def57063735a",
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-3.png?alt=media&token=..."
+];
+
+const DASHBOARD_WORKOUT_PLACEHOLDERS = [
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-1.png?alt=media&token=bddae351-3649-4372-89a3-0691bee5ee8b",
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-2.png?alt=media&token=...",
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-3.png?alt=media&token=3d548e39-e180-4609-a89b-39b7d76c7119"
+];
+
 export default function DashboardPage() {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
@@ -271,18 +284,15 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                    {(firstMeal || true) && (
-                      <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
-                        <Image 
-                          /* CHỖ DÁN LINK ẢNH PLACEHOLDER CHO MEALS DƯỚI ĐÂY */
-                          src={firstMeal?.imageUrl || `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-1.png?alt=media`} 
-                          alt={firstMeal?.name || 'Meal suggestion'} 
-                          fill 
-                          className="object-cover" 
-                          unoptimized
-                        />
-                      </div>
-                    )}
+                    <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
+                      <Image 
+                        src={firstMeal?.imageUrl || DASHBOARD_MEAL_PLACEHOLDERS[0]} 
+                        alt={firstMeal?.name || 'Meal suggestion'} 
+                        fill 
+                        className="object-cover" 
+                        unoptimized
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-3">
@@ -298,18 +308,15 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                    {(firstWorkout || true) && (
-                      <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
-                        <Image 
-                          /* CHỖ DÁN LINK ẢNH PLACEHOLDER CHO WORKOUTS DƯỚI ĐÂY */
-                          src={firstWorkout?.imageUrl || `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-1.png?alt=media`} 
-                          alt={firstWorkout?.name || 'Exercise suggestion'} 
-                          fill 
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
-                    )}
+                    <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
+                      <Image 
+                        src={firstWorkout?.imageUrl || DASHBOARD_WORKOUT_PLACEHOLDERS[0]} 
+                        alt={firstWorkout?.name || 'Exercise suggestion'} 
+                        fill 
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
                   </div>
                 </>
               ) : (

@@ -35,6 +35,19 @@ import { Button } from '@/components/ui/button';
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
 import { uploadBase64WithCache } from '@/firebase/storage/utils';
 
+// --- ĐỊNH NGHĨA MẢNG LINK ẢNH Ở ĐÂY ---
+const MEAL_PLACEHOLDERS = [
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-1.png?alt=media&token=24c5abe9-feac-4951-aa76-def57063735a",
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-2.png?alt=media&token=a6b306ef-5ee5-4c0e-83f0-47cc0e2035b5",
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-3.png?alt=media&token=789..." // Dán link 3 vào đây
+];
+
+const WORKOUT_PLACEHOLDERS = [
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-1.png?alt=media&token=bddae351-3649-4372-89a3-0691bee5ee8b",
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-2.png?alt=media&token=...", 
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-3.png?alt=media&token=3d548e39-e180-4609-a89b-39b7d76c7119"
+];
+
 export default function AiPage() {
   const { user, userProfile, loading: userLoading } = useUser();
   const firestore = useFirestore();
@@ -215,8 +228,7 @@ export default function AiPage() {
                     <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md transition-all hover:shadow-lg">
                       <div className="relative aspect-video w-full bg-muted">
                         <Image 
-                          /* CHỖ DÁN LINK ẢNH PLACEHOLDER CHO MEALS DƯỚI ĐÂY */
-                          src={meal.imageUrl || `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-${(idx % 3) + 1}.png?alt=media`} 
+                          src={meal.imageUrl || MEAL_PLACEHOLDERS[idx % 3]} 
                           alt={meal.name} 
                           fill 
                           className="object-cover" 
@@ -242,8 +254,7 @@ export default function AiPage() {
                     <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md transition-all hover:shadow-lg">
                       <div className="relative aspect-video w-full bg-muted">
                         <Image 
-                          /* CHỖ DÁN LINK ẢNH PLACEHOLDER CHO WORKOUTS DƯỚI ĐÂY */
-                          src={exercise.imageUrl || `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-${(idx % 3) + 1}.png?alt=media`} 
+                          src={exercise.imageUrl || WORKOUT_PLACEHOLDERS[idx % 3]} 
                           alt={exercise.name} 
                           fill 
                           className="object-cover" 
