@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Hệ thống tư vấn sức khỏe kết nối với Backend AI bên ngoài (Express + Genkit).
@@ -53,8 +54,7 @@ export type HealthSuggestionResponse = z.infer<typeof HealthSuggestionResponseSc
 
 /**
  * ĐỊA CHỈ BACKEND AI CỦA BẠN
- * Được lấy trực tiếp từ tệp .env (hoặc cấu hình App Hosting).
- * Nếu không có biến môi trường, mặc định dùng localhost để debug.
+ * Được lấy trực tiếp từ tệp .env.
  */
 const BACKEND_URL = process.env.BACKEND_API_URL || 'http://localhost:8080/ai';
 
@@ -76,7 +76,7 @@ export async function getHealthSuggestions(
   1. Đưa ra lời khuyên dựa trên lượng calo thực tế. Hãy khuyến khích người dùng nếu họ đang đi đúng hướng.
   2. Đề xuất 3 bữa ăn (Sáng, Trưa, Tối) và 2 bài tập phù hợp nhất với mục tiêu.
   3. Viết nội dung ngắn gọn bằng ngôn ngữ: ${input.language || 'vi'}.
-  4. Viết 'imagePrompt' bằng tiếng Anh cực kỳ chi tiết cho AI tạo ảnh (Ví dụ: "Top-down view of a healthy meal, professional food photography").
+  4. Viết 'imagePrompt' bằng tiếng Anh cực kỳ chi tiết cho AI tạo ảnh.
 
   TRẢ VỀ KẾT QUẢ DƯỚI DẠNG MỘT ĐỐI TƯỢNG JSON DUY NHẤT. KHÔNG BAO GỒM CÁC KHỐI MÃ (CODE FENCES) HOẶC VĂN BẢN THỪA.
   Cấu trúc JSON:
@@ -103,11 +103,10 @@ export async function getHealthSuggestions(
 
     const suggestions = await response.json();
     
-    // Kiểm chứng dữ liệu trả về với Zod để đảm bảo an toàn cho Server Component
+    // Kiểm chứng dữ liệu trả về với Zod
     return HealthSuggestionResponseSchema.parse(suggestions);
   } catch (error: any) {
     console.error("Lỗi khi kết nối với Backend AI:", error);
-    // Trả về lỗi chi tiết hơn để người dùng dễ xử lý
     throw new Error(error.message || "Không thể kết nối với máy chủ AI. Vui lòng kiểm tra lại cấu hình BACKEND_API_URL.");
   }
 }

@@ -1,3 +1,4 @@
+
 # HealthSphere - AI-Powered Health & Nutrition Companion
 
 ## 1. Tổng quan về đề tài
@@ -13,29 +14,28 @@ HealthSphere là một hệ sinh thái chăm sóc sức khỏe cá nhân thông 
 - **Backend AI (External):** Node.js Express Server xử lý GenAI (Gemini + Imagen).
 - **Link ứng dụng:** [https://studio--studio-8164753205-5553c.us-central1.hosted.app/dashboard](https://studio--studio-8164753205-5553c.us-central1.hosted.app/dashboard)
 
-## 4. Tối ưu hóa bộ nhớ đệm (Global AI Image Cache)
-Để tiết kiệm chi phí GenAI, Backend Express nên được sửa đổi như sau:
+## 4. Sửa lỗi Backend (Quan trọng)
+Nếu bạn gặp lỗi `m.content.find is not a function` ở Backend Express, hãy sửa lại đoạn code xử lý phản hồi Genkit 1.x như sau:
 
-### Logic gợi ý cho file backend.js:
 ```javascript
-// 1. Hash cái imagePrompt
-const hash = createHash(imagePrompt); 
-const fileName = `images/ai/meals/${hash}.png`;
-const file = bucket.file(fileName);
+// TRONG FILE backend.js CỦA BẠN
+const response = await ai.generate({ ... });
 
-// 2. Kiểm tra xem file đã tồn tại chưa
-const [exists] = await file.exists();
+// CÁCH 1: Nếu bạn dùng Structured Output (khuyên dùng)
+const suggestions = response.output; // Đây trực tiếp là object JSON
 
-if (exists) {
-  // 3. Nếu có rồi thì trả về URL luôn, không gọi AI nữa
-  return `https://storage.googleapis.com/${bucket.name}/${file.name}`;
-} else {
-  // 4. Nếu chưa có mới gọi Imagen 4 để gen và save
-  const imgRes = await ai.generate({ ... });
-  // ... save file ...
-}
+// CÁCH 2: Nếu bạn dùng Text và JSON.parse (nếu CÁCH 1 không được)
+const suggestions = JSON.parse(response.text);
+
+// LỖI 'find' THƯỜNG DO BẠN GỌI:
+// const data = response.content.find(...) -> SAI
+// ĐÚNG PHẢI LÀ:
+// const data = response.message.content.find(...) -> NHƯNG NÊN DÙNG .output HOẶC .text CHO NHANH
 ```
 
-## 5. Hướng phát triển
-- Tích hợp thiết bị đeo (Apple Health, Google Fit).
-- Phân tích chỉ số y tế chuyên sâu (DNA, Xét nghiệm máu).
+## 5. Tối ưu hóa bộ nhớ đệm (Global AI Image Cache)
+```javascript
+const hash = createHash(imagePrompt); 
+const fileName = `images/ai/meals/${hash}.png`;
+// ... kiểm tra file tồn tại trong Storage trước khi gen mới ...
+```
