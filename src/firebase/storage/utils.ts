@@ -35,24 +35,36 @@ export async function uploadBase64WithCache(
     throw new Error('Người dùng cần đăng nhập để thực hiện tác vụ này');
   }
 
+  // Nếu không có base64 hợp lệ, trả về chuỗi rỗng
+  if (!base64String || !base64String.startsWith('data:')) {
+    return '';
+  }
+
   const hash = hashString(prompt);
   const fullPath = `images/ai/${folder}/${hash}.png`;
   const storageRef = ref(storage, fullPath);
 
   try {
-    // KIỂM TRA CACHE TOÀN CỘNG ĐỒNG: 
-    // Nếu tệp này đã có trong Storage (do user khác đã gen trước đó), dùng luôn URL cũ
+    // KIỂM TRA CACHE TOÀN CỘNG ĐỒNG
     const existingUrl = await getDownloadURL(storageRef);
-    console.log('⚡ [Global Cache Hit] Image found for prompt hash:', hash);
+    console.log('⚡ [Global Cache Hit] Image found:', hash);
     return existingUrl;
-  } catch (err) {
-    // Lỗi 404 nghĩa là chưa có ai gen ảnh này, tiến hành upload mới
-    console.log('🚀 [Cache Miss] Generating and uploading new shared AI image:', fullPath);
+  } catch (err: any) {
+    // Nếu lỗi không phải là 404 (không tìm thấy), có thể do lỗi mạng/quyền
+    if (err.code !== 'storage/object-not-found') {
+      console.warn('⚠️ Storage error during cache check:', err);
+    }
   }
 
-  // Upload tệp mới vào kho chung
-  const uploadSnapshot = await uploadString(storageRef, base64String, 'data_url');
-  return await getDownloadURL(uploadSnapshot.ref);
+  try {
+    // Upload tệp mới vào kho chung
+    console.log('🚀 [Cache Miss] Uploading new shared AI image:', fullPath);
+    const uploadSnapshot = await uploadString(storageRef, base64String, 'data_url');
+    return await getDownloadURL(uploadSnapshot.ref);
+  } catch (uploadErr) {
+    console.error('❌ Failed to upload AI image to shared storage:', uploadErr);
+    return base64String; // Trả về base64 gốc nếu không upload được để vẫn hiện được ảnh tạm thời
+  }
 }
 
 /**

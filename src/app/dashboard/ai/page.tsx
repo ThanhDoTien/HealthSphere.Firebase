@@ -28,6 +28,7 @@ import {
   Dumbbell,
   Lightbulb,
   RefreshCcw,
+  ImageOff,
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useTranslation } from '@/context/LanguageContext';
@@ -130,13 +131,12 @@ export default function AiPage() {
         language: locale,
       });
 
-      // --- LOGIC XỬ LÝ ẢNH (BẠN CÓ THỂ TỰ CODE TẠI ĐÂY) ---
+      // --- LOGIC XỬ LÝ ẢNH VỚI CACHE ---
       const mealSuggestionsWithCache = await Promise.all(
         suggestions.mealSuggestions.map(async (meal) => {
           if (meal.imageUrl && meal.imageUrl.startsWith('data:')) {
-            // Gọi hàm upload để lưu vào thư mục chung 'images/ai/meals/'
             const cachedUrl = await uploadBase64WithCache(meal.imageUrl, meal.imagePrompt, 'meals');
-            return { ...meal, imageUrl: cachedUrl };
+            return { ...meal, imageUrl: cachedUrl || meal.imageUrl };
           }
           return meal;
         })
@@ -145,9 +145,8 @@ export default function AiPage() {
       const workoutSuggestionsWithCache = await Promise.all(
         suggestions.workoutSuggestion.map(async (workout) => {
           if (workout.imageUrl && workout.imageUrl.startsWith('data:')) {
-            // Lưu vào thư mục chung 'images/ai/exercises/'
             const cachedUrl = await uploadBase64WithCache(workout.imageUrl, workout.imagePrompt, 'exercises');
-            return { ...workout, imageUrl: cachedUrl };
+            return { ...workout, imageUrl: cachedUrl || workout.imageUrl };
           }
           return workout;
         })
@@ -187,9 +186,16 @@ export default function AiPage() {
           {(pageIsLoading || isGenerating) && (
             <div className="flex flex-col items-center justify-center gap-4 py-16">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-muted-foreground animate-pulse text-center">
-                {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
-              </p>
+              <div className="space-y-2 text-center">
+                <p className="text-lg font-medium animate-pulse">
+                  {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
+                </p>
+                {isGenerating && (
+                  <p className="text-sm text-muted-foreground max-w-xs mx-auto italic">
+                    {t('ai.loadingData')}... (Tạo ảnh có thể mất 10-20 giây)
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -204,7 +210,7 @@ export default function AiPage() {
                   </div>
                   <div>
                     <CardTitle className="text-lg">{t('ai.tipTitle')}</CardTitle>
-                    <div className="text-base leading-relaxed whitespace-pre-line mt-2">
+                    <div className="text-base leading-relaxed whitespace-pre-line mt-2 text-foreground/80">
                       {suggestionData.generalTip}
                     </div>
                   </div>
@@ -215,17 +221,22 @@ export default function AiPage() {
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold"><Utensils className="h-6 w-6 text-accent" />{t('ai.mealsTitle')}</h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.mealSuggestions?.map((meal, idx) => (
-                    <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-sm">
-                      {meal.imageUrl && (
-                        <div className="relative aspect-video w-full bg-muted">
+                    <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md border-accent/10 transition-all hover:shadow-lg">
+                      <div className="relative aspect-video w-full bg-muted flex items-center justify-center">
+                        {meal.imageUrl ? (
                           <Image src={meal.imageUrl} alt={meal.name} fill className="object-cover" unoptimized />
-                        </div>
-                      )}
-                      <CardHeader>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
+                            <ImageOff className="h-10 w-10" />
+                            <span className="text-xs uppercase font-semibold">No Image Generated</span>
+                          </div>
+                        )}
+                      </div>
+                      <CardHeader className="pb-2">
                         <CardTitle className="text-lg">{meal.name}</CardTitle>
-                        <CardDescription>~{meal.calories} kcal</CardDescription>
+                        <CardDescription className="font-semibold text-accent">~{meal.calories} kcal</CardDescription>
                       </CardHeader>
-                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed whitespace-pre-line border-t pt-4 mt-auto">
                         {meal.recipe}
                       </CardContent>
                     </Card>
@@ -237,16 +248,21 @@ export default function AiPage() {
                 <h3 className="mb-4 flex items-center gap-2 text-xl font-bold"><Dumbbell className="h-6 w-6 text-orange-500" />{t('ai.workoutTitle')}</h3>
                 <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
                   {suggestionData.workoutSuggestion?.map((exercise, idx) => (
-                    <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-sm">
-                      {exercise.imageUrl && (
-                        <div className="relative aspect-video w-full bg-muted">
+                    <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md border-orange-500/10 transition-all hover:shadow-lg">
+                      <div className="relative aspect-video w-full bg-muted flex items-center justify-center">
+                        {exercise.imageUrl ? (
                           <Image src={exercise.imageUrl} alt={exercise.name} fill className="object-cover" unoptimized />
-                        </div>
-                      )}
-                      <CardHeader>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
+                            <ImageOff className="h-10 w-10" />
+                            <span className="text-xs uppercase font-semibold">No Image Generated</span>
+                          </div>
+                        )}
+                      </div>
+                      <CardHeader className="pb-2">
                         <CardTitle className="text-lg">{exercise.name}</CardTitle>
                       </CardHeader>
-                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed whitespace-pre-line border-t pt-4 mt-auto">
                         {exercise.description}
                       </CardContent>
                     </Card>
