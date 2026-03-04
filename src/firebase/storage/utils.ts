@@ -4,7 +4,7 @@ import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage'
 import { initializeFirebase } from '@/firebase';
 
 /**
- * Tạo hash đơn giản từ string (dùng làm ID duy nhất)
+ * Tạo hash đơn giản từ string (dùng làm ID duy nhất cho cache)
  */
 function hashString(str: string): string {
   let hash = 0;
@@ -17,10 +17,7 @@ function hashString(str: string): string {
 }
 
 /**
- * Upload ảnh base64 trực tiếp lên Firebase Storage
- * 
- * @param base64String Ảnh dạng data URI (data:image/png;base64,...)
- * @param path Đường dẫn lưu trữ (ví dụ: ai/meals/today.png)
+ * Upload ảnh base64 trực tiếp lên Firebase Storage vào thư mục riêng của user
  */
 export async function uploadBase64ToStorage(
   base64String: string,
@@ -33,25 +30,21 @@ export async function uploadBase64ToStorage(
     throw new Error('User not logged in');
   }
 
-  // Đảm bảo path bắt đầu bằng users/{uid}/ để tuân thủ Security Rules
+  // Đảm bảo path bắt đầu bằng users/{uid}/ để tuân thủ Security Rules riêng tư
   const fullPath = path.startsWith('users/') ? path : `users/${user.uid}/${path}`;
   const storageRef = ref(storage, fullPath);
 
-  // Upload chuỗi base64 (sử dụng định dạng data_url)
   const snapshot = await uploadString(storageRef, base64String, 'data_url');
-
-  // Lấy Public URL
-  const downloadURL = await getDownloadURL(snapshot.ref);
-
-  return downloadURL;
+  return await getDownloadURL(snapshot.ref);
 }
 
 /**
- * Upload ảnh base64 lên Firebase Storage với cơ chế cache dựa trên hash
+ * Upload ảnh AI vào thư mục CHUNG (shared) với cơ chế cache toàn cục.
+ * Nếu ảnh đã tồn tại (dựa trên hash của key), trả về URL cũ ngay lập tức.
  * 
  * @param base64String Ảnh dạng data URI
- * @param key Chuỗi duy nhất (vd: prompt, tên món ăn, bài tập...)
- * @param folder 'meals' | 'exercises'
+ * @param key Chuỗi duy nhất (vd: prompt) để tạo hash
+ * @param folder Thư mục con trong shared/ai/
  */
 export async function uploadBase64WithCache(
   base64String: string,
@@ -60,32 +53,27 @@ export async function uploadBase64WithCache(
 ): Promise<string> {
   const { storage, auth } = initializeFirebase();
 
-  const user = auth.currentUser;
-  if (!user) {
+  if (!auth.currentUser) {
     throw new Error('Người dùng chưa đăng nhập');
   }
 
-  const uid = user.uid;
-
-  // Tạo ID duy nhất từ key
+  // Tạo ID duy nhất từ key (prompt)
   const hash = hashString(key);
 
-  // Path chuẩn (cache theo user)
-  const fullPath = `users/${uid}/ai/${folder}/${hash}.png`;
+  // SỬ DỤNG ĐƯỜNG DẪN CHUNG (shared) thay vì users/{uid}
+  const fullPath = `shared/ai/${folder}/${hash}.png`;
   const storageRef = ref(storage, fullPath);
 
   try {
-    // THỬ lấy URL trước (nếu đã tồn tại)
+    // KIỂM TRA CACHE: Thử lấy URL nếu ảnh đã được ai đó tạo trước đó
     const existingUrl = await getDownloadURL(storageRef);
+    console.log('⚡ AI Image Cache Hit:', fullPath);
     return existingUrl;
   } catch (err) {
-    // chưa có → upload mới
+    // Nếu lỗi (nghĩa là ảnh chưa tồn tại), tiến hành upload mới
+    console.log('🔥 Generating New AI Image & Saving to Shared Pool...');
   }
 
-  // Upload ảnh mới
   const snapshot = await uploadString(storageRef, base64String, 'data_url');
-
-  const downloadURL = await getDownloadURL(snapshot.ref);
-
-  return downloadURL;
+  return await getDownloadURL(snapshot.ref);
 }
