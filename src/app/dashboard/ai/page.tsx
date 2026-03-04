@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -33,6 +34,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useTranslation } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
+import { uploadBase64WithCache } from '@/firebase/storage/utils';
 
 export default function AiPage() {
   const { user, userProfile, loading: userLoading } = useUser();
@@ -129,8 +131,38 @@ export default function AiPage() {
         language: locale,
       });
 
-      await setDoc(suggestionDocRef, suggestions);
+      // --- Logic Thư Mục Chung (Cache AI Image) ---
+      // Duyệt qua các bữa ăn để lưu ảnh vào Storage chung nếu đó là ảnh Gen mới
+      const mealSuggestionsWithCache = await Promise.all(
+        suggestions.mealSuggestions.map(async (meal) => {
+          if (meal.imageUrl && meal.imageUrl.startsWith('data:')) {
+            const cachedUrl = await uploadBase64WithCache(meal.imageUrl, meal.imagePrompt, 'meals');
+            return { ...meal, imageUrl: cachedUrl };
+          }
+          return meal;
+        })
+      );
+
+      // Duyệt qua bài tập để lưu ảnh vào Storage chung
+      const workoutSuggestionsWithCache = await Promise.all(
+        suggestions.workoutSuggestion.map(async (workout) => {
+          if (workout.imageUrl && workout.imageUrl.startsWith('data:')) {
+            const cachedUrl = await uploadBase64WithCache(workout.imageUrl, workout.imagePrompt, 'exercises');
+            return { ...workout, imageUrl: cachedUrl };
+          }
+          return workout;
+        })
+      );
+
+      const finalSuggestions = {
+        ...suggestions,
+        mealSuggestions: mealSuggestionsWithCache,
+        workoutSuggestion: workoutSuggestionsWithCache,
+      };
+
+      await setDoc(suggestionDocRef, finalSuggestions);
     } catch (err: any) {
+      console.error("Lỗi trong quá trình tạo gợi ý:", err);
       setError(err.message || t('ai.errorMessage'));
     } finally {
       setIsGenerating(false);
