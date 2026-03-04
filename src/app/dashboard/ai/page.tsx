@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -23,7 +22,6 @@ import {
   getHealthSuggestions,
   type HealthSuggestionResponse,
 } from '@/ai/flows/suggestion-flow';
-import { uploadBase64ToStorage } from '@/firebase/storage/utils';
 import {
   Loader2,
   Utensils,
@@ -131,8 +129,6 @@ export default function AiPage() {
         language: locale,
       });
 
-      // Backend API already returns imageUrl pointing to storage, 
-      // but if there are dataUri leftovers, we handle them.
       await setDoc(suggestionDocRef, suggestions);
     } catch (err: any) {
       setError(err.message || t('ai.errorMessage'));
