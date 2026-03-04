@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -131,12 +130,11 @@ export default function AiPage() {
         language: locale,
       });
 
-      // --- Logic Thư Mục Chung (Global AI Image Cache) ---
-      // Duyệt qua các bữa ăn để kiểm tra cache hoặc upload mới vào folder 'images' chung
+      // --- LOGIC XỬ LÝ ẢNH (BẠN CÓ THỂ TỰ CODE TẠI ĐÂY) ---
       const mealSuggestionsWithCache = await Promise.all(
         suggestions.mealSuggestions.map(async (meal) => {
           if (meal.imageUrl && meal.imageUrl.startsWith('data:')) {
-            // Lưu vào images/ai/meals/{hash}.png (Cả cộng đồng dùng chung)
+            // Gọi hàm upload để lưu vào thư mục chung 'images/ai/meals/'
             const cachedUrl = await uploadBase64WithCache(meal.imageUrl, meal.imagePrompt, 'meals');
             return { ...meal, imageUrl: cachedUrl };
           }
@@ -144,11 +142,10 @@ export default function AiPage() {
         })
       );
 
-      // Duyệt qua bài tập để kiểm tra cache
       const workoutSuggestionsWithCache = await Promise.all(
         suggestions.workoutSuggestion.map(async (workout) => {
           if (workout.imageUrl && workout.imageUrl.startsWith('data:')) {
-            // Lưu vào images/ai/exercises/{hash}.png
+            // Lưu vào thư mục chung 'images/ai/exercises/'
             const cachedUrl = await uploadBase64WithCache(workout.imageUrl, workout.imagePrompt, 'exercises');
             return { ...workout, imageUrl: cachedUrl };
           }
