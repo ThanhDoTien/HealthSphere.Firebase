@@ -74,7 +74,7 @@ export async function getHealthSuggestions(
   
   Nhiệm vụ:
   1. Đưa ra lời khuyên dựa trên lượng calo thực tế. Hãy khuyến khích người dùng nếu họ đang đi đúng hướng.
-  2. Đề xuất 3 bữa ăn (Sáng, Trưa, Tối) và 2 bài tập phù hợp nhất với mục tiêu.
+  2. Đề xuất 4 bữa ăn (Sáng, Trưa, Tối, phụ) và 2-3 bài tập phù hợp nhất với mục tiêu.
   3. Viết nội dung ngắn gọn bằng ngôn ngữ: ${input.language || 'vi'}.
   4. Viết 'imagePrompt' bằng tiếng Anh cực kỳ chi tiết cho AI tạo ảnh.
 
