@@ -271,11 +271,12 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                    {(firstMeal?.imageUrl) && (
+                    {(firstMeal || true) && (
                       <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
                         <Image 
-                          src={firstMeal.imageUrl} 
-                          alt={firstMeal.name || 'Meal suggestion'} 
+                          /* CHỖ DÁN LINK ẢNH PLACEHOLDER CHO MEALS DƯỚI ĐÂY */
+                          src={firstMeal?.imageUrl || `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-1.png?alt=media`} 
+                          alt={firstMeal?.name || 'Meal suggestion'} 
                           fill 
                           className="object-cover" 
                           unoptimized
@@ -297,11 +298,12 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                    {(firstWorkout?.imageUrl) && (
+                    {(firstWorkout || true) && (
                       <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
                         <Image 
-                          src={firstWorkout.imageUrl} 
-                          alt={firstWorkout.name || 'Exercise suggestion'} 
+                          /* CHỖ DÁN LINK ẢNH PLACEHOLDER CHO WORKOUTS DƯỚI ĐÂY */
+                          src={firstWorkout?.imageUrl || `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-1.png?alt=media`} 
+                          alt={firstWorkout?.name || 'Exercise suggestion'} 
                           fill 
                           className="object-cover"
                           unoptimized

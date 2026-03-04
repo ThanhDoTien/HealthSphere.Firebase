@@ -28,7 +28,6 @@ import {
   Dumbbell,
   Lightbulb,
   RefreshCcw,
-  ImageOff,
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useTranslation } from '@/context/LanguageContext';
@@ -131,7 +130,6 @@ export default function AiPage() {
         language: locale,
       });
 
-      // Xử lý ảnh AI với cơ chế Cache dùng chung (Hash naming)
       const mealSuggestionsWithCache = await Promise.all(
         suggestions.mealSuggestions.map(async (meal) => {
           if (meal.imageUrl && meal.imageUrl.startsWith('data:')) {
@@ -217,7 +215,8 @@ export default function AiPage() {
                     <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md transition-all hover:shadow-lg">
                       <div className="relative aspect-video w-full bg-muted">
                         <Image 
-                          src={meal.imageUrl || `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com/o/ImagePlacehoder%2Fmeals%2Fdefault-meal.png?alt=media`} 
+                          /* CHỖ DÁN LINK ẢNH PLACEHOLDER CHO MEALS DƯỚI ĐÂY */
+                          src={meal.imageUrl || `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-${(idx % 3) + 1}.png?alt=media`} 
                           alt={meal.name} 
                           fill 
                           className="object-cover" 
@@ -243,7 +242,8 @@ export default function AiPage() {
                     <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md transition-all hover:shadow-lg">
                       <div className="relative aspect-video w-full bg-muted">
                         <Image 
-                          src={exercise.imageUrl || `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout.png?alt=media`} 
+                          /* CHỖ DÁN LINK ẢNH PLACEHOLDER CHO WORKOUTS DƯỚI ĐÂY */
+                          src={exercise.imageUrl || `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.appspot.com/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-${(idx % 3) + 1}.png?alt=media`} 
                           alt={exercise.name} 
                           fill 
                           className="object-cover" 
