@@ -45,11 +45,10 @@ type WeightLog = {
   date: string;
 };
 
-// --- DÙNG MẢNG ĐỂ XOAY VÒNG ẢNH TRÊN DASHBOARD ---
 const DASHBOARD_MEAL_PLACEHOLDERS = [
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-2.png?alt=media&token=a6b306ef-5ee5-4c0e-83f0-47cc0e2035b5",
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-1.png?alt=media&token=24c5abe9-feac-4951-aa76-def57063735a",
-  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-3.png?alt=media&token=..."
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-3.png?alt=media&token=222..."
 ];
 
 const DASHBOARD_WORKOUT_PLACEHOLDERS = [
@@ -168,170 +167,84 @@ export default function DashboardPage() {
   const firstWorkout = suggestionData?.workoutSuggestion?.[0];
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col space-y-6 pb-10">
       <header className="p-4 sm:p-6">
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-3xl font-bold tracking-tight">
           {userProfile?.name ? t('dashboard.welcome', { name: userProfile.name }) : t('dashboard.welcomeUser')}
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-lg">
           {t('dashboard.summary')}
         </p>
       </header>
 
-      <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
-        <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
-            <div className="sm:col-span-2 md:col-span-4 lg:col-span-2 xl:col-span-2">
-              {userProfile && <BmiMeter height={userProfile.height} weight={currentWeight || userProfile.weight} />}
-            </div>
+      <main className="px-4 sm:px-6 space-y-6">
+        {/* Top Section: BMI and Stats */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="md:col-span-2 lg:col-span-2">
+            {userProfile && <BmiMeter height={userProfile.height} weight={currentWeight || userProfile.weight} />}
+          </div>
+          <div className="grid gap-4 md:col-span-2 lg:col-span-2 grid-cols-2">
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription>{t('dashboard.caloriesConsumed')}</CardDescription>
-                <CardTitle className="text-4xl">{caloriesConsumed.toLocaleString()}</CardTitle>
+                <CardTitle className="text-3xl">{caloriesConsumed.toLocaleString()}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-xs text-muted-foreground">{t('dashboard.comparison.today')}</div>
-              </CardContent>
             </Card>
             <Card className="border-accent/50 bg-accent/5">
               <CardHeader className="pb-2">
                 <CardDescription className="text-accent-foreground/70">{t('dashboard.caloriesBurned')}</CardDescription>
-                <CardTitle className="text-4xl text-accent">{Math.round(caloriesBurned).toLocaleString()}</CardTitle>
+                <CardTitle className="text-3xl text-accent">{Math.round(caloriesBurned).toLocaleString()}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-xs text-muted-foreground">
-                  {Math.round(baseTDEE).toLocaleString()} (Base) + {activityData?.reduce((s, a) => s + a.caloriesBurned, 0) || 0} (Activity)
-                </div>
-              </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription>{t('dashboard.sleepHour')}</CardDescription>
-                <CardTitle className="text-4xl">{sleepHours.toFixed(1)}</CardTitle>
+                <CardTitle className="text-3xl">{sleepHours.toFixed(1)}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-xs text-muted-foreground">{t('dashboard.comparison.today')}</div>
-              </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription>{t('dashboard.currentWeight')}</CardDescription>
-                <CardTitle className="text-4xl">
+                <CardTitle className="text-3xl">
                   {currentWeight ? `${currentWeight} kg` : 'N/A'}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-xs text-muted-foreground">
-                  {weightData && weightData.length > 0 ? t('dashboard.comparison.today') : t('dashboard.weight.noTrend')}
-                </div>
-              </CardContent>
             </Card>
           </div>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="space-y-1">
-                <CardTitle>{t('dashboard.weightTrackingTitle')}</CardTitle>
-                <CardDescription>{t('dashboard.weightTrackingDescription')}</CardDescription>
-              </div>
-              <Select value={weightFilter} onValueChange={setWeightFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">{t('dashboard.weightFilter.last7')}</SelectItem>
-                  <SelectItem value="30">{t('dashboard.weightFilter.last30')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <BarChart
-                data={chartData}
-                config={weightChartConfig}
-                yAxisWidth={40}
-                className="h-64"
-                showLegend={false}
-              />
-              {user && <AddWeightForm userId={user.uid} />}
-            </CardContent>
-          </Card>
         </div>
 
-        <div className="grid auto-rows-max items-start gap-4 md:gap-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('dashboard.aiSuggestionsTitle')}</CardTitle>
-              <CardDescription>
-                {t('dashboard.aiSuggestionsDescription')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-6">
-              {suggestionLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : suggestionData ? (
-                <>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <Utensils className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-sm text-primary">{t('dashboard.recipeSuggestion')}</p>
-                        <p className="text-sm font-semibold mt-1">{firstMeal?.name}</p>
-                        <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                          {firstMeal?.recipe?.replace(/<[^>]*>?/gm, '') || ''}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
-                      <Image 
-                        src={firstMeal?.imageUrl || DASHBOARD_MEAL_PLACEHOLDERS[0]} 
-                        alt={firstMeal?.name || 'Meal suggestion'} 
-                        fill 
-                        className="object-cover" 
-                        unoptimized
-                      />
-                    </div>
-                  </div>
+        {/* Middle Section: Weight Tracking */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="space-y-1">
+              <CardTitle>{t('dashboard.weightTrackingTitle')}</CardTitle>
+              <CardDescription>{t('dashboard.weightTrackingDescription')}</CardDescription>
+            </div>
+            <Select value={weightFilter} onValueChange={setWeightFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">{t('dashboard.weightFilter.last7')}</SelectItem>
+                <SelectItem value="30">{t('dashboard.weightFilter.last30')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <BarChart
+              data={chartData}
+              config={weightChartConfig}
+              yAxisWidth={40}
+              className="h-64"
+              showLegend={false}
+            />
+            {user && <AddWeightForm userId={user.uid} />}
+          </CardContent>
+        </Card>
 
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
-                        <Dumbbell className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-sm text-accent">{t('dashboard.exerciseSuggestion')}</p>
-                        <p className="text-sm font-semibold mt-1">{firstWorkout?.name}</p>
-                        <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                          {firstWorkout?.description?.replace(/<[^>]*>?/gm, '') || ''}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm border bg-muted">
-                      <Image 
-                        src={firstWorkout?.imageUrl || DASHBOARD_WORKOUT_PLACEHOLDERS[0]} 
-                        alt={firstWorkout?.name || 'Exercise suggestion'} 
-                        fill 
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-xs text-muted-foreground mb-4">
-                    {t('dashboard.aiSuggestionsDescription')}
-                  </p>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href="/dashboard/ai">{t('bottomNav.ai')}</Link>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          
+        {/* Bottom Section: Activities and AI Suggestions */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Today's Activities */}
           <Card>
             <CardHeader>
               <CardTitle>{t('dashboard.todaysActivitiesTitle')}</CardTitle>
@@ -342,14 +255,90 @@ export default function DashboardPage() {
             <CardContent className="grid gap-4">
                {activityData && activityData.length > 0 ? (
                 activityData.map((activity) => (
-                    <div key={activity.id} className="flex items-center text-sm">
-                        <div>{activity.name}</div>
-                        <div className="ml-auto font-semibold">{activity.caloriesBurned} kcal</div>
+                    <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                        <span className="font-medium">{activity.name}</span>
+                        <span className="font-bold text-accent">{activity.caloriesBurned} kcal</span>
                     </div>
                 ))
             ) : (
-                <p className="text-xs text-muted-foreground">{t('dashboard.noActivities')}</p>
+                <div className="py-10 text-center text-muted-foreground border-2 border-dashed rounded-lg">
+                  {t('dashboard.noActivities')}
+                </div>
             )}
+            </CardContent>
+          </Card>
+
+          {/* AI Suggestions */}
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-primary">
+                <Sparkles className="h-5 w-5" />
+                {t('dashboard.aiSuggestionsTitle')}
+              </CardTitle>
+              <CardDescription>
+                {t('dashboard.aiSuggestionsDescription')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+              {suggestionLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : suggestionData ? (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="relative aspect-square w-20 overflow-hidden rounded-md border bg-muted shrink-0">
+                      <Image 
+                        src={firstMeal?.imageUrl || DASHBOARD_MEAL_PLACEHOLDERS[0]} 
+                        alt={firstMeal?.name || 'Meal'} 
+                        fill 
+                        className="object-cover" 
+                        unoptimized
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-sm text-primary uppercase">{t('dashboard.recipeSuggestion')}</p>
+                      <p className="font-semibold">{firstMeal?.name}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {firstMeal?.recipe?.replace(/<[^>]*>?/gm, '')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="relative aspect-square w-20 overflow-hidden rounded-md border bg-muted shrink-0">
+                      <Image 
+                        src={firstWorkout?.imageUrl || DASHBOARD_WORKOUT_PLACEHOLDERS[0]} 
+                        alt={firstWorkout?.name || 'Workout'} 
+                        fill 
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-sm text-accent uppercase">{t('dashboard.exerciseSuggestion')}</p>
+                      <p className="font-semibold">{firstWorkout?.name}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {firstWorkout?.description?.replace(/<[^>]*>?/gm, '')}
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="link" asChild className="p-0 h-auto text-primary">
+                    <Link href="/dashboard/ai" className="flex items-center gap-1">
+                      {t('bottomNav.ai')} <ChevronsRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {t('dashboard.aiSuggestionsDescription')}
+                  </p>
+                  <Button variant="outline" size="sm" asChild className="border-primary text-primary hover:bg-primary/10">
+                    <Link href="/dashboard/ai">{t('bottomNav.ai')}</Link>
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -357,3 +346,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+import { ChevronsRight, Sparkles } from 'lucide-react';
