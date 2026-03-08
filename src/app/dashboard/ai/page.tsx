@@ -36,19 +36,19 @@ import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
 import { uploadBase64WithCache } from '@/firebase/storage/utils';
 
 /** 
- * DÁN LINK ẢNH PLACEHOLDER CỦA BẠN VÀO ĐÂY 
- * Link chuẩn phải có dạng: https://firebasestorage.googleapis.com/...
+ * CHỖ DÁN LINK ẢNH PLACEHOLDER CỦA BẠN VÀO ĐÂY 
+ * Bạn hãy thay thế các chuỗi rỗng bên dưới bằng link 'Download URL' từ Firebase Storage.
  */
 const MEAL_PLACEHOLDERS = [
-  "LINK_ANH_BUA_AN_1",
-  "LINK_ANH_BUA_AN_2",
-  "LINK_ANH_BUA_AN_3"
+  "", // Link ảnh bữa ăn 1
+  "", // Link ảnh bữa ăn 2
+  ""  // Link ảnh bữa ăn 3
 ];
 
 const WORKOUT_PLACEHOLDERS = [
-  "LINK_ANH_BAI_TAP_1",
-  "LINK_ANH_BAI_TAP_2",
-  "LINK_ANH_BAI_TAP_3"
+  "", // Link ảnh bài tập 1
+  "", // Link ảnh bài tập 2
+  ""  // Link ảnh bài tập 3
 ];
 
 export default function AiPage() {
@@ -104,17 +104,17 @@ export default function AiPage() {
   
   const dailySummary = useMemo(() => {
     const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
-    if (mealData) summary.caloriesConsumed = mealData.reduce((sum, meal) => sum + meal.calories, 0);
+    if (mealData) summary.caloriesConsumed = mealData.reduce((sum, meal: any) => sum + meal.calories, 0);
     
     if (userProfile) {
       const currentWeight = latestWeightData?.[0]?.weight || userProfile.weight;
       const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
       const tdee = calculateTDEE(bmr, userProfile.activityLevel);
-      const activityBurn = activityData ? activityData.reduce((sum, activity) => sum + activity.caloriesBurned, 0) : 0;
+      const activityBurn = activityData ? activityData.reduce((sum, activity: any) => sum + activity.caloriesBurned, 0) : 0;
       summary.caloriesBurned = tdee + activityBurn;
     }
 
-    if (sleepData) summary.sleepHours = sleepData.reduce((sum, sleep) => sum + sleep.duration, 0);
+    if (sleepData) summary.sleepHours = sleepData.reduce((sum, sleep: any) => sum + sleep.duration, 0);
     return summary;
   }, [mealData, activityData, sleepData, userProfile, latestWeightData]);
 
@@ -236,7 +236,7 @@ export default function AiPage() {
                     <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md transition-all hover:shadow-lg">
                       <div className="relative aspect-video w-full bg-muted">
                         <Image 
-                          src={meal.imageUrl || MEAL_PLACEHOLDERS[idx % 3]} 
+                          src={meal.imageUrl || MEAL_PLACEHOLDERS[idx % 3] || `https://picsum.photos/seed/meal-${idx}/800/600`} 
                           alt={meal.name} 
                           fill 
                           className="object-cover" 
@@ -262,7 +262,7 @@ export default function AiPage() {
                     <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md transition-all hover:shadow-lg">
                       <div className="relative aspect-video w-full bg-muted">
                         <Image 
-                          src={exercise.imageUrl || WORKOUT_PLACEHOLDERS[idx % 3]} 
+                          src={exercise.imageUrl || WORKOUT_PLACEHOLDERS[idx % 3] || `https://picsum.photos/seed/workout-${idx}/800/600`} 
                           alt={exercise.name} 
                           fill 
                           className="object-cover" 
