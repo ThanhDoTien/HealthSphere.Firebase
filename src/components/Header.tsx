@@ -29,28 +29,28 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="mr-4 flex items-center">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
+      <div className="container flex h-16 items-center justify-between px-4">
+        <div className="flex items-center">
+          <Link href="/" className="mr-4 flex items-center space-x-2 sm:mr-6">
             <Logo className="h-6 w-6 text-primary" />
             <span className="hidden font-bold sm:inline-block">
               HealthSphere
             </span>
           </Link>
-          <nav className="hidden items-center space-x-2 text-sm font-medium md:flex">
+          <nav className="hidden items-center space-x-1 md:flex">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center rounded-md px-3 py-2 transition-colors',
+                  'flex items-center rounded-md px-2 py-2 transition-colors text-xs font-medium',
                   pathname?.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')
                     ? 'bg-muted font-semibold text-foreground'
                     : 'text-foreground/70 hover:text-foreground'
                 )}
               >
                 <item.icon className={cn(
-                    "mr-2 h-4 w-4",
+                    "mr-1.5 h-3.5 w-3.5",
                     pathname?.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard') ? "text-primary" : "text-foreground/70"
                 )} />
                 {t(item.labelKey)}
@@ -67,10 +67,10 @@ export default function Header() {
                         <Menu className="h-6 w-6" />
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="bottom" align="start">
+                <DropdownMenuContent side="bottom" align="start" className="w-48">
                 {navItems.map((item) => (
                     <DropdownMenuItem key={item.href} asChild>
-                        <Link href={item.href} className='flex w-full items-center'>
+                        <Link href={item.href} className='flex w-full items-center py-2'>
                             <item.icon className="mr-2 h-4 w-4" />
                             <span>{t(item.labelKey)}</span>
                         </Link>
@@ -81,7 +81,7 @@ export default function Header() {
         </div>
 
 
-        <div className="hidden items-center justify-end md:flex">
+        <div className="flex items-center justify-end space-x-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">

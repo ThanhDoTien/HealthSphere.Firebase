@@ -35,18 +35,18 @@ import { Button } from '@/components/ui/button';
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
 import { uploadBase64WithCache } from '@/firebase/storage/utils';
 
-/* CHỖ DÁN LINK ẢNH PLACEHOLDER CHO MEALS DƯỚI ĐÂY */
+// --- CHỖ DÁN LINK ẢNH PLACEHOLDER CHO MEALS DƯỚI ĐÂY ---
 const MEAL_PLACEHOLDERS = [
-  "", // Link 1
-  "", // Link 2
-  ""  // Link 3
+  "", // Link ảnh 1
+  "", // Link ảnh 2
+  ""  // Link ảnh 3
 ];
 
-/* CHỖ DÁN LINK ẢNH PLACEHOLDER CHO WORKOUTS DƯỚI ĐÂY */
+// --- CHỖ DÁN LINK ẢNH PLACEHOLDER CHO WORKOUTS DƯỚI ĐÂY ---
 const WORKOUT_PLACEHOLDERS = [
-  "", // Link 1
-  "", // Link 2
-  ""  // Link 3
+  "", // Link ảnh 1
+  "", // Link ảnh 2
+  ""  // Link ảnh 3
 ];
 
 export default function AiPage() {
@@ -179,7 +179,6 @@ export default function AiPage() {
     }
   }, [userProfile, user, today, suggestionDocRef, dailySummary, locale, t, latestWeightData]);
 
-  // TỰ ĐỘNG CHẠY KHI VÀO WEB NẾU CHƯA CÓ DỮ LIỆU
   useEffect(() => {
     if (!suggestionLoading && !suggestionData && !isGenerating && today && userProfile) {
       handleGenerateSuggestions();

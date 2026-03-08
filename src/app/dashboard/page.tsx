@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Utensils, Dumbbell, Loader2 } from 'lucide-react';
+import { Utensils, Dumbbell, Loader2, ChevronsRight, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -45,16 +45,17 @@ type WeightLog = {
   date: string;
 };
 
+// --- CHỖ DÁN LINK ẢNH PLACEHOLDER CHO DASHBOARD ---
 const DASHBOARD_MEAL_PLACEHOLDERS = [
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-2.png?alt=media&token=a6b306ef-5ee5-4c0e-83f0-47cc0e2035b5",
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-1.png?alt=media&token=24c5abe9-feac-4951-aa76-def57063735a",
-  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-3.png?alt=media&token=222..."
+  "https://picsum.photos/seed/meal/800/600"
 ];
 
 const DASHBOARD_WORKOUT_PLACEHOLDERS = [
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-1.png?alt=media&token=bddae351-3649-4372-89a3-0691bee5ee8b",
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-2.png?alt=media&token=...",
-  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-3.png?alt=media&token=3d548e39-e180-4609-a89b-39b7d76c7119"
+  "https://picsum.photos/seed/workout/800/600"
 ];
 
 export default function DashboardPage() {
@@ -141,7 +142,7 @@ export default function DashboardPage() {
 
   const caloriesConsumed = useMemo(() => {
     if (!mealData) return 0;
-    return mealData.reduce((sum, meal) => sum + meal.calories, 0);
+    return mealData.reduce((sum, meal: any) => sum + meal.calories, 0);
   }, [mealData]);
 
   const baseTDEE = useMemo(() => {
@@ -152,13 +153,13 @@ export default function DashboardPage() {
   }, [userProfile, latestWeightData]);
 
   const caloriesBurned = useMemo(() => {
-    const activityBurn = activityData ? activityData.reduce((sum, activity) => sum + activity.caloriesBurned, 0) : 0;
+    const activityBurn = activityData ? activityData.reduce((sum, activity: any) => sum + activity.caloriesBurned, 0) : 0;
     return baseTDEE + activityBurn;
   }, [baseTDEE, activityData]);
 
   const sleepHours = useMemo(() => {
     if (!sleepData || sleepData.length === 0) return 0;
-    return sleepData.reduce((sum, sleep) => sum + sleep.duration, 0);
+    return sleepData.reduce((sum, sleep: any) => sum + sleep.duration, 0);
   }, [sleepData]);
 
   const currentWeight = latestWeightData?.[0]?.weight || weightData?.[0]?.weight;
@@ -190,10 +191,10 @@ export default function DashboardPage() {
                 <CardTitle className="text-3xl">{caloriesConsumed.toLocaleString()}</CardTitle>
               </CardHeader>
             </Card>
-            <Card className="border-accent/50 bg-accent/5">
+            <Card>
               <CardHeader className="pb-2">
-                <CardDescription className="text-accent-foreground/70">{t('dashboard.caloriesBurned')}</CardDescription>
-                <CardTitle className="text-3xl text-accent">{Math.round(caloriesBurned).toLocaleString()}</CardTitle>
+                <CardDescription>{t('dashboard.caloriesBurned')}</CardDescription>
+                <CardTitle className="text-3xl">{Math.round(caloriesBurned).toLocaleString()}</CardTitle>
               </CardHeader>
             </Card>
             <Card>
@@ -254,7 +255,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="grid gap-4">
                {activityData && activityData.length > 0 ? (
-                activityData.map((activity) => (
+                activityData.map((activity: any) => (
                     <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                         <span className="font-medium">{activity.name}</span>
                         <span className="font-bold text-accent">{activity.caloriesBurned} kcal</span>
@@ -297,8 +298,8 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-sm text-primary uppercase">{t('dashboard.recipeSuggestion')}</p>
-                      <p className="font-semibold">{firstMeal?.name}</p>
+                      <p className="font-bold text-[10px] text-primary uppercase">{t('dashboard.recipeSuggestion')}</p>
+                      <p className="font-semibold text-sm">{firstMeal?.name}</p>
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {firstMeal?.recipe?.replace(/<[^>]*>?/gm, '')}
                       </p>
@@ -316,16 +317,16 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-sm text-accent uppercase">{t('dashboard.exerciseSuggestion')}</p>
-                      <p className="font-semibold">{firstWorkout?.name}</p>
+                      <p className="font-bold text-[10px] text-accent uppercase">{t('dashboard.exerciseSuggestion')}</p>
+                      <p className="font-semibold text-sm">{firstWorkout?.name}</p>
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {firstWorkout?.description?.replace(/<[^>]*>?/gm, '')}
                       </p>
                     </div>
                   </div>
-                  <Button variant="link" asChild className="p-0 h-auto text-primary">
+                  <Button variant="link" asChild className="p-0 h-auto text-primary text-xs">
                     <Link href="/dashboard/ai" className="flex items-center gap-1">
-                      {t('bottomNav.ai')} <ChevronsRight className="h-4 w-4" />
+                      {t('bottomNav.ai')} <ChevronsRight className="h-3 w-3" />
                     </Link>
                   </Button>
                 </div>
@@ -346,5 +347,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-import { ChevronsRight, Sparkles } from 'lucide-react';
