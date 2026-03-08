@@ -130,7 +130,6 @@ export default function AiPage() {
     setError(null);
   
     try {
-      // Lấy ID Token để gửi sang Middleware
       const token = await user.getIdToken();
 
       const suggestions = await getHealthSuggestions({
@@ -145,7 +144,7 @@ export default function AiPage() {
         dailySummary,
         recentActivities: [],
         language: locale,
-        token, // Gửi token xác thực
+        token,
       });
 
       const mealSuggestionsWithCache = await Promise.all(

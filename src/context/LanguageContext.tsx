@@ -17,7 +17,8 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [locale, setLocale] = useState<Locale>('en');
+  // Đặt mặc định là 'vi' theo yêu cầu
+  const [locale, setLocale] = useState<Locale>('vi');
 
   // Load locale from localStorage on mount
   useEffect(() => {
