@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -37,16 +38,16 @@ import { uploadBase64WithCache } from '@/firebase/storage/utils';
 
 // --- CHỖ DÁN LINK ẢNH PLACEHOLDER CHO MEALS DƯỚI ĐÂY ---
 const MEAL_PLACEHOLDERS = [
-  "", // Link ảnh 1
-  "", // Link ảnh 2
-  ""  // Link ảnh 3
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-1.png?alt=media&token=24c5abe9-feac-4951-aa76-def57063735a",
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-2.png?alt=media&token=a6b306ef-5ee5-4c0e-83f0-47cc0e2035b5",
+  "https://picsum.photos/seed/meal-3/800/600"
 ];
 
 // --- CHỖ DÁN LINK ẢNH PLACEHOLDER CHO WORKOUTS DƯỚI ĐÂY ---
 const WORKOUT_PLACEHOLDERS = [
-  "", // Link ảnh 1
-  "", // Link ảnh 2
-  ""  // Link ảnh 3
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-1.png?alt=media&token=bddae351-3649-4372-89a3-0691bee5ee8b",
+  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-2.png?alt=media&token=...",
+  "https://picsum.photos/seed/workout-3/800/600"
 ];
 
 export default function AiPage() {

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -188,19 +189,19 @@ export default function DashboardPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription>{t('dashboard.caloriesConsumed')}</CardDescription>
-                <CardTitle className="text-3xl">{caloriesConsumed.toLocaleString()}</CardTitle>
+                <CardTitle className="text-3xl">{caloriesConsumed.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">kcal</span></CardTitle>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription>{t('dashboard.caloriesBurned')}</CardDescription>
-                <CardTitle className="text-3xl">{Math.round(caloriesBurned).toLocaleString()}</CardTitle>
+                <CardTitle className="text-3xl">{Math.round(caloriesBurned).toLocaleString()} <span className="text-sm font-normal text-muted-foreground">kcal</span></CardTitle>
               </CardHeader>
             </Card>
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription>{t('dashboard.sleepHour')}</CardDescription>
-                <CardTitle className="text-3xl">{sleepHours.toFixed(1)}</CardTitle>
+                <CardTitle className="text-3xl">{sleepHours.toFixed(1)} <span className="text-sm font-normal text-muted-foreground">h</span></CardTitle>
               </CardHeader>
             </Card>
             <Card>
@@ -245,7 +246,7 @@ export default function DashboardPage() {
 
         {/* Bottom Section: Activities and AI Suggestions */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Today's Activities */}
+          {/* Today's Activities (Workout Log) */}
           <Card>
             <CardHeader>
               <CardTitle>{t('dashboard.todaysActivitiesTitle')}</CardTitle>
@@ -258,7 +259,7 @@ export default function DashboardPage() {
                 activityData.map((activity: any) => (
                     <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                         <span className="font-medium">{activity.name}</span>
-                        <span className="font-bold text-accent">{activity.caloriesBurned} kcal</span>
+                        <span className="font-bold">{activity.caloriesBurned} kcal</span>
                     </div>
                 ))
             ) : (
