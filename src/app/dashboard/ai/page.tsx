@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -46,8 +45,8 @@ const MEAL_PLACEHOLDERS = [
 // --- CHỖ DÁN LINK ẢNH PLACEHOLDER CHO WORKOUTS DƯỚI ĐÂY ---
 const WORKOUT_PLACEHOLDERS = [
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-1.png?alt=media&token=bddae351-3649-4372-89a3-0691bee5ee8b",
-  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-2.png?alt=media&token=...",
-  "https://picsum.photos/seed/workout-3/800/600"
+  "",
+  ""
 ];
 
 export default function AiPage() {
@@ -81,7 +80,7 @@ export default function AiPage() {
   }, [firestore, user, today]);
 
   const weightQuery = useMemoFirebase(() => {
-    if (!user) return null;
+    if (!user || !today) return null;
     return query(
       collection(firestore, 'users', user.uid, 'weights'),
       where('date', '==', today)
@@ -131,6 +130,9 @@ export default function AiPage() {
     setError(null);
   
     try {
+      // Lấy ID Token để gửi sang Middleware
+      const token = await user.getIdToken();
+
       const suggestions = await getHealthSuggestions({
         userProfile: {
           goal: userProfile.goal,
@@ -143,6 +145,7 @@ export default function AiPage() {
         dailySummary,
         recentActivities: [],
         language: locale,
+        token, // Gửi token xác thực
       });
 
       const mealSuggestionsWithCache = await Promise.all(

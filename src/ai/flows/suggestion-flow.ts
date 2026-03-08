@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Hệ thống tư vấn sức khỏe kết nối với Backend AI bên ngoài (Express + Genkit).
@@ -27,6 +26,7 @@ const HealthSuggestionRequestSchema = z.object({
   }),
   recentActivities: z.array(z.string()),
   language: z.string().optional(),
+  token: z.string().optional(), // Token xác thực người dùng
 });
 export type HealthSuggestionRequest = z.infer<typeof HealthSuggestionRequestSchema>;
 
@@ -52,19 +52,11 @@ const HealthSuggestionResponseSchema = z.object({
 });
 export type HealthSuggestionResponse = z.infer<typeof HealthSuggestionResponseSchema>;
 
-/**
- * ĐỊA CHỈ BACKEND AI CỦA BẠN
- * Được lấy trực tiếp từ tệp .env.
- */
 const BACKEND_URL = process.env.BACKEND_API_URL || 'http://localhost:8080/ai';
 
-/**
- * Hàm gọi API Backend AI bên ngoài.
- */
 export async function getHealthSuggestions(
   input: HealthSuggestionRequest
 ): Promise<HealthSuggestionResponse> {
-  // Tạo prompt văn bản chi tiết từ dữ liệu đầu vào để gửi cho Gemini tại Backend
   const prompt = `Bạn là một chuyên gia sức khỏe AI cao cấp. 
   Dựa trên dữ liệu thực tế:
   - Mục tiêu: ${input.userProfile.goal}
@@ -91,6 +83,8 @@ export async function getHealthSuggestions(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        // Gửi token xác thực sang middleware/backend
+        'Authorization': input.token ? `Bearer ${input.token}` : '',
       },
       body: JSON.stringify({ prompt }),
       cache: 'no-store',
@@ -102,11 +96,9 @@ export async function getHealthSuggestions(
     }
 
     const suggestions = await response.json();
-    
-    // Kiểm chứng dữ liệu trả về với Zod
     return HealthSuggestionResponseSchema.parse(suggestions);
   } catch (error: any) {
     console.error("Lỗi khi kết nối với Backend AI:", error);
-    throw new Error(error.message || "Không thể kết nối với máy chủ AI. Vui lòng kiểm tra lại cấu hình BACKEND_API_URL.");
+    throw new Error(error.message || "Không thể kết nối với máy chủ AI.");
   }
 }
