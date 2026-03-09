@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Utensils, Dumbbell, Loader2, ChevronsRight, Sparkles } from 'lucide-react';
+import { Utensils, Dumbbell, Loader2, ChevronsRight, Sparkles, Bed, Scale } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -186,32 +185,52 @@ export default function DashboardPage() {
             {userProfile && <BmiMeter height={userProfile.height} weight={currentWeight || userProfile.weight} />}
           </div>
           <div className="grid gap-4 md:col-span-2 lg:col-span-2 grid-cols-2">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>{t('dashboard.caloriesConsumed')}</CardDescription>
-                <CardTitle className="text-3xl">{caloriesConsumed.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">kcal</span></CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>{t('dashboard.caloriesBurned')}</CardDescription>
-                <CardTitle className="text-3xl">{Math.round(caloriesBurned).toLocaleString()} <span className="text-sm font-normal text-muted-foreground">kcal</span></CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>{t('dashboard.sleepHour')}</CardDescription>
-                <CardTitle className="text-3xl">{sleepHours.toFixed(1)} <span className="text-sm font-normal text-muted-foreground">h</span></CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>{t('dashboard.currentWeight')}</CardDescription>
-                <CardTitle className="text-3xl">
-                  {currentWeight ? `${currentWeight} kg` : 'N/A'}
-                </CardTitle>
-              </CardHeader>
-            </Card>
+            <Link href="/dashboard/calories">
+              <Card className="hover:bg-accent/5 transition-colors cursor-pointer h-full">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardDescription>{t('dashboard.caloriesConsumed')}</CardDescription>
+                    <Utensils className="h-4 w-4 text-orange-500" />
+                  </div>
+                  <CardTitle className="text-3xl">{caloriesConsumed.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">kcal</span></CardTitle>
+                </CardHeader>
+              </Card>
+            </Link>
+            <Link href="/dashboard/activity">
+              <Card className="hover:bg-accent/5 transition-colors cursor-pointer h-full">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardDescription>{t('dashboard.caloriesBurned')}</CardDescription>
+                    <Dumbbell className="h-4 w-4 text-primary" />
+                  </div>
+                  <CardTitle className="text-3xl">{Math.round(caloriesBurned).toLocaleString()} <span className="text-sm font-normal text-muted-foreground">kcal</span></CardTitle>
+                </CardHeader>
+              </Card>
+            </Link>
+            <Link href="/dashboard/sleep">
+              <Card className="hover:bg-accent/5 transition-colors cursor-pointer h-full">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardDescription>{t('dashboard.sleepHour')}</CardDescription>
+                    <Bed className="h-4 w-4 text-purple-500" />
+                  </div>
+                  <CardTitle className="text-3xl">{sleepHours.toFixed(1)} <span className="text-sm font-normal text-muted-foreground">h</span></CardTitle>
+                </CardHeader>
+              </Card>
+            </Link>
+            <Link href="/dashboard/profile">
+              <Card className="hover:bg-accent/5 transition-colors cursor-pointer h-full">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardDescription>{t('dashboard.currentWeight')}</CardDescription>
+                    <Scale className="h-4 w-4 text-accent" />
+                  </div>
+                  <CardTitle className="text-3xl">
+                    {currentWeight ? `${currentWeight} kg` : 'N/A'}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+            </Link>
           </div>
         </div>
 

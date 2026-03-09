@@ -45,8 +45,8 @@ const MEAL_PLACEHOLDERS = [
 // --- CHỖ DÁN LINK ẢNH PLACEHOLDER CHO WORKOUTS DƯỚI ĐÂY ---
 const WORKOUT_PLACEHOLDERS = [
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-1.png?alt=media&token=bddae351-3649-4372-89a3-0691bee5ee8b",
-  "",
-  ""
+  "https://picsum.photos/seed/workout-2/800/600",
+  "https://picsum.photos/seed/workout-3/800/600"
 ];
 
 export default function AiPage() {
