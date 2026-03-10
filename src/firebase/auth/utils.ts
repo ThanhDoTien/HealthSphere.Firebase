@@ -65,18 +65,25 @@ const createUserProfile = async (
     createdAt: createdAt
   };
 
-  fetch(`${BACKEND_URL}/api/Users`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(syncPayload),
-  })
-  .then(res => {
-    if (res.ok) console.log("✅ Đồng bộ User sang Backend thành công");
-    else console.error("❌ Lỗi đồng bộ Backend:", res.status);
-  })
-  .catch(err => console.error("❌ Lỗi kết nối Backend:", err));
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/Users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(syncPayload),
+    });
+  
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Backend error:", text);
+    } else {
+      const json = await res.json();
+      console.log("User synced to ASP.NET:", json);
+    }
+  } catch (err) {
+    console.error("Cannot connect ASP.NET:", err);
+  }
 
   // 3. Tạo bản ghi cân nặng đầu tiên
   const weightLogRef = collection(firestore, `users/${userId}/weights`);
