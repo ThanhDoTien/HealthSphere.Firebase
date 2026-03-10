@@ -267,7 +267,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* AI Comment CALLOUT (Moved ABOVE Weight Chart) */}
+        {/* AI Comment CALLOUT */}
         {!isGenerating && !isAllLoading && suggestionData && (
           <Card className="border-primary/20 bg-primary/5 shadow-sm overflow-hidden">
             <div className="p-4 flex gap-4">
@@ -311,9 +311,9 @@ export default function DashboardPage() {
         </Card>
 
         {/* Row 3: Activity Log & Suggestions Stack */}
-        <div className="space-y-6">
-          {/* Today's Activities */}
-          <Card className="shadow-md">
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* LEFT: Today's Activities */}
+          <Card className="shadow-md h-full">
             <CardHeader>
               <CardTitle className="text-xl font-bold">{t('dashboard.todaysActivitiesTitle')}</CardTitle>
               <CardDescription>{t('dashboard.todaysActivitiesDescription')}</CardDescription>
@@ -334,80 +334,79 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* AI Suggestions (Meals & Workouts) below Activity Log */}
-          {!isGenerating && !isAllLoading && suggestionData && (
-            <div className="space-y-8">
-              {/* MEALS LIST */}
-              <div>
-                <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
-                  <Utensils className="h-5 w-5 text-accent" />
-                  {t('ai.mealsTitle')}
-                </h3>
-                <div className="grid gap-4">
-                  {suggestionData.mealSuggestions?.map((meal, idx) => (
-                    <Card key={idx} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex flex-col sm:flex-row">
-                        <div className="relative aspect-video sm:w-48 shrink-0 bg-muted">
-                          <Image src={meal.imageUrl || PLACEHOLDER_MEALS[idx % 3]} alt={meal.name} fill className="object-cover" unoptimized />
-                        </div>
-                        <div className="p-4 flex-1">
-                          <div className="flex justify-between items-start mb-1">
-                            <h4 className="font-bold text-md">{meal.name}</h4>
-                            <span className="text-sm font-semibold text-accent">~{meal.calories} kcal</span>
+          {/* RIGHT: AI Suggestions */}
+          <div className="space-y-6">
+            {!isGenerating && !isAllLoading && suggestionData ? (
+              <>
+                {/* MEALS LIST */}
+                <div>
+                  <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
+                    <Utensils className="h-5 w-5 text-accent" />
+                    {t('ai.mealsTitle')}
+                  </h3>
+                  <div className="grid gap-4">
+                    {suggestionData.mealSuggestions?.map((meal, idx) => (
+                      <Card key={idx} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex flex-col sm:flex-row">
+                          <div className="relative aspect-video sm:w-32 shrink-0 bg-muted">
+                            <Image src={meal.imageUrl || PLACEHOLDER_MEALS[idx % 3]} alt={meal.name} fill className="object-cover" unoptimized />
                           </div>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            {meal.recipe}
-                          </p>
+                          <div className="p-3 flex-1">
+                            <div className="flex justify-between items-start mb-1">
+                              <h4 className="font-bold text-sm">{meal.name}</h4>
+                              <span className="text-xs font-semibold text-accent">~{meal.calories} kcal</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {meal.recipe}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* WORKOUTS LIST */}
-              <div>
-                <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
-                  <Dumbbell className="h-5 w-5 text-orange-500" />
-                  {t('ai.workoutTitle')}
-                </h3>
-                <div className="grid gap-4">
-                  {suggestionData.workoutSuggestion?.map((exercise, idx) => (
-                    <Card key={idx} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex flex-col sm:flex-row">
-                        <div className="relative aspect-video sm:w-48 shrink-0 bg-muted">
-                          <Image src={exercise.imageUrl || PLACEHOLDER_WORKOUTS[idx % 2]} alt={exercise.name} fill className="object-cover" unoptimized />
+                {/* WORKOUTS LIST */}
+                <div>
+                  <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
+                    <Dumbbell className="h-5 w-5 text-orange-500" />
+                    {t('ai.workoutTitle')}
+                  </h3>
+                  <div className="grid gap-4">
+                    {suggestionData.workoutSuggestion?.map((exercise, idx) => (
+                      <Card key={idx} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex flex-col sm:flex-row">
+                          <div className="relative aspect-video sm:w-32 shrink-0 bg-muted">
+                            <Image src={exercise.imageUrl || PLACEHOLDER_WORKOUTS[idx % 2]} alt={exercise.name} fill className="object-cover" unoptimized />
+                          </div>
+                          <div className="p-3 flex-1">
+                            <h4 className="font-bold text-sm mb-1">{exercise.name}</h4>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {exercise.description}
+                            </p>
+                          </div>
                         </div>
-                        <div className="p-4 flex-1">
-                          <h4 className="font-bold text-md mb-2">{exercise.name}</h4>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            {exercise.description}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    ))}
+                  </div>
                 </div>
+              </>
+            ) : (isGenerating || isAllLoading) ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-4 h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm font-medium animate-pulse text-muted-foreground">
+                  {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
+                </p>
               </div>
-            </div>
-          )}
+            ) : null}
 
-          {/* Loading States */}
-          {(isGenerating || isAllLoading) && (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-lg font-medium animate-pulse text-muted-foreground">
-                {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
-              </p>
-            </div>
-          )}
-
-          {aiError && (
-            <Alert variant="destructive">
-              <AlertTitle>{t('ai.errorTitle')}</AlertTitle>
-              <AlertDescription>{aiError}</AlertDescription>
-            </Alert>
-          )}
+            {aiError && (
+              <Alert variant="destructive">
+                <AlertTitle>{t('ai.errorTitle')}</AlertTitle>
+                <AlertDescription>{aiError}</AlertDescription>
+              </Alert>
+            )}
+          </div>
         </div>
       </main>
     </div>

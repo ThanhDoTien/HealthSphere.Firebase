@@ -111,10 +111,10 @@ export default function AiChatPage() {
         language: locale,
       });
 
-      setMessages([...newMessages, { role: 'model', content: botResponse }]);
+      setMessages(prev => [...prev, { role: 'model', content: botResponse }]);
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages([...newMessages, { role: 'model', content: t('ai.errorMessage') }]);
+      setMessages(prev => [...prev, { role: 'model', content: t('ai.errorMessage') }]);
     } finally {
       setIsTyping(false);
     }

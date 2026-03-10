@@ -1,14 +1,10 @@
+
 'use server';
 /**
- * @fileOverview Hệ thống tư vấn sức khỏe kết nối với Backend AI bên ngoài (Express + Genkit).
- * 
- * VỊ TRÍ CẤU HÌNH BACKEND:
- * - Biến BACKEND_URL được lấy từ biến môi trường BACKEND_API_URL.
+ * @fileOverview Hệ thống tư vấn sức khỏe kết nối với Backend AI bên ngoài.
  */
 
 import { z } from 'zod';
-
-// --- Định nghĩa Schemas ---
 
 const HealthSuggestionRequestSchema = z.object({
   userProfile: z.object({
@@ -26,7 +22,7 @@ const HealthSuggestionRequestSchema = z.object({
   }),
   recentActivities: z.array(z.string()),
   language: z.string().optional(),
-  token: z.string().optional(), // Token xác thực người dùng
+  token: z.string().optional(),
 });
 export type HealthSuggestionRequest = z.infer<typeof HealthSuggestionRequestSchema>;
 
@@ -83,7 +79,6 @@ export async function getHealthSuggestions(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // Gửi token xác thực sang middleware/backend
         'Authorization': input.token ? `Bearer ${input.token}` : '',
       },
       body: JSON.stringify({ prompt }),
@@ -99,6 +94,6 @@ export async function getHealthSuggestions(
     return HealthSuggestionResponseSchema.parse(suggestions);
   } catch (error: any) {
     console.error("Lỗi khi kết nối với Backend AI:", error);
-    throw new Error(error.message || "Không thể kết nối với máy chủ AI.");
+    throw new Error("Không thể kết nối với AI. Vui lòng kiểm tra lại máy chủ hoặc kết nối mạng.");
   }
 }

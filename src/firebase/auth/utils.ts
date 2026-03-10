@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -15,7 +16,6 @@ import { FirestorePermissionError } from "../errors";
 
 const { auth, firestore } = initializeFirebase();
 
-// VỊ TRÍ CẤU HÌNH BACKEND ĐỂ ĐỒNG BỘ USER
 const BACKEND_URL = "https://healthsphere-8kji.onrender.com";
 
 interface SignUpData {
@@ -52,7 +52,7 @@ const createUserProfile = async (
     throw error;
   });
 
-  // 2. Gửi chuỗi JSON sang Middleware/Backend theo định dạng yêu cầu
+  // 2. Gửi chuỗi JSON sang Backend theo định dạng yêu cầu
   const syncPayload = {
     id: 0,
     authId: userId,
@@ -66,23 +66,13 @@ const createUserProfile = async (
   };
 
   try {
-    const res = await fetch(`${BACKEND_URL}/api/Users`, {
+    fetch(`${BACKEND_URL}/api/Users`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(syncPayload),
-    });
-  
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("Backend error:", text);
-    } else {
-      const json = await res.json();
-      console.log("User synced to ASP.NET:", json);
-    }
+    }).catch(err => console.error("Sync error:", err));
   } catch (err) {
-    console.error("Cannot connect ASP.NET:", err);
+    console.error("Cannot connect to backend sync:", err);
   }
 
   // 3. Tạo bản ghi cân nặng đầu tiên
@@ -104,17 +94,13 @@ const createUserProfile = async (
   });
 };
 
-// Data for updating profile, which may include fields we don't want to update.
 type UpdateProfileData = Partial<SignUpData>;
 
-// New function to update user profile
 export const updateUserProfile = async (
   userId: string,
   data: UpdateProfileData
 ): Promise<void> => {
   const userDocRef = doc(firestore, `users/${userId}`);
-
-  // Create a copy and remove fields that should not be updated
   const updateData = { ...data };
   delete updateData.email;
   delete updateData.password;
@@ -132,7 +118,6 @@ export const updateUserProfile = async (
   });
 };
 
-// Sign Up with email and password
 export const signUp = async (data: SignUpData): Promise<UserCredential> => {
   if (!data.password) throw new Error("Password is required for sign up.");
   const userCredential = await createUserWithEmailAndPassword(
@@ -145,7 +130,6 @@ export const signUp = async (data: SignUpData): Promise<UserCredential> => {
   return userCredential;
 };
 
-// Sign In with email and password
 export const signIn = async (
   email: string,
   password: string
@@ -153,12 +137,10 @@ export const signIn = async (
   return signInWithEmailAndPassword(auth, email, password);
 };
 
-// Sign In with Google
 export const signInWithGoogle = async (): Promise<UserCredential> => {
   const provider = new GoogleAuthProvider();
   const userCredential = await signInWithPopup(auth, provider);
 
-  // Create profile if it doesn't exist
   const userDocRef = doc(firestore, `users/${userCredential.user.uid}`);
   const userDoc = await getDoc(userDocRef);
   if (!userDoc.exists()) {
@@ -177,7 +159,6 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
   return userCredential;
 };
 
-// Logout
 export const logout = async (): Promise<void> => {
   return signOut(auth);
 };
