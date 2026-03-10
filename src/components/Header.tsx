@@ -43,14 +43,14 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center rounded-md px-2 py-1.5 transition-colors text-xs font-medium',
+                  'flex items-center rounded-md px-2 py-1.5 transition-colors text-[10px] font-medium',
                   pathname?.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')
                     ? 'bg-muted font-semibold text-foreground'
                     : 'text-foreground/70 hover:text-foreground'
                 )}
               >
                 <item.icon className={cn(
-                  "mr-1.5 h-3 w-3",
+                  "mr-1 h-3 w-3",
                   pathname?.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard') ? "text-primary" : "text-foreground/70"
                 )} />
                 {t(item.labelKey)}

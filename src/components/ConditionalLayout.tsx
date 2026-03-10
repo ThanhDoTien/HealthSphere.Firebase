@@ -20,7 +20,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
       <div className={cn(
         "mx-auto transition-all duration-300 min-h-screen flex flex-col",
         !isHomePage
-          ? "w-full lg:max-w-[70%] bg-background shadow-[0_0_50px_rgba(0,0,0,0.1)]"
+          ? "w-full lg:max-w-[70%] bg-background shadow-[0_0_50px_rgba(0,0,0,0.1)] border-x"
           : "w-full"
       )}>
         {children}

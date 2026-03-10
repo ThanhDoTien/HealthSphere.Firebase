@@ -1,11 +1,13 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodResolver } from '@hookform/resolvers';
 import { z } from 'zod';
 import {
   collection,
   addDoc,
+  doc,
+  updateDoc,
 } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
@@ -19,10 +21,10 @@ import { useTranslation } from '@/context/LanguageContext';
 
 const FormSchema = z.object({
   weight: z.coerce
-    .number({ invalid_type_error: 'Please enter a number.' })
-    .min(20, { message: 'Weight must be a realistic number.' }),
+    .number({ invalid_type_error: 'Vui lòng nhập số.' })
+    .min(20, { message: 'Cân nặng phải là một con số hợp lý.' }),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: "Please enter a valid date.",
+    message: "Vui lòng nhập ngày hợp lệ.",
   }),
 });
 
@@ -50,7 +52,7 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
     }
   });
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     const weightLogRef = collection(firestore, `users/${userId}/weights`);
     const weightLogData = {
       userId: userId,
@@ -58,29 +60,34 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
       date: data.date,
     };
 
-    addDoc(weightLogRef, weightLogData)
-      .then(() => {
-        toast({
-          title: t('form.common.success'),
-          description: t('form.add_weight.success', { date: data.date }),
-        });
-        reset();
-      })
-      .catch((error) => {
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: weightLogRef.path,
-            operation: 'create',
-            requestResourceData: weightLogData,
-          })
-        );
-        toast({
-          variant: 'destructive',
-          title: t('form.common.error'),
-          description: t('form.add_weight.error'),
-        });
+    try {
+      // 1. Lưu vào nhật ký cân nặng
+      await addDoc(weightLogRef, weightLogData);
+
+      // 2. Đồng bộ cập nhật cân nặng vào Hồ sơ người dùng
+      const userRef = doc(firestore, 'users', userId);
+      await updateDoc(userRef, { weight: data.weight });
+
+      toast({
+        title: t('form.common.success'),
+        description: t('form.add_weight.success', { date: data.date }),
       });
+      reset();
+    } catch (error: any) {
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: weightLogRef.path,
+          operation: 'create',
+          requestResourceData: weightLogData,
+        })
+      );
+      toast({
+        variant: 'destructive',
+        title: t('form.common.error'),
+        description: t('form.add_weight.error'),
+      });
+    }
   };
 
   return (
