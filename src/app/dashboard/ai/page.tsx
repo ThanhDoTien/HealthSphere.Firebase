@@ -1,6 +1,7 @@
+
 'use client';
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import Image from 'next/image';
+
+import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -8,285 +9,199 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase/auth/use-user';
-import { useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { useFirestore, useMemoFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import {
-  collection,
-  query,
-  where,
-  doc,
-  setDoc,
-} from 'firebase/firestore';
-import {
-  getHealthSuggestions,
-  type HealthSuggestionResponse,
-} from '@/ai/flows/suggestion-flow';
+import { collection, query, where } from 'firebase/firestore';
+import { healthChat } from '@/ai/flows/chat-flow';
 import {
   Loader2,
-  Utensils,
-  Dumbbell,
-  Lightbulb,
-  RefreshCcw,
+  Send,
+  Sparkles,
+  User,
+  Bot,
 } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useTranslation } from '@/context/LanguageContext';
-import { Button } from '@/components/ui/button';
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
-import { uploadBase64WithCache } from '@/firebase/storage/utils';
+import { cn } from '@/lib/utils';
 
-const MEAL_PLACEHOLDERS = [
-  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-1.png?alt=media&token=24c5abe9-feac-4951-aa76-def57063735a",
-  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-2.png?alt=media&token=a6b306ef-5ee5-4c0e-83f0-47cc0e2035b5",
-  "https://picsum.photos/seed/meal-3/800/600"
-];
+type Message = {
+  role: 'user' | 'model';
+  content: string;
+};
 
-const WORKOUT_PLACEHOLDERS = [
-  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-1.png?alt=media&token=bddae351-3649-4372-89a3-0691bee5ee8b",
-  "https://picsum.photos/seed/workout-2/800/600",
-  "https://picsum.photos/seed/workout-3/800/600"
-];
-
-export default function AiPage() {
+export default function AiChatPage() {
   const { user, userProfile, loading: userLoading } = useUser();
   const firestore = useFirestore();
-  const [today, setToday] = useState('');
   const { t, locale } = useTranslation();
-
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [today, setToday] = useState('');
 
   useEffect(() => {
-    const todayDate = new Date();
-    setToday(todayDate.toISOString().split('T')[0]);
+    setToday(new Date().toISOString().split('T')[0]);
   }, []);
 
+  // Firestore Data for Context
   const mealsQuery = useMemoFirebase(() => {
     if (!user || !today) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'meals'),
-      where('date', '==', today)
-    );
+    return query(collection(firestore, 'users', user.uid, 'meals'), where('date', '==', today));
   }, [firestore, user, today]);
 
   const activitiesQuery = useMemoFirebase(() => {
     if (!user || !today) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'activities'),
-      where('date', '==', today)
-    );
-  }, [firestore, user, today]);
-
-  const weightQuery = useMemoFirebase(() => {
-    if (!user || !today) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'weights'),
-      where('date', '==', today)
-    );
+    return query(collection(firestore, 'users', user.uid, 'activities'), where('date', '==', today));
   }, [firestore, user, today]);
 
   const sleepQuery = useMemoFirebase(() => {
     if (!user || !today) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'sleep'),
-      where('date', '==', today)
-    );
+    return query(collection(firestore, 'users', user.uid, 'sleep'), where('date', '==', today));
   }, [firestore, user, today]);
 
-  const { data: mealData, isLoading: mealLoading } = useCollection(mealsQuery);
-  const { data: activityData, isLoading: activityLoading } = useCollection(activitiesQuery);
-  const { data: sleepData, isLoading: sleepLoading } = useCollection(sleepQuery);
-  const { data: latestWeightData } = useCollection(weightQuery);
+  const { data: mealData } = useCollection(mealsQuery);
+  const { data: activityData } = useCollection(activitiesQuery);
+  const { data: sleepData } = useCollection(sleepQuery);
 
   const dailySummary = useMemo(() => {
     const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
-    if (mealData) summary.caloriesConsumed = mealData.reduce((sum: number, meal: any) => sum + meal.calories, 0);
-
+    if (mealData) summary.caloriesConsumed = mealData.reduce((sum: number, m: any) => sum + m.calories, 0);
     if (userProfile) {
-      const currentWeight = latestWeightData?.[0]?.weight || userProfile.weight;
-      const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
+      const bmr = calculateBMR(userProfile.weight, userProfile.height, userProfile.age, userProfile.gender);
       const tdee = calculateTDEE(bmr, userProfile.activityLevel);
-      const activityBurn = activityData ? activityData.reduce((sum: number, activity: any) => sum + activity.caloriesBurned, 0) : 0;
+      const activityBurn = activityData ? activityData.reduce((sum: number, a: any) => sum + a.caloriesBurned, 0) : 0;
       summary.caloriesBurned = tdee + activityBurn;
     }
-
-    if (sleepData) summary.sleepHours = sleepData.reduce((sum: number, sleep: any) => sum + sleep.duration, 0);
+    if (sleepData) summary.sleepHours = sleepData.reduce((sum: number, s: any) => sum + s.duration, 0);
     return summary;
-  }, [mealData, activityData, sleepData, userProfile, latestWeightData]);
+  }, [mealData, activityData, sleepData, userProfile]);
 
-  const suggestionDocRef = useMemoFirebase(() => {
-    if (!user || !today) return null;
-    return doc(firestore, 'users', user.uid, 'todaysuggestions', today);
-  }, [firestore, user, today]);
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
 
-  const { data: suggestionData, isLoading: suggestionLoading } = useDoc<HealthSuggestionResponse>(suggestionDocRef);
+  const handleSend = async () => {
+    if (!input.trim() || isTyping || !userProfile) return;
 
-  const handleGenerateSuggestions = useCallback(async () => {
-    if (!userProfile || !user || !today || !suggestionDocRef) return;
-
-    setIsGenerating(true);
-    setError(null);
+    const userMsg = input.trim();
+    setInput('');
+    const newMessages: Message[] = [...messages, { role: 'user', content: userMsg }];
+    setMessages(newMessages);
+    setIsTyping(true);
 
     try {
-      const token = await user.getIdToken();
-
-      const suggestions = await getHealthSuggestions({
+      const botResponse = await healthChat({
+        message: userMsg,
+        history: messages.map(m => ({ role: m.role, content: m.content })),
         userProfile: {
+          name: userProfile.name,
           goal: userProfile.goal,
-          weight: latestWeightData?.[0]?.weight || userProfile.weight,
+          weight: userProfile.weight,
           height: userProfile.height,
           age: userProfile.age,
           gender: userProfile.gender,
           activityLevel: userProfile.activityLevel,
         },
         dailySummary,
-        recentActivities: [],
         language: locale,
-        token,
       });
 
-      const mealSuggestionsWithCache = await Promise.all(
-        suggestions.mealSuggestions.map(async (meal) => {
-          if (meal.imageUrl && meal.imageUrl.startsWith('data:')) {
-            const cachedUrl = await uploadBase64WithCache(meal.imageUrl, meal.imagePrompt, 'meals');
-            return { ...meal, imageUrl: cachedUrl || meal.imageUrl };
-          }
-          return meal;
-        })
-      );
-
-      const workoutSuggestionsWithCache = await Promise.all(
-        suggestions.workoutSuggestion.map(async (workout) => {
-          if (workout.imageUrl && workout.imageUrl.startsWith('data:')) {
-            const cachedUrl = await uploadBase64WithCache(workout.imageUrl, workout.imagePrompt, 'exercises');
-            return { ...workout, imageUrl: cachedUrl || workout.imageUrl };
-          }
-          return workout;
-        })
-      );
-
-      const finalSuggestions = {
-        ...suggestions,
-        mealSuggestions: mealSuggestionsWithCache,
-        workoutSuggestion: workoutSuggestionsWithCache,
-      };
-
-      await setDoc(suggestionDocRef, finalSuggestions);
-    } catch (err: any) {
-      console.error("Lỗi tạo gợi ý:", err);
-      setError(err.message || t('ai.errorMessage'));
+      setMessages([...newMessages, { role: 'model', content: botResponse }]);
+    } catch (error) {
+      console.error('Chat error:', error);
+      setMessages([...newMessages, { role: 'model', content: t('ai.errorMessage') }]);
     } finally {
-      setIsGenerating(false);
+      setIsTyping(false);
     }
-  }, [userProfile, user, today, suggestionDocRef, dailySummary, locale, t, latestWeightData]);
-
-  useEffect(() => {
-    if (!suggestionLoading && !suggestionData && !isGenerating && today && userProfile) {
-      handleGenerateSuggestions();
-    }
-  }, [suggestionLoading, suggestionData, isGenerating, today, userProfile, handleGenerateSuggestions]);
-
-  const pageIsLoading = userLoading || mealLoading || activityLoading || sleepLoading || suggestionLoading;
+  };
 
   return (
-    <div className="p-4 sm:p-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">{t('ai.title')}</CardTitle>
-            <CardDescription>{t('ai.description')}</CardDescription>
+    <div className="flex h-[calc(100vh-4rem)] flex-col p-4 sm:p-6 overflow-hidden">
+      <Card className="flex flex-1 flex-col overflow-hidden shadow-lg border-primary/20">
+        <CardHeader className="border-b bg-muted/50 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">{t('ai.title')}</CardTitle>
+              <CardDescription>{t('ai.description')}</CardDescription>
+            </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleGenerateSuggestions} disabled={isGenerating || pageIsLoading}>
-            {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-2 h-4 w-4" />}
-            {t('ai.generateButton')}
-          </Button>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {(pageIsLoading || isGenerating) && (
-            <div className="flex flex-col items-center justify-center gap-4 py-16">
-              <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-lg font-medium animate-pulse">
-                {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
-              </p>
+
+        <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth" ref={scrollRef}>
+          {messages.length === 0 && (
+            <div className="flex h-full flex-col items-center justify-center text-center opacity-50 space-y-4">
+              <Bot className="h-16 w-16" />
+              <p className="max-w-[250px]">{t('ai.chatbot.welcome')}</p>
             </div>
           )}
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertTitle>{t('ai.errorTitle')}</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {!isGenerating && !pageIsLoading && suggestionData && (
-            <div className="space-y-8 pt-4">
-              <Card className="border-primary/20 bg-primary/5">
-                <CardHeader className="flex-row items-start gap-4 space-y-0">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Lightbulb className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">{t('ai.tipTitle')}</CardTitle>
-                    <div className="text-base leading-relaxed whitespace-pre-line mt-2 text-foreground/80">
-                      {suggestionData.generalTip}
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-
-              <div>
-                <h3 className="mb-4 flex items-center gap-2 text-xl font-bold"><Utensils className="h-6 w-6 text-accent" />{t('ai.mealsTitle')}</h3>
-                <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
-                  {suggestionData.mealSuggestions?.map((meal, idx) => (
-                    <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md transition-all hover:shadow-lg">
-                      <div className="relative aspect-video w-full bg-muted">
-                        <Image
-                          src={meal.imageUrl || MEAL_PLACEHOLDERS[idx % 3] || `https://picsum.photos/seed/meal-${idx}/800/600`}
-                          alt={meal.name}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">{meal.name}</CardTitle>
-                        <CardDescription className="font-semibold text-accent">~{meal.calories} kcal</CardDescription>
-                      </CardHeader>
-                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed whitespace-pre-line border-t pt-4">
-                        {meal.recipe}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+          {messages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={cn(
+                "flex w-full items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
+                msg.role === 'user' ? "flex-row-reverse" : "flex-row"
+              )}
+            >
+              <div className={cn(
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-sm",
+                msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+              )}>
+                {msg.role === 'user' ? <User className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
               </div>
+              <div className={cn(
+                "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-sm",
+                msg.role === 'user' 
+                  ? "bg-primary text-primary-foreground rounded-tr-none" 
+                  : "bg-muted/80 text-foreground rounded-tl-none border border-border/50"
+              )}>
+                <p className="whitespace-pre-line leading-relaxed">{msg.content}</p>
+              </div>
+            </div>
+          ))}
 
-              <div>
-                <h3 className="mb-4 flex items-center gap-2 text-xl font-bold"><Dumbbell className="h-6 w-6 text-orange-500" />{t('ai.workoutTitle')}</h3>
-                <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3">
-                  {suggestionData.workoutSuggestion?.map((exercise, idx) => (
-                    <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md transition-all hover:shadow-lg">
-                      <div className="relative aspect-video w-full bg-muted">
-                        <Image
-                          src={exercise.imageUrl || WORKOUT_PLACEHOLDERS[idx % 3] || `https://picsum.photos/seed/workout-${idx}/800/600`}
-                          alt={exercise.name}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">{exercise.name}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="flex-1 text-sm text-muted-foreground leading-relaxed whitespace-pre-line border-t pt-4">
-                        {exercise.description}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+          {isTyping && (
+            <div className="flex w-full items-start gap-3 animate-pulse">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted border">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <div className="max-w-[80%] rounded-2xl rounded-tl-none bg-muted/50 border px-4 py-2.5">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
               </div>
             </div>
           )}
         </CardContent>
+
+        <div className="border-t bg-background p-4">
+          <form 
+            onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+            className="flex items-center gap-2"
+          >
+            <Input
+              placeholder={t('ai.chatbot.placeholder')}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={isTyping}
+              className="flex-1 rounded-full px-6 focus-visible:ring-primary h-12"
+            />
+            <Button 
+              type="submit" 
+              size="icon" 
+              disabled={isTyping || !input.trim()}
+              className="h-12 w-12 rounded-full shadow-md"
+            >
+              <Send className="h-5 w-5" />
+            </Button>
+          </form>
+        </div>
       </Card>
     </div>
   );
