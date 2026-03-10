@@ -15,6 +15,9 @@ import { FirestorePermissionError } from "../errors";
 
 const { auth, firestore } = initializeFirebase();
 
+// VỊ TRÍ CẤU HÌNH BACKEND ĐỂ ĐỒNG BỘ USER
+const BACKEND_URL = "https://healthsphere-8kji.onrender.com";
+
 interface SignUpData {
   name: string;
   email: string;
@@ -26,13 +29,18 @@ interface SignUpData {
   goal: string;
 }
 
-// Create a user profile and initial weight log in Firestore
+/**
+ * Tạo User Profile trong Firestore và ĐỒNG BỘ SANG BACKEND
+ */
 const createUserProfile = async (
   userId: string,
   data: Omit<SignUpData, "password" | 'confirmPassword'> & { weight: number }
 ): Promise<void> => {
   const userDocRef = doc(firestore, `users/${userId}`);
-  await setDoc(userDocRef, data).catch((error) => {
+  const createdAt = new Date().toISOString();
+
+  // 1. Lưu vào Firestore của Firebase
+  await setDoc(userDocRef, { ...data, createdAt }).catch((error) => {
     errorEmitter.emit(
       'permission-error',
       new FirestorePermissionError({
@@ -41,20 +49,43 @@ const createUserProfile = async (
         requestResourceData: data,
       })
     );
-    throw error; // Re-throw to be caught by the calling function
+    throw error;
   });
 
-  // Add initial weight log
+  // 2. Gửi chuỗi JSON sang Middleware/Backend theo định dạng yêu cầu
+  const syncPayload = {
+    id: 0,
+    authId: userId,
+    email: data.email,
+    name: data.name,
+    gender: data.gender,
+    height: data.height,
+    weight: data.weight,
+    goal: data.goal,
+    createdAt: createdAt
+  };
+
+  fetch(`${BACKEND_URL}/api/Users`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(syncPayload),
+  })
+  .then(res => {
+    if (res.ok) console.log("✅ Đồng bộ User sang Backend thành công");
+    else console.error("❌ Lỗi đồng bộ Backend:", res.status);
+  })
+  .catch(err => console.error("❌ Lỗi kết nối Backend:", err));
+
+  // 3. Tạo bản ghi cân nặng đầu tiên
   const weightLogRef = collection(firestore, `users/${userId}/weights`);
   const weightLogData = {
     userId: userId,
     weight: data.weight,
-    date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+    date: new Date().toISOString().split('T')[0],
   };
   await addDoc(weightLogRef, weightLogData).catch((error) => {
-    // We don't rethrow here as it's a non-critical secondary write.
-    // The user has been created, profile is set, just the initial weight log failed.
-    // The error will still be logged to the dev console by the listener.
     errorEmitter.emit(
       'permission-error',
       new FirestorePermissionError({
@@ -75,10 +106,10 @@ export const updateUserProfile = async (
   data: UpdateProfileData
 ): Promise<void> => {
   const userDocRef = doc(firestore, `users/${userId}`);
-  
+
   // Create a copy and remove fields that should not be updated
   const updateData = { ...data };
-  delete updateData.email; 
+  delete updateData.email;
   delete updateData.password;
 
   await updateDoc(userDocRef, updateData).catch((error) => {

@@ -99,11 +99,11 @@ export default function AiPage() {
   const { data: activityData, isLoading: activityLoading } = useCollection(activitiesQuery);
   const { data: sleepData, isLoading: sleepLoading } = useCollection(sleepQuery);
   const { data: latestWeightData } = useCollection(weightQuery);
-  
+
   const dailySummary = useMemo(() => {
     const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
     if (mealData) summary.caloriesConsumed = mealData.reduce((sum, meal: any) => sum + meal.calories, 0);
-    
+
     if (userProfile) {
       const currentWeight = latestWeightData?.[0]?.weight || userProfile.weight;
       const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
@@ -125,10 +125,10 @@ export default function AiPage() {
 
   const handleGenerateSuggestions = useCallback(async () => {
     if (!userProfile || !user || !today || !suggestionDocRef) return;
-  
+
     setIsGenerating(true);
     setError(null);
-  
+
     try {
       const token = await user.getIdToken();
 
@@ -242,12 +242,12 @@ export default function AiPage() {
                   {suggestionData.mealSuggestions?.map((meal, idx) => (
                     <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md transition-all hover:shadow-lg">
                       <div className="relative aspect-video w-full bg-muted">
-                        <Image 
-                          src={meal.imageUrl || MEAL_PLACEHOLDERS[idx % 3] || `https://picsum.photos/seed/meal-${idx}/800/600`} 
-                          alt={meal.name} 
-                          fill 
-                          className="object-cover" 
-                          unoptimized 
+                        <Image
+                          src={meal.imageUrl || MEAL_PLACEHOLDERS[idx % 3] || `https://picsum.photos/seed/meal-${idx}/800/600`}
+                          alt={meal.name}
+                          fill
+                          className="object-cover"
+                          unoptimized
                         />
                       </div>
                       <CardHeader className="pb-2">
@@ -268,12 +268,12 @@ export default function AiPage() {
                   {suggestionData.workoutSuggestion?.map((exercise, idx) => (
                     <Card key={idx} className="overflow-hidden flex flex-col h-full shadow-md transition-all hover:shadow-lg">
                       <div className="relative aspect-video w-full bg-muted">
-                        <Image 
-                          src={exercise.imageUrl || WORKOUT_PLACEHOLDERS[idx % 3] || `https://picsum.photos/seed/workout-${idx}/800/600`} 
-                          alt={exercise.name} 
-                          fill 
-                          className="object-cover" 
-                          unoptimized 
+                        <Image
+                          src={exercise.imageUrl || WORKOUT_PLACEHOLDERS[idx % 3] || `https://picsum.photos/seed/workout-${idx}/800/600`}
+                          alt={exercise.name}
+                          fill
+                          className="object-cover"
+                          unoptimized
                         />
                       </div>
                       <CardHeader className="pb-2">
