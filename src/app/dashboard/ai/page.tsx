@@ -102,17 +102,17 @@ export default function AiPage() {
 
   const dailySummary = useMemo(() => {
     const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
-    if (mealData) summary.caloriesConsumed = mealData.reduce((sum, meal: any) => sum + meal.calories, 0);
+    if (mealData) summary.caloriesConsumed = mealData.reduce((sum: number, meal: any) => sum + meal.calories, 0);
 
     if (userProfile) {
       const currentWeight = latestWeightData?.[0]?.weight || userProfile.weight;
       const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
       const tdee = calculateTDEE(bmr, userProfile.activityLevel);
-      const activityBurn = activityData ? activityData.reduce((sum, activity: any) => sum + activity.caloriesBurned, 0) : 0;
+      const activityBurn = activityData ? activityData.reduce((sum: number, activity: any) => sum + activity.caloriesBurned, 0) : 0;
       summary.caloriesBurned = tdee + activityBurn;
     }
 
-    if (sleepData) summary.sleepHours = sleepData.reduce((sum, sleep: any) => sum + sleep.duration, 0);
+    if (sleepData) summary.sleepHours = sleepData.reduce((sum: number, sleep: any) => sum + sleep.duration, 0);
     return summary;
   }, [mealData, activityData, sleepData, userProfile, latestWeightData]);
 

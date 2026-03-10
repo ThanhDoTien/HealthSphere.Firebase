@@ -69,10 +69,10 @@ export default function AddMealForm({ userId }: AddMealFormProps) {
     try {
       await addDoc(mealLogRef, mealLogData);
       
-      // Đồng bộ sang Backend API
+      // Đồng bộ sang Backend API với userId là authId của Firebase
       const syncPayload = {
         id: 0,
-        userId: 0,
+        userId: userId, 
         mealName: data.name,
         calories: data.calories,
         protein: 0,

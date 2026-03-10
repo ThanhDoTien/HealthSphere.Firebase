@@ -155,10 +155,10 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
     try {
       await addDoc(mealLogRef, mealLogData);
       
-      // Đồng bộ sang Backend API
+      // Đồng bộ sang Backend API với userId trùng với authId
       const syncPayload = {
         id: 0,
-        userId: 0,
+        userId: userId, 
         mealName: `AI: ${mealName}`,
         calories: totalCalories,
         protein: 0,
