@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -46,7 +45,7 @@ export default function AiChatPage() {
     setToday(new Date().toISOString().split('T')[0]);
   }, []);
 
-  // Firestore Data for Context
+  // Context Data for AI
   const mealsQuery = useMemoFirebase(() => {
     if (!user || !today) return null;
     return query(collection(firestore, 'users', user.uid, 'meals'), where('date', '==', today));
@@ -122,7 +121,7 @@ export default function AiChatPage() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col p-4 sm:p-6 overflow-hidden">
-      <Card className="flex flex-1 flex-col overflow-hidden shadow-lg border-primary/20">
+      <Card className="flex flex-1 flex-col overflow-hidden shadow-lg border-primary/20 bg-card">
         <CardHeader className="border-b bg-muted/50 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -135,7 +134,7 @@ export default function AiChatPage() {
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth" ref={scrollRef}>
+        <CardContent className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
           {messages.length === 0 && (
             <div className="flex h-full flex-col items-center justify-center text-center opacity-50 space-y-4">
               <Bot className="h-16 w-16" />
@@ -158,7 +157,7 @@ export default function AiChatPage() {
                 {msg.role === 'user' ? <User className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
               </div>
               <div className={cn(
-                "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm shadow-sm",
+                "max-w-[80%] rounded-2xl px-4 py-2 text-sm shadow-sm",
                 msg.role === 'user' 
                   ? "bg-primary text-primary-foreground rounded-tr-none" 
                   : "bg-muted/80 text-foreground rounded-tl-none border border-border/50"
@@ -173,7 +172,7 @@ export default function AiChatPage() {
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted border">
                 <Sparkles className="h-4 w-4 text-primary" />
               </div>
-              <div className="max-w-[80%] rounded-2xl rounded-tl-none bg-muted/50 border px-4 py-2.5">
+              <div className="max-w-[80%] rounded-2xl rounded-tl-none bg-muted/50 border px-4 py-2">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
               </div>
             </div>
@@ -190,13 +189,13 @@ export default function AiChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={isTyping}
-              className="flex-1 rounded-full px-6 focus-visible:ring-primary h-12"
+              className="flex-1 rounded-full px-4 focus-visible:ring-primary h-11"
             />
             <Button 
               type="submit" 
               size="icon" 
               disabled={isTyping || !input.trim()}
-              className="h-12 w-12 rounded-full shadow-md"
+              className="h-11 w-11 rounded-full shadow-md"
             >
               <Send className="h-5 w-5" />
             </Button>

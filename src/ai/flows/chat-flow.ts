@@ -1,9 +1,7 @@
-
 'use server';
 /**
  * @fileOverview Luồng xử lý Chatbot Sức khỏe thông minh.
- *
- * - healthChat - Hàm xử lý hội thoại AI.
+ * Định nghĩa prompt ở cấp độ module để đảm bảo hiệu năng và tính ổn định của Genkit.
  */
 
 import { ai } from '@/ai/genkit';
@@ -34,33 +32,43 @@ const ChatInputSchema = z.object({
 
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
-export async function healthChat(input: ChatInput): Promise<string> {
-  const prompt = ai.definePrompt({
-    name: 'healthChatPrompt',
-    input: { schema: ChatInputSchema },
-    prompt: `Bạn là HealthSphere AI - Chuyên gia tư vấn sức khỏe, dinh dưỡng và thể hình cao cấp.
+// Định nghĩa prompt ở ngoài hàm để Genkit đăng ký một lần duy nhất
+const healthChatPrompt = ai.definePrompt({
+  name: 'healthChatPrompt',
+  input: { schema: ChatInputSchema },
+  prompt: `Bạn là HealthSphere AI - Chuyên gia tư vấn sức khỏe, dinh dưỡng và thể hình cao cấp.
 
 Thông tin người dùng:
+{{#if userProfile}}
 - Tên: {{userProfile.name}}
 - Mục tiêu: {{userProfile.goal}}
 - Chỉ số: {{userProfile.weight}}kg, {{userProfile.height}}cm, {{userProfile.age}} tuổi
 - Cường độ: {{userProfile.activityLevel}}
+{{/if}}
 
 Tiến độ hôm nay:
+{{#if dailySummary}}
 - Calo nạp: {{dailySummary.caloriesConsumed}} kcal
 - Calo đốt: {{dailySummary.caloriesBurned}} kcal
 - Ngủ: {{dailySummary.sleepHours}} giờ
+{{/if}}
 
 Ngôn ngữ ưu tiên: {{language}}
 
 Nhiệm vụ:
-1. Trả lời các thắc mắc của người dùng về sức khỏe dựa trên dữ liệu thực tế của họ.
-2. Đưa ra các lời khuyên mang tính khích lệ, khoa học và dễ thực hiện.
-3. Nếu người dùng hỏi ngoài lĩnh vực sức khỏe, hãy khéo léo đưa cuộc trò chuyện trở lại chủ đề chính.
+1. Trả lời các thắc mắc về sức khỏe, dinh dưỡng dựa trên dữ liệu thực tế của họ.
+2. Đưa ra lời khuyên khoa học, khích lệ và dễ thực hiện.
+3. Trả lời ngắn gọn, súc tích nhưng đầy đủ thông tin.
 
 Tin nhắn người dùng: {{message}}`,
-  });
+});
 
-  const { text } = await prompt(input);
-  return text || 'Xin lỗi, tôi gặp chút trục trặc khi xử lý câu hỏi này.';
+export async function healthChat(input: ChatInput): Promise<string> {
+  try {
+    const { text } = await healthChatPrompt(input);
+    return text || 'Xin lỗi, tôi gặp chút trục trặc khi xử lý câu hỏi này.';
+  } catch (error) {
+    console.error('Genkit Chat Error:', error);
+    throw new Error('Could not connect to AI services.');
+  }
 }
