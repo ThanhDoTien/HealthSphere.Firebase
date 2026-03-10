@@ -4,9 +4,9 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 /**
- * Thành phần điều khiển bố cục có điều kiện.
- * - Trang chủ (/): Chiếm 100% chiều rộng.
- * - Các trang khác: Chiếm 70% chiều rộng trên màn hình lớn, căn giữa, có đổ bóng.
+ * Điều chỉnh bố cục trang web.
+ * - Trang chủ (/): 100% chiều rộng.
+ * - Các trang khác: 70% chiều rộng trên màn hình lớn, căn giữa để gắn quảng cáo hai bên.
  */
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

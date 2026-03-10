@@ -59,7 +59,6 @@ export default function Header() {
           </nav>
         </div>
 
-        {/* Mobile Nav */}
         <div className="flex items-center md:hidden">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -70,7 +69,7 @@ export default function Header() {
                 <DropdownMenuContent side="bottom" align="start" className="w-48">
                 {navItems.map((item) => (
                     <DropdownMenuItem key={item.href} asChild>
-                        <Link href={item.href} className='flex w-full items-center py-2'>
+                        <Link href={item.href} className='flex w-full items-center py-2 text-xs'>
                             <item.icon className="mr-2 h-4 w-4" />
                             <span>{t(item.labelKey)}</span>
                         </Link>
@@ -79,7 +78,6 @@ export default function Header() {
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
-
 
         <div className="flex items-center justify-end space-x-2">
           <DropdownMenu>

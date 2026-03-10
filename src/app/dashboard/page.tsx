@@ -45,7 +45,6 @@ type WeightLog = {
   date: string;
 };
 
-// --- CHỖ DÁN LINK ẢNH PLACEHOLDER CHO DASHBOARD ---
 const DASHBOARD_MEAL_PLACEHOLDERS = [
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-2.png?alt=media&token=a6b306ef-5ee5-4c0e-83f0-47cc0e2035b5",
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fmeals%2Fdefault-meal-1.png?alt=media&token=24c5abe9-feac-4951-aa76-def57063735a",
@@ -54,7 +53,6 @@ const DASHBOARD_MEAL_PLACEHOLDERS = [
 
 const DASHBOARD_WORKOUT_PLACEHOLDERS = [
   "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-1.png?alt=media&token=bddae351-3649-4372-89a3-0691bee5ee8b",
-  "https://firebasestorage.googleapis.com/v0/b/studio-8164753205-5553c.firebasestorage.app/o/ImagePlacehoder%2Fworkouts%2Fdefault-workout-2.png?alt=media&token=...",
   "https://picsum.photos/seed/workout/800/600"
 ];
 
@@ -179,7 +177,6 @@ export default function DashboardPage() {
       </header>
 
       <main className="px-4 sm:px-6 space-y-6">
-        {/* Top Section: BMI and Stats */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div className="md:col-span-2 lg:col-span-2">
             {userProfile && <BmiMeter height={userProfile.height} weight={currentWeight || userProfile.weight} />}
@@ -201,7 +198,7 @@ export default function DashboardPage() {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardDescription>{t('dashboard.caloriesBurned')}</CardDescription>
-                    <Dumbbell className="h-4 w-4 text-primary" />
+                    <Dumbbell className="h-4 w-4" />
                   </div>
                   <CardTitle className="text-3xl">{Math.round(caloriesBurned).toLocaleString()} <span className="text-sm font-normal text-muted-foreground">kcal</span></CardTitle>
                 </CardHeader>
@@ -234,7 +231,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Middle Section: Weight Tracking */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="space-y-1">
@@ -263,9 +259,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Bottom Section: Activities and AI Suggestions */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Today's Activities (Workout Log) */}
           <Card>
             <CardHeader>
               <CardTitle>{t('dashboard.todaysActivitiesTitle')}</CardTitle>
@@ -289,7 +283,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* AI Suggestions */}
           <Card className="border-primary/20 bg-primary/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-primary">
