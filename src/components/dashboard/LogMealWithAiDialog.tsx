@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -45,6 +44,8 @@ interface LogMealWithAiDialogProps {
   userId: string;
 }
 
+const BACKEND_URL = "https://healthsphere-8kji.onrender.com";
+
 export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -75,7 +76,6 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
         } catch (error) {
           console.error('Error accessing camera:', error);
           setHasCameraPermission(false);
-          // Don't show toast error immediately as user might prefer upload
         }
       }
     };
@@ -89,7 +89,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
             videoElement.srcObject = null;
         }
     }
-  }, [open, capturedImage, toast, t]);
+  }, [open, capturedImage]);
 
   const handleCapture = () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -126,15 +126,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
     try {
       const result = await recognizeFood({ photoDataUri: imageDataUrl });
       setAnalysisResult(result);
-      if (result.identifiedFoods.length === 0) {
-        toast({
-            variant: 'default',
-            title: t('dialog.ai_meal.noFoodToast'),
-            description: t('dialog.ai_meal.noFoodToastDescription')
-        });
-      }
     } catch (error: any) {
-      console.error('AI analysis error:', error);
       toast({
         variant: 'destructive',
         title: t('dialog.ai_meal.analysisFailed'),
@@ -145,7 +137,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
     }
   };
 
-  const handleLogMeal = () => {
+  const handleLogMeal = async () => {
     if (!analysisResult || !userId) return;
 
     const mealName = analysisResult.identifiedFoods.map(f => f.name).join(', ') || 'AI Logged Meal';
@@ -160,29 +152,49 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
         date: new Date().toISOString().split('T')[0],
     };
 
-    addDoc(mealLogRef, mealLogData)
-      .then(() => {
-        toast({
-          title: t('form.common.success'),
-          description: t('dialog.ai_meal.logSuccess', {calories: totalCalories }),
-        });
-        resetAndClose();
-      })
-      .catch((error) => {
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: mealLogRef.path,
-            operation: 'create',
-            requestResourceData: mealLogData,
-          })
-        );
-        toast({
-          variant: 'destructive',
-          title: t('form.common.error'),
-          description: t('dialog.ai_meal.logError'),
-        });
+    try {
+      await addDoc(mealLogRef, mealLogData);
+      
+      // Đồng bộ sang Backend API
+      const syncPayload = {
+        id: 0,
+        userId: 0,
+        mealName: `AI: ${mealName}`,
+        calories: totalCalories,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        imageUrl: capturedImage || "",
+        type: mealType,
+        createdAt: new Date().toISOString()
+      };
+
+      fetch(`${BACKEND_URL}/api/MealLogs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(syncPayload),
+      }).catch(err => console.error("Sync error:", err));
+
+      toast({
+        title: t('form.common.success'),
+        description: t('dialog.ai_meal.logSuccess', {calories: totalCalories }),
       });
+      resetAndClose();
+    } catch (error: any) {
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: mealLogRef.path,
+          operation: 'create',
+          requestResourceData: mealLogData,
+        })
+      );
+      toast({
+        variant: 'destructive',
+        title: t('form.common.error'),
+        description: t('dialog.ai_meal.logError'),
+      });
+    }
   };
 
   const resetAndClose = () => {

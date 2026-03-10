@@ -36,6 +36,8 @@ interface AddMealFormProps {
   userId: string;
 }
 
+const BACKEND_URL = "https://healthsphere-8kji.onrender.com";
+
 export default function AddMealForm({ userId }: AddMealFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -57,40 +59,60 @@ export default function AddMealForm({ userId }: AddMealFormProps) {
     },
   });
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     const mealLogRef = collection(firestore, `users/${userId}/meals`);
     const mealLogData = {
       userId,
       ...data,
     };
 
-    addDoc(mealLogRef, mealLogData)
-      .then(() => {
-        toast({
-          title: t('form.common.success'),
-          description: t('form.add_meal.success', { name: data.name }),
-        });
-        reset({
-            ...data, // keep the date and mealtype
-            name: '',
-            calories: undefined
-        });
-      })
-      .catch((error) => {
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: mealLogRef.path,
-            operation: 'create',
-            requestResourceData: mealLogData,
-          })
-        );
-        toast({
-          variant: 'destructive',
-          title: t('form.common.error'),
-          description: t('form.add_meal.error'),
-        });
+    try {
+      await addDoc(mealLogRef, mealLogData);
+      
+      // Đồng bộ sang Backend API
+      const syncPayload = {
+        id: 0,
+        userId: 0,
+        mealName: data.name,
+        calories: data.calories,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        imageUrl: "",
+        type: data.mealType,
+        createdAt: new Date().toISOString()
+      };
+
+      fetch(`${BACKEND_URL}/api/MealLogs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(syncPayload),
+      }).catch(err => console.error("Sync error:", err));
+
+      toast({
+        title: t('form.common.success'),
+        description: t('form.add_meal.success', { name: data.name }),
       });
+      reset({
+        ...data,
+        name: '',
+        calories: undefined
+      });
+    } catch (error: any) {
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: mealLogRef.path,
+          operation: 'create',
+          requestResourceData: mealLogData,
+        })
+      );
+      toast({
+        variant: 'destructive',
+        title: t('form.common.error'),
+        description: t('form.add_meal.error'),
+      });
+    }
   };
 
   return (
