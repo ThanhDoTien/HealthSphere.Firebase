@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { Utensils, Dumbbell, Loader2, Bed, Scale, Lightbulb, RefreshCcw } from 'lucide-react';
+import { Utensils, Dumbbell, Loader2, Bed, Scale, Lightbulb, RefreshCcw, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -206,7 +207,7 @@ export default function DashboardPage() {
               <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-primary/20 shadow-sm h-full">
                 <CardHeader className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <CardDescription className="text-xs">{t('dashboard.caloriesConsumed')}</CardDescription>
+                    <CardDescription className="text-[10px]">{t('dashboard.caloriesConsumed')}</CardDescription>
                     <Utensils className="h-4 w-4 text-primary" />
                   </div>
                   <CardTitle className="text-xl font-bold">{dailySummary.caloriesConsumed} <span className="text-xs font-normal text-muted-foreground">kcal</span></CardTitle>
@@ -217,7 +218,7 @@ export default function DashboardPage() {
               <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-accent/20 shadow-sm h-full">
                 <CardHeader className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <CardDescription className="text-xs">{t('dashboard.caloriesBurned')}</CardDescription>
+                    <CardDescription className="text-[10px]">{t('dashboard.caloriesBurned')}</CardDescription>
                     <Dumbbell className="h-4 w-4 text-accent" />
                   </div>
                   <CardTitle className="text-xl font-bold">{Math.round(dailySummary.caloriesBurned)} <span className="text-xs font-normal text-muted-foreground">kcal</span></CardTitle>
@@ -228,7 +229,7 @@ export default function DashboardPage() {
               <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-blue-500/20 shadow-sm h-full">
                 <CardHeader className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <CardDescription className="text-xs">{t('dashboard.sleepHour')}</CardDescription>
+                    <CardDescription className="text-[10px]">{t('dashboard.sleepHour')}</CardDescription>
                     <Bed className="h-4 w-4 text-blue-500" />
                   </div>
                   <CardTitle className="text-xl font-bold">{dailySummary.sleepHours.toFixed(1)} <span className="text-xs font-normal text-muted-foreground">h</span></CardTitle>
@@ -239,7 +240,7 @@ export default function DashboardPage() {
               <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-gray-500/20 shadow-sm h-full">
                 <CardHeader className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <CardDescription className="text-xs">{t('dashboard.currentWeight')}</CardDescription>
+                    <CardDescription className="text-[10px]">{t('dashboard.currentWeight')}</CardDescription>
                     <Scale className="h-4 w-4 text-gray-500" />
                   </div>
                   <CardTitle className="text-xl font-bold">{currentWeight ? `${currentWeight} kg` : 'N/A'}</CardTitle>
@@ -249,7 +250,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ROW 2: AI TIP CALLOUT */}
+        {/* ROW 2: AI TIP CALLOUT - ABOVE WEIGHT TRACKING */}
         {!isGenerating && !isAllLoading && suggestionData && (
           <Card className="border-primary/20 bg-primary/5 shadow-sm">
             <div className="p-4 flex gap-4">
@@ -316,34 +317,38 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* RIGHT: AI SUGGESTIONS */}
+          {/* RIGHT: AI SUGGESTIONS - MEALS & WORKOUTS */}
           <div className="space-y-6">
+            <h3 className="flex items-center gap-2 text-xl font-bold">
+              <Sparkles className="h-5 w-5 text-primary" />
+              {t('ai.title')}
+            </h3>
             {!isGenerating && !isAllLoading && suggestionData ? (
-              <div className="space-y-8">
-                <div className="space-y-4">
-                  <h3 className="flex items-center gap-2 text-xl font-bold">
-                    <Utensils className="h-5 w-5 text-primary" />
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <h4 className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                    <Utensils className="h-4 w-4" />
                     {t('ai.mealsTitle')}
-                  </h3>
-                  <div className="grid gap-4">
+                  </h4>
+                  <div className="grid gap-3">
                     {suggestionData.mealSuggestions?.map((meal, idx) => (
-                      <Card key={idx} className="overflow-hidden hover:shadow-md transition-shadow">
-                        <div className="flex flex-col sm:flex-row">
-                          <div className="relative aspect-video sm:w-32 shrink-0 bg-muted">
+                      <Card key={idx} className="overflow-hidden hover:shadow-sm transition-shadow">
+                        <div className="flex">
+                          <div className="relative h-20 w-20 shrink-0 bg-muted">
                             <Image 
-                              src={meal.imageUrl || `https://picsum.photos/seed/${meal.name}/800/600`} 
+                              src={meal.imageUrl || `https://picsum.photos/seed/${meal.name}/200/200`} 
                               alt={meal.name} 
                               fill 
                               className="object-cover" 
                               unoptimized 
                             />
                           </div>
-                          <div className="p-3 flex-1">
-                            <div className="flex justify-between items-start mb-1">
-                              <h4 className="font-bold text-sm">{meal.name}</h4>
-                              <span className="text-xs font-semibold text-primary">~{meal.calories} kcal</span>
+                          <div className="p-3 flex-1 min-w-0">
+                            <div className="flex justify-between items-start mb-0.5">
+                              <h5 className="font-bold text-xs truncate">{meal.name}</h5>
+                              <span className="text-[10px] font-semibold text-primary shrink-0">~{meal.calories} kcal</span>
                             </div>
-                            <p className="text-xs text-muted-foreground line-clamp-2">{meal.recipe}</p>
+                            <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">{meal.recipe}</p>
                           </div>
                         </div>
                       </Card>
@@ -351,27 +356,27 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="flex items-center gap-2 text-xl font-bold">
-                    <Dumbbell className="h-5 w-5 text-accent" />
+                <div className="space-y-3">
+                  <h4 className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                    <Dumbbell className="h-4 w-4" />
                     {t('ai.workoutTitle')}
-                  </h3>
-                  <div className="grid gap-4">
+                  </h4>
+                  <div className="grid gap-3">
                     {suggestionData.workoutSuggestion?.map((exercise, idx) => (
-                      <Card key={idx} className="overflow-hidden hover:shadow-md transition-shadow">
-                        <div className="flex flex-col sm:flex-row">
-                          <div className="relative aspect-video sm:w-32 shrink-0 bg-muted">
+                      <Card key={idx} className="overflow-hidden hover:shadow-sm transition-shadow">
+                        <div className="flex">
+                          <div className="relative h-20 w-20 shrink-0 bg-muted">
                             <Image 
-                              src={exercise.imageUrl || `https://picsum.photos/seed/${exercise.name}/800/600`} 
+                              src={exercise.imageUrl || `https://picsum.photos/seed/${exercise.name}/200/200`} 
                               alt={exercise.name} 
                               fill 
                               className="object-cover" 
                               unoptimized 
                             />
                           </div>
-                          <div className="p-3 flex-1">
-                            <h4 className="font-bold text-sm mb-1">{exercise.name}</h4>
-                            <p className="text-xs text-muted-foreground line-clamp-2">{exercise.description}</p>
+                          <div className="p-3 flex-1 min-w-0">
+                            <h5 className="font-bold text-xs mb-0.5 truncate">{exercise.name}</h5>
+                            <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">{exercise.description}</p>
                           </div>
                         </div>
                       </Card>
@@ -380,16 +385,16 @@ export default function DashboardPage() {
                 </div>
               </div>
             ) : (isGenerating || isAllLoading) ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm font-medium animate-pulse text-muted-foreground">
+              <div className="flex flex-col items-center justify-center py-10 gap-4 border border-dashed rounded-lg bg-muted/5">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <p className="text-xs font-medium animate-pulse text-muted-foreground">
                   {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
                 </p>
               </div>
             ) : null}
 
             {aiError && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="mt-4">
                 <AlertTitle>{t('ai.errorTitle')}</AlertTitle>
                 <AlertDescription>{aiError}</AlertDescription>
               </Alert>

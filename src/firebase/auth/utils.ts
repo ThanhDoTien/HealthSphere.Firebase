@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -26,16 +27,18 @@ interface SignUpData {
   weight: number;
   gender: string;
   goal: string;
+  activityLevel: string;
 }
 
 const createUserProfile = async (
   userId: string,
-  data: Omit<SignUpData, "password" | 'confirmPassword'> & { weight: number }
+  data: Omit<SignUpData, "password">
 ): Promise<void> => {
   const userDocRef = doc(firestore, `users/${userId}`);
   const createdAt = new Date().toISOString();
 
-  await setDoc(userDocRef, { ...data, createdAt }).catch((error) => {
+  const profileToStore = { ...data, createdAt };
+  await setDoc(userDocRef, profileToStore).catch((error) => {
     errorEmitter.emit(
       'permission-error',
       new FirestorePermissionError({
@@ -47,6 +50,7 @@ const createUserProfile = async (
     throw error;
   });
 
+  // Đồng bộ sang Middleware Backend với định dạng JSON chuẩn
   const syncPayload = {
     id: 0,
     authId: userId,
@@ -69,34 +73,24 @@ const createUserProfile = async (
     console.error("Cannot connect to backend sync:", err);
   }
 
+  // Khởi tạo nhật ký cân nặng đầu tiên
   const weightLogRef = collection(firestore, `users/${userId}/weights`);
   const weightLogData = {
     userId: userId,
     weight: data.weight,
     date: new Date().toISOString().split('T')[0],
   };
-  await addDoc(weightLogRef, weightLogData).catch((error) => {
-    errorEmitter.emit(
-      'permission-error',
-      new FirestorePermissionError({
-        path: weightLogRef.path,
-        operation: 'create',
-        requestResourceData: weightLogData,
-      })
-    );
-  });
+  await addDoc(weightLogRef, weightLogData);
 };
-
-type UpdateProfileData = Partial<SignUpData>;
 
 export const updateUserProfile = async (
   userId: string,
-  data: UpdateProfileData
+  data: Partial<SignUpData>
 ): Promise<void> => {
   const userDocRef = doc(firestore, `users/${userId}`);
   const updateData = { ...data };
   delete updateData.email;
-  delete updateData.password;
+  delete (updateData as any).password;
 
   await updateDoc(userDocRef, updateData).catch((error) => {
     errorEmitter.emit(
@@ -145,6 +139,7 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
       weight: 0,
       gender: "other",
       goal: "Stay healthy",
+      activityLevel: "moderate"
     };
     await createUserProfile(userCredential.user.uid, profileData);
   }
