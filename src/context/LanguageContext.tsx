@@ -17,10 +17,8 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  // Đặt mặc định là 'vi' theo yêu cầu
   const [locale, setLocale] = useState<Locale>('vi');
 
-  // Load locale from localStorage on mount
   useEffect(() => {
     const savedLocale = localStorage.getItem('locale') as Locale;
     if (savedLocale && (savedLocale === 'en' || savedLocale === 'vi')) {
@@ -39,13 +37,10 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
     let translatedText = currentLocaleFile[key] || fallbackLocaleFile[key];
 
-    // If still not found, return the key itself.
     if (translatedText === undefined) {
-        console.warn(`Translation key "${key}" not found for locale "${locale}".`);
         return key;
     }
     
-    // Replace placeholders if params are provided.
     if (params) {
         translatedText = Object.entries(params).reduce((acc, [paramKey, paramValue]) => {
             return acc.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));

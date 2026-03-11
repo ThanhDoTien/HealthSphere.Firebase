@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -62,10 +61,8 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
     };
 
     try {
-      // 1. Lưu vào nhật ký cân nặng
       await addDoc(weightLogRef, weightLogData);
 
-      // 2. Đồng bộ cập nhật cân nặng vào Hồ sơ người dùng
       const userRef = doc(firestore, 'users', userId);
       await updateDoc(userRef, { weight: data.weight });
 

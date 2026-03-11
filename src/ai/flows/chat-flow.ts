@@ -1,7 +1,6 @@
 'use server';
 /**
  * @fileOverview Luồng xử lý Chatbot Sức khỏe thông minh.
- * Định nghĩa prompt ở cấp độ module để đảm bảo hiệu năng và tính ổn định của Genkit.
  */
 
 import { ai } from '@/ai/genkit';
@@ -32,7 +31,6 @@ const ChatInputSchema = z.object({
 
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
-// Định nghĩa prompt ở ngoài hàm để Genkit đăng ký một lần duy nhất
 const healthChatPrompt = ai.definePrompt({
   name: 'healthChatPrompt',
   input: { schema: ChatInputSchema },

@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -29,9 +28,6 @@ interface SignUpData {
   goal: string;
 }
 
-/**
- * Tạo User Profile trong Firestore và ĐỒNG BỘ SANG BACKEND
- */
 const createUserProfile = async (
   userId: string,
   data: Omit<SignUpData, "password" | 'confirmPassword'> & { weight: number }
@@ -39,7 +35,6 @@ const createUserProfile = async (
   const userDocRef = doc(firestore, `users/${userId}`);
   const createdAt = new Date().toISOString();
 
-  // 1. Lưu vào Firestore của Firebase
   await setDoc(userDocRef, { ...data, createdAt }).catch((error) => {
     errorEmitter.emit(
       'permission-error',
@@ -52,7 +47,6 @@ const createUserProfile = async (
     throw error;
   });
 
-  // 2. Gửi chuỗi JSON sang Backend theo định dạng yêu cầu
   const syncPayload = {
     id: 0,
     authId: userId,
@@ -75,7 +69,6 @@ const createUserProfile = async (
     console.error("Cannot connect to backend sync:", err);
   }
 
-  // 3. Tạo bản ghi cân nặng đầu tiên
   const weightLogRef = collection(firestore, `users/${userId}/weights`);
   const weightLogData = {
     userId: userId,

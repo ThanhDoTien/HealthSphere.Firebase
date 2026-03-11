@@ -249,7 +249,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ROW 2: AI TIP CALLOUT (QUAN TRỌNG: NẰM TRÊN CÂN NẶNG) */}
+        {/* ROW 2: AI TIP CALLOUT */}
         {!isGenerating && !isAllLoading && suggestionData && (
           <Card className="border-primary/20 bg-primary/5 shadow-sm">
             <div className="p-4 flex gap-4">
@@ -290,7 +290,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* ROW 4: ACTIVITIES (LEFT) & AI SUGGESTIONS (RIGHT) */}
+        {/* ROW 4: ACTIVITIES & AI SUGGESTIONS */}
         <div className="grid gap-6 md:grid-cols-2">
           {/* LEFT: TODAY ACTIVITIES */}
           <div className="space-y-6">
@@ -316,11 +316,10 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* RIGHT: AI SUGGESTIONS (MEALS & WORKOUTS) */}
+          {/* RIGHT: AI SUGGESTIONS */}
           <div className="space-y-6">
             {!isGenerating && !isAllLoading && suggestionData ? (
               <div className="space-y-8">
-                {/* MEALS */}
                 <div className="space-y-4">
                   <h3 className="flex items-center gap-2 text-xl font-bold">
                     <Utensils className="h-5 w-5 text-primary" />
@@ -352,7 +351,6 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* WORKOUTS */}
                 <div className="space-y-4">
                   <h3 className="flex items-center gap-2 text-xl font-bold">
                     <Dumbbell className="h-5 w-5 text-accent" />

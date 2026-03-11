@@ -45,7 +45,6 @@ export default function AiChatPage() {
     setToday(new Date().toISOString().split('T')[0]);
   }, []);
 
-  // Context Data for AI
   const mealsQuery = useMemoFirebase(() => {
     if (!user || !today) return null;
     return query(collection(firestore, 'users', user.uid, 'meals'), where('date', '==', today));
