@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -15,8 +16,7 @@ import { useMemoFirebase } from '@/firebase/provider';
 import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
-import AddMealForm from '@/components/dashboard/AddMealForm';
-import { Loader2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Loader2, MoreHorizontal, Pencil, Trash2, Info } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import {
   DropdownMenu,
@@ -54,10 +54,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import AiMealChatLog from '@/components/dashboard/AiMealChatLog';
 
 type Meal = {
   name: string;
   calories: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  fiber?: number;
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   date: string;
   userId: string;
@@ -210,9 +215,16 @@ export default function CaloriesPage() {
               showLegend={false}
             />
           )}
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h3 className="text-lg font-medium">{t('calories.logTitle')}</h3>
-            {user && <LogMealWithAiDialog userId={user.uid} />}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <LogMealWithAiDialog userId={user?.uid || ''} />
+               <div className="bg-muted/30 rounded-xl p-4 border border-dashed flex items-center justify-center text-xs text-muted-foreground text-center">
+                  <p>Mẹo: Bạn có thể chụp ảnh món ăn để AI phân tích nhanh hơn.</p>
+               </div>
+            </div>
+
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
@@ -223,7 +235,8 @@ export default function CaloriesPage() {
                 </span>
               </div>
             </div>
-            {user && <AddMealForm userId={user.uid} />}
+
+            {user && <AiMealChatLog userId={user.uid} />}
           </div>
 
           <div className="space-y-6 border-t pt-6">
@@ -243,22 +256,32 @@ export default function CaloriesPage() {
                         day: 'numeric',
                       })}
                     </h4>
-                    <ul className="space-y-2 pt-2">
+                    <ul className="space-y-3 pt-2">
                       {meals.map((meal) => (
                         <li
                           key={meal.id}
-                          className="flex items-center justify-between rounded-lg bg-muted/50 p-3"
+                          className="flex items-start justify-between rounded-xl bg-muted/50 p-4 border"
                         >
-                          <div>
-                            <p className="font-medium">{meal.name}</p>
-                            <p className="text-sm capitalize text-muted-foreground">
+                          <div className="space-y-1">
+                            <p className="font-bold">{meal.name}</p>
+                            <p className="text-xs capitalize text-muted-foreground">
                               {t(`form.add_meal.type${meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1)}`)}
                             </p>
+                            {(meal.protein || meal.carbs || meal.fat) && (
+                              <div className="flex gap-3 pt-1">
+                                {meal.protein !== undefined && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">P: {meal.protein}g</span>}
+                                {meal.carbs !== undefined && <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">C: {meal.carbs}g</span>}
+                                {meal.fat !== undefined && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">F: {meal.fat}g</span>}
+                              </div>
+                            )}
                           </div>
-                          <div className="flex items-center gap-4">
-                            <p className="font-semibold">
-                              {meal.calories} kcal
-                            </p>
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              <p className="font-bold text-primary">
+                                {meal.calories}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">kcal</p>
+                            </div>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="h-8 w-8 p-0">

@@ -67,7 +67,7 @@
     "MealLog": {
       "title": "MealLog",
       "type": "object",
-      "description": "A single meal entry, which can represent a single food item or a full meal composed of multiple items. This can be logged manually by the user or automatically via AI image recognition.",
+      "description": "A single meal entry, which can represent a single food item or a full meal composed of multiple items. This can be logged manually by the user or automatically via AI text or image recognition.",
       "properties": {
         "userId": {
           "type": "string",
@@ -75,11 +75,27 @@
         },
         "name": {
           "type": "string",
-          "description": "Name of the meal or food item. For AI-generated logs, this may be a comma-separated list of identified foods, prefixed with 'AI: '."
+          "description": "Name of the meal or food item."
         },
         "calories": {
           "type": "number",
           "description": "Calorie count for the meal."
+        },
+        "protein": {
+          "type": "number",
+          "description": "Protein in grams."
+        },
+        "carbs": {
+          "type": "number",
+          "description": "Carbohydrates in grams."
+        },
+        "fat": {
+          "type": "number",
+          "description": "Fat in grams."
+        },
+        "fiber": {
+          "type": "number",
+          "description": "Fiber in grams."
         },
         "mealType": {
           "type": "string",
@@ -165,36 +181,6 @@
         }
       },
       "required": ["role", "content", "createdAt"]
-    },
-    "TodaySnapshot": {
-      "title": "TodaySnapshot",
-      "type": "object",
-      "description": "A snapshot of the user's health data at the time of an AI suggestion request.",
-      "properties": {
-        "userProfile": {
-          "type": "object",
-          "properties": {
-            "goal": { "type": "string" },
-            "weight": { "type": "number" },
-            "height": { "type": "number" },
-            "age": { "type": "number" },
-            "gender": { "type": "string" },
-            "activityLevel": { "type": "string" }
-          }
-        },
-        "dailySummary": {
-          "type": "object",
-          "properties": {
-            "caloriesConsumed": { "type": "number" },
-            "caloriesBurned": { "type": "number" },
-            "sleepHours": { "type": "number" }
-          }
-        },
-        "recentActivities": {
-          "type": "array",
-          "items": { "type": "string" }
-        }
-      }
     },
     "TodaySuggestion": {
       "title": "TodaySuggestion",
@@ -297,16 +283,6 @@
             "$ref": "#/backend/entities/ChatMessage"
           },
           "description": "Stores individual chat messages for a user."
-        }
-      },
-      {
-        "path": "/users/{userId}/todaysnapshots/{snapshotId}",
-        "definition": {
-          "entityName": "TodaySnapshot",
-          "schema": {
-            "$ref": "#/backend/entities/TodaySnapshot"
-          },
-          "description": "Stores a snapshot of user data for AI suggestion generation. Private to the user."
         }
       },
       {
