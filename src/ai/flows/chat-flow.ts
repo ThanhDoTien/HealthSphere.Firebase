@@ -34,8 +34,7 @@ export type ChatInput = z.infer<typeof ChatInputSchema>;
 
 const healthChatPrompt = ai.definePrompt({
   name: 'healthChatPrompt',
-  model: 'googleai/gemini-2.5-flash',
-
+  model: 'googleai/gemini-2.0-flash-exp',
   input: { schema: ChatInputSchema },
   prompt: `Bạn là HealthSphere AI - Chuyên gia tư vấn sức khỏe, dinh dưỡng và thể hình cao cấp.
 
@@ -73,3 +72,4 @@ export async function healthChat(input: ChatInput): Promise<string> {
     throw new Error('Could not connect to AI services.');
   }
 }
+

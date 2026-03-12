@@ -122,3 +122,4 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
     </form>
   );
 }
+
