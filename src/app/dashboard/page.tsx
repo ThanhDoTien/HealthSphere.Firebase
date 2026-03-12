@@ -196,7 +196,7 @@ export default function DashboardPage() {
         <p className="text-muted-foreground text-lg">{t('dashboard.summary')}</p>
       </header>
 
-      <main className="px-4 sm:px-6 space-y-6">
+      <main className="px-4 sm:px-6 space-y-8">
         {/* ROW 1: STATS & BMI */}
         <div className="grid gap-4 md:grid-cols-4">
           <div className="md:col-span-2">
@@ -291,7 +291,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* SECTION: TODAY ACTIVITIES (STACKED) */}
+        {/* SECTION: TODAY ACTIVITIES */}
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle className="text-xl font-bold">{t('dashboard.todaysActivitiesTitle')}</CardTitle>
@@ -313,30 +313,30 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* SECTION: AI ASSISTANT (STACKED, BOXES GRID) */}
+        {/* SECTION: AI ASSISTANT (Suggestions) */}
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl font-bold">
-               <Sparkles className="h-5 w-5 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-xl font-bold text-primary">
+               <Sparkles className="h-5 w-5" />
                {t('ai.title')}
             </CardTitle>
             <CardDescription>{t('dashboard.aiSuggestionsDescription')}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-8">
+          <CardContent className="space-y-12">
             {!isGenerating && !isAllLoading && suggestionData ? (
-              <div className="space-y-10">
+              <div className="space-y-12">
                 {/* Meal Boxes */}
-                <div className="space-y-4">
-                  <h4 className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
-                    <Utensils className="h-4 w-4" />
+                <div className="space-y-6">
+                  <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
+                    <Utensils className="h-5 w-5" />
                     {t('ai.mealsTitle')}
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {suggestionData.mealSuggestions?.map((meal, idx) => (
-                      <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow">
-                        <div className="relative h-32 w-full bg-muted">
+                      <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                        <div className="relative h-48 w-full bg-muted">
                           <Image 
-                            src={meal.imageUrl || `https://picsum.photos/seed/${meal.name}/400/300`} 
+                            src={meal.imageUrl || `https://picsum.photos/seed/${meal.name}/600/400`} 
                             alt={meal.name} 
                             fill 
                             className="object-cover" 
@@ -344,12 +344,12 @@ export default function DashboardPage() {
                             data-ai-hint="healthy meal"
                           />
                         </div>
-                        <div className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <h5 className="font-bold text-sm truncate max-w-[70%]">{meal.name}</h5>
-                            <span className="text-xs font-bold text-primary shrink-0">~{meal.calories} kcal</span>
+                        <div className="p-5 flex-1 flex flex-col">
+                          <div className="flex justify-between items-start mb-3">
+                            <h5 className="font-bold text-base leading-tight">{meal.name}</h5>
+                            <span className="text-sm font-bold text-primary shrink-0 ml-2">~{meal.calories} kcal</span>
                           </div>
-                          <p className="text-xs text-muted-foreground line-clamp-2 leading-tight">{meal.recipe}</p>
+                          <p className="text-sm text-muted-foreground leading-relaxed flex-1">{meal.recipe}</p>
                         </div>
                       </Card>
                     ))}
@@ -357,17 +357,17 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Workout Boxes */}
-                <div className="space-y-4">
-                  <h4 className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
-                    <Dumbbell className="h-4 w-4" />
+                <div className="space-y-6">
+                  <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
+                    <Dumbbell className="h-5 w-5" />
                     {t('ai.workoutTitle')}
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {suggestionData.workoutSuggestion?.map((exercise, idx) => (
-                      <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow">
-                        <div className="relative h-32 w-full bg-muted">
+                      <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                        <div className="relative h-48 w-full bg-muted">
                           <Image 
-                            src={exercise.imageUrl || `https://picsum.photos/seed/${exercise.name}/400/300`} 
+                            src={exercise.imageUrl || `https://picsum.photos/seed/${exercise.name}/600/400`} 
                             alt={exercise.name} 
                             fill 
                             className="object-cover" 
@@ -375,9 +375,9 @@ export default function DashboardPage() {
                             data-ai-hint="exercise workout"
                           />
                         </div>
-                        <div className="p-4">
-                          <h5 className="font-bold text-sm mb-2 truncate">{exercise.name}</h5>
-                          <p className="text-xs text-muted-foreground line-clamp-2 leading-tight">{exercise.description}</p>
+                        <div className="p-5 flex-1 flex flex-col">
+                          <h5 className="font-bold text-base mb-3 leading-tight">{exercise.name}</h5>
+                          <p className="text-sm text-muted-foreground leading-relaxed flex-1">{exercise.description}</p>
                         </div>
                       </Card>
                     ))}
@@ -385,9 +385,9 @@ export default function DashboardPage() {
                 </div>
               </div>
             ) : (isGenerating || isAllLoading) ? (
-              <div className="flex flex-col items-center justify-center py-10 gap-4">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <p className="text-xs font-medium animate-pulse text-muted-foreground">
+              <div className="flex flex-col items-center justify-center py-16 gap-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm font-medium animate-pulse text-muted-foreground">
                   {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
                 </p>
               </div>
@@ -405,4 +405,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
