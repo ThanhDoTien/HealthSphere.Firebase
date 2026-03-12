@@ -1,3 +1,4 @@
+
 {
   "home.login": "Đăng nhập",
   "home.signup": "Đăng ký",
@@ -89,8 +90,6 @@
   "dashboard.weightFilter.last30": "30 lần ghi gần nhất",
   "dashboard.aiSuggestionsTitle": "Gợi ý từ AI",
   "dashboard.aiSuggestionsDescription": "Dựa trên mục tiêu và hoạt động của bạn.",
-  "dashboard.recipeSuggestion": "Gợi ý công thức",
-  "dashboard.exerciseSuggestion": "Gợi ý bài tập",
   "dashboard.todaysActivitiesTitle": "Nhật ký tập luyện hôm nay",
   "dashboard.todaysActivitiesDescription": "Tóm tắt các hoạt động của bạn hôm nay.",
   "dashboard.noActivities": "Chưa có hoạt động nào được ghi lại hôm nay.",
@@ -179,6 +178,12 @@
   "form.add_meal.button": "Ghi lại Bữa ăn",
   "form.add_meal.success": "Đã thêm món '{name}' vào nhật ký.",
   "form.add_meal.error": "Có lỗi khi thêm món ăn.",
+  "form.add_weight.title": "Cân nặng (kg)",
+  "form.add_weight.placeholder": "Nhập cân nặng của bạn",
+  "form.add_weight.save": "Lưu cân nặng",
+  "form.add_weight.saving": "Đang lưu...",
+  "form.add_weight.success": "Đã ghi nhận cân nặng ngày {date}.",
+  "form.add_weight.error": "Có lỗi khi ghi nhận cân nặng.",
   "common.filter.last7": "7 ngày qua",
   "common.filter.last30": "30 ngày qua"
 }

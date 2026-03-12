@@ -1,3 +1,4 @@
+
 {
   "home.login": "Login",
   "home.signup": "Sign Up",
@@ -177,6 +178,12 @@
   "form.add_meal.button": "Log Meal",
   "form.add_meal.success": "Added '{name}' to log.",
   "form.add_meal.error": "Error adding meal.",
+  "form.add_weight.title": "Weight (kg)",
+  "form.add_weight.placeholder": "Enter your weight",
+  "form.add_weight.save": "Save Weight",
+  "form.add_weight.saving": "Saving...",
+  "form.add_weight.success": "Weight logged for {date}.",
+  "form.add_weight.error": "Error adding weight entry.",
   "common.filter.last7": "Last 7 days",
   "common.filter.last30": "Last 30 days"
 }
