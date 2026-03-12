@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -197,7 +196,7 @@ export default function DashboardPage() {
       </header>
 
       <main className="px-4 sm:px-6 space-y-8">
-        {/* ROW 1: STATS & BMI */}
+        {/* STATS & BMI */}
         <div className="grid gap-4 md:grid-cols-4">
           <div className="md:col-span-2">
             {userProfile && <BmiMeter height={userProfile.height} weight={currentWeight || userProfile.weight} />}
@@ -250,7 +249,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* AI TIP CALLOUT - ABOVE WEIGHT */}
+        {/* AI TIP CALLOUT */}
         {!isGenerating && !isAllLoading && suggestionData && (
           <Card className="border-primary/20 bg-primary/5 shadow-sm">
             <div className="p-4 flex gap-4">
@@ -259,7 +258,7 @@ export default function DashboardPage() {
               </div>
               <div className="space-y-1 flex-1">
                 <h4 className="text-sm font-bold text-primary">{t('ai.tipTitle')}</h4>
-                <p className="text-sm leading-relaxed text-foreground/80">{suggestionData.generalTip}</p>
+                <p className="text-base leading-relaxed text-foreground/90">{suggestionData.generalTip}</p>
               </div>
               <Button variant="ghost" size="sm" onClick={handleGenerateSuggestions} disabled={isGenerating}>
                 <RefreshCcw className="h-4 w-4" />
@@ -291,7 +290,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* SECTION: TODAY ACTIVITIES */}
+        {/* TODAY ACTIVITIES */}
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle className="text-xl font-bold">{t('dashboard.todaysActivitiesTitle')}</CardTitle>
@@ -313,94 +312,90 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* SECTION: AI ASSISTANT (Suggestions) */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl font-bold text-primary">
-               <Sparkles className="h-5 w-5" />
-               {t('ai.title')}
-            </CardTitle>
-            <CardDescription>{t('dashboard.aiSuggestionsDescription')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-12">
-            {!isGenerating && !isAllLoading && suggestionData ? (
-              <div className="space-y-12">
-                {/* Meal Boxes */}
-                <div className="space-y-6">
-                  <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
-                    <Utensils className="h-5 w-5" />
-                    {t('ai.mealsTitle')}
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {suggestionData.mealSuggestions?.map((meal, idx) => (
-                      <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col">
-                        <div className="relative h-48 w-full bg-muted">
-                          <Image 
-                            src={meal.imageUrl || `https://picsum.photos/seed/${meal.name}/600/400`} 
-                            alt={meal.name} 
-                            fill 
-                            className="object-cover" 
-                            unoptimized 
-                            data-ai-hint="healthy meal"
-                          />
-                        </div>
-                        <div className="p-5 flex-1 flex flex-col">
-                          <div className="flex justify-between items-start mb-3">
-                            <h5 className="font-bold text-base leading-tight">{meal.name}</h5>
-                            <span className="text-sm font-bold text-primary shrink-0 ml-2">~{meal.calories} kcal</span>
-                          </div>
-                          <p className="text-sm text-muted-foreground leading-relaxed flex-1">{meal.recipe}</p>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
+        {/* AI ASSISTANT (Suggestions) */}
+        <div className="space-y-8">
+          <div className="flex items-center gap-2 px-1">
+            <Sparkles className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl font-bold text-primary">{t('ai.title')}</h2>
+          </div>
 
-                {/* Workout Boxes */}
-                <div className="space-y-6">
-                  <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
-                    <Dumbbell className="h-5 w-5" />
-                    {t('ai.workoutTitle')}
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {suggestionData.workoutSuggestion?.map((exercise, idx) => (
-                      <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col">
-                        <div className="relative h-48 w-full bg-muted">
-                          <Image 
-                            src={exercise.imageUrl || `https://picsum.photos/seed/${exercise.name}/600/400`} 
-                            alt={exercise.name} 
-                            fill 
-                            className="object-cover" 
-                            unoptimized 
-                            data-ai-hint="exercise workout"
-                          />
+          {!isGenerating && !isAllLoading && suggestionData ? (
+            <div className="space-y-12">
+              {/* Meal Suggestions */}
+              <div className="space-y-6">
+                <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
+                  <Utensils className="h-5 w-5" />
+                  {t('ai.mealsTitle')}
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {suggestionData.mealSuggestions?.map((meal, idx) => (
+                    <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
+                      <div className="relative h-56 w-full bg-muted">
+                        <Image 
+                          src={meal.imageUrl || `https://picsum.photos/seed/${meal.name}/600/400`} 
+                          alt={meal.name} 
+                          fill 
+                          className="object-cover" 
+                          unoptimized 
+                          data-ai-hint="healthy meal"
+                        />
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col space-y-3">
+                        <div className="flex justify-between items-start">
+                          <h5 className="font-bold text-lg leading-tight">{meal.name}</h5>
+                          <span className="text-sm font-bold text-primary shrink-0 ml-2">~{meal.calories} kcal</span>
                         </div>
-                        <div className="p-5 flex-1 flex flex-col">
-                          <h5 className="font-bold text-base mb-3 leading-tight">{exercise.name}</h5>
-                          <p className="text-sm text-muted-foreground leading-relaxed flex-1">{exercise.description}</p>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
+                        <p className="text-sm text-muted-foreground leading-relaxed flex-1 whitespace-pre-line">{meal.recipe}</p>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
               </div>
-            ) : (isGenerating || isAllLoading) ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-4">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm font-medium animate-pulse text-muted-foreground">
-                  {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
-                </p>
-              </div>
-            ) : null}
 
-            {aiError && (
-              <Alert variant="destructive">
-                <AlertTitle>{t('ai.errorTitle')}</AlertTitle>
-                <AlertDescription>{aiError}</AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
+              {/* Workout Suggestions */}
+              <div className="space-y-6">
+                <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
+                  <Dumbbell className="h-5 w-5" />
+                  {t('ai.workoutTitle')}
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {suggestionData.workoutSuggestion?.map((exercise, idx) => (
+                    <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
+                      <div className="relative h-56 w-full bg-muted">
+                        <Image 
+                          src={exercise.imageUrl || `https://picsum.photos/seed/${exercise.name}/600/400`} 
+                          alt={exercise.name} 
+                          fill 
+                          className="object-cover" 
+                          unoptimized 
+                          data-ai-hint="exercise workout"
+                        />
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col space-y-3">
+                        <h5 className="font-bold text-lg leading-tight">{exercise.name}</h5>
+                        <p className="text-sm text-muted-foreground leading-relaxed flex-1 whitespace-pre-line">{exercise.description}</p>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (isGenerating || isAllLoading) ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-4 border rounded-xl bg-muted/10">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <p className="text-base font-medium animate-pulse text-muted-foreground">
+                {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
+              </p>
+            </div>
+          ) : null}
+
+          {aiError && (
+            <Alert variant="destructive">
+              <AlertTitle>{t('ai.errorTitle')}</AlertTitle>
+              <AlertDescription>{aiError}</AlertDescription>
+            </Alert>
+          )}
+        </div>
       </main>
     </div>
   );

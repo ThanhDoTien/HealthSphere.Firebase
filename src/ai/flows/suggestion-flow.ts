@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Hệ thống tư vấn sức khỏe kết nối với Backend AI bên ngoài.
@@ -54,24 +53,25 @@ export async function getHealthSuggestions(
   input: HealthSuggestionRequest
 ): Promise<HealthSuggestionResponse> {
   const prompt = `Bạn là một chuyên gia sức khỏe AI cao cấp. 
-  Dựa trên dữ liệu thực tế:
+  Dựa trên dữ liệu thực tế của người dùng:
   - Mục tiêu: ${input.userProfile.goal}
-  - Chỉ số: ${input.userProfile.weight}kg, ${input.userProfile.height}cm, ${input.userProfile.age}tuổi, Giới tính: ${input.userProfile.gender}
+  - Chỉ số: ${input.userProfile.weight}kg, ${input.userProfile.height}cm, ${input.userProfile.age} tuổi, Giới tính: ${input.userProfile.gender}
   - Cường độ vận động: ${input.userProfile.activityLevel || 'moderate'}
-  - Tiến độ hôm nay: Nạp ${input.dailySummary.caloriesConsumed}kcal, Đã đốt tổng cộng ${input.dailySummary.caloriesBurned}kcal, Ngủ ${input.dailySummary.sleepHours}h
+  - Tiến độ hôm nay: Đã nạp ${input.dailySummary.caloriesConsumed} kcal, Đã đốt tổng cộng ${input.dailySummary.caloriesBurned} kcal, Đã ngủ ${input.dailySummary.sleepHours}h
   
-  Nhiệm vụ:
-  1. Đưa ra lời khuyên dựa trên lượng calo thực tế. Hãy khuyến khích người dùng nếu họ đang đi đúng hướng.
-  2. Đề xuất 4 bữa ăn (Sáng, Trưa, Tối, phụ) và 2-3 bài tập phù hợp nhất với mục tiêu.
-  3. Viết nội dung ngắn gọn bằng ngôn ngữ: ${input.language || 'vi'}.
-  4. Viết 'imagePrompt' bằng tiếng Anh cực kỳ chi tiết cho AI tạo ảnh.
+  Nhiệm vụ của bạn:
+  1. Đưa ra 1 lời khuyên (generalTip) cực kỳ ngắn gọn, tập trung vào việc họ có đang đạt chỉ tiêu calo hôm nay không.
+  2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) phù hợp với mục tiêu ${input.userProfile.goal}. 
+  3. Đề xuất 2 bài tập (workoutSuggestion) giúp tối ưu hóa sức khỏe.
+  4. Ngôn ngữ phản hồi: ${input.language || 'vi'}.
+  5. Đối với 'imagePrompt': Viết bằng tiếng Anh, mô tả cực kỳ chi tiết về món ăn/bài tập theo phong cách nhiếp ảnh chuyên nghiệp (ví dụ: "high-quality food photography of a healthy grilled chicken salad, soft lighting, 4k").
 
   TRẢ VỀ KẾT QUẢ DƯỚI DẠNG MỘT ĐỐI TƯỢNG JSON DUY NHẤT. KHÔNG BAO GỒM CÁC KHỐI MÃ (CODE FENCES) HOẶC VĂN BẢN THỪA.
-  Cấu trúc JSON:
+  Cấu trúc JSON yêu cầu:
   {
-    "generalTip": "...",
-    "mealSuggestions": [{"name": "...", "recipe": "...", "calories": 0, "imagePrompt": "..."}],
-    "workoutSuggestion": [{"name": "...", "description": "...", "imagePrompt": "..."}]
+    "generalTip": "Nội dung lời khuyên...",
+    "mealSuggestions": [{"name": "Tên món", "recipe": "Cách làm ngắn gọn", "calories": 350, "imagePrompt": "Detailed English prompt for Imagen 4"}],
+    "workoutSuggestion": [{"name": "Tên bài tập", "description": "Hướng dẫn thực hiện", "imagePrompt": "Detailed English prompt for Imagen 4"}]
   }`;
 
   try {
