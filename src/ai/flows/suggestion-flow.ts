@@ -60,9 +60,9 @@ export async function getHealthSuggestions(
   - Tiến độ hôm nay: Đã nạp ${input.dailySummary.caloriesConsumed} kcal, Đã đốt tổng cộng ${input.dailySummary.caloriesBurned} kcal, Đã ngủ ${input.dailySummary.sleepHours}h
   
   Nhiệm vụ của bạn:
-  1. Đưa ra 1 lời khuyên (generalTip) cực kỳ ngắn gọn, tập trung vào việc họ có đang đạt chỉ tiêu calo hôm nay không.
-  2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) phù hợp với mục tiêu ${input.userProfile.goal}. 
-  3. Đề xuất 2 bài tập (workoutSuggestion) giúp tối ưu hóa sức khỏe.
+  1. Đưa ra 1 lời khuyên (generalTip) cực kỳ chi tiết, tập trung vào việc họ có đang đạt chỉ tiêu calo hôm nay không.
+  2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) phù hợp với mục tiêu ${input.userProfile.goal}, Hướng dẫn cách chế biến và cung cấp thông tin chi tiết về từng món ăn, bao nhiêu gram fat, carb, protein và chất xơ. 
+  3. Đề xuất 2-3 bài tập (workoutSuggestion) giúp tối ưu hóa sức khỏe.
   4. Ngôn ngữ phản hồi: ${input.language || 'vi'}.
   5. Đối với 'imagePrompt': Viết bằng tiếng Anh, mô tả cực kỳ chi tiết về món ăn/bài tập theo phong cách nhiếp ảnh chuyên nghiệp (ví dụ: "high-quality food photography of a healthy grilled chicken salad, soft lighting, 4k").
 
@@ -70,7 +70,7 @@ export async function getHealthSuggestions(
   Cấu trúc JSON yêu cầu:
   {
     "generalTip": "Nội dung lời khuyên...",
-    "mealSuggestions": [{"name": "Tên món", "recipe": "Cách làm ngắn gọn", "calories": 350, "imagePrompt": "Detailed English prompt for Imagen 4"}],
+    "mealSuggestions": [{"name": "Tên món", "recipe": "Cách làm", "calories": 350, "imagePrompt": "Detailed English prompt for Imagen 4"}],
     "workoutSuggestion": [{"name": "Tên bài tập", "description": "Hướng dẫn thực hiện", "imagePrompt": "Detailed English prompt for Imagen 4"}]
   }`;
 
