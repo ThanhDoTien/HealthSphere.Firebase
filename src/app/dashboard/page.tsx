@@ -249,25 +249,36 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* AI TIP CALLOUT - Luôn hiển thị trên biểu đồ cân nặng */}
-        {!isGenerating && !isAllLoading && suggestionData && (
+        {/* AI TIP CALLOUT & LOADING */}
+        {(isGenerating || isAllLoading) && !suggestionData ? (
+          <Card className="border-primary/20 bg-primary/5 shadow-sm animate-pulse">
+            <div className="p-4 flex items-center gap-4">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <p className="text-base font-medium text-primary">
+                {isGenerating ? "HealthSphere AI đang chuẩn bị lời khuyên cho bạn..." : t('ai.loadingData')}
+              </p>
+            </div>
+          </Card>
+        ) : suggestionData ? (
           <Card className="border-primary/20 bg-primary/5 shadow-sm">
             <div className="p-4 flex gap-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Lightbulb className="h-6 w-6" />
               </div>
               <div className="space-y-1 flex-1">
-                <h4 className="text-lg font-bold text-primary">{t('ai.tipTitle')}</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-lg font-bold text-primary">{t('ai.tipTitle')}</h4>
+                  <Button variant="ghost" size="sm" onClick={handleGenerateSuggestions} disabled={isGenerating}>
+                    <RefreshCcw className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
+                  </Button>
+                </div>
                 <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line font-medium">
                   {suggestionData.generalTip}
                 </p>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleGenerateSuggestions} disabled={isGenerating}>
-                <RefreshCcw className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
-              </Button>
             </div>
           </Card>
-        )}
+        ) : null}
 
         {/* WEIGHT TRACKING */}
         <Card className="shadow-md">
@@ -314,7 +325,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* AI ASSISTANT (Suggestions) - Dưới cùng, 2 ô một dòng */}
+        {/* AI ASSISTANT (Suggestions) */}
         <div className="space-y-8">
           <div className="flex items-center gap-2 px-1">
             <Sparkles className="h-6 w-6 text-primary" />
@@ -323,7 +334,7 @@ export default function DashboardPage() {
 
           {!isGenerating && !isAllLoading && suggestionData ? (
             <div className="space-y-12">
-              {/* Meal Suggestions - 2 columns */}
+              {/* Meal Suggestions */}
               <div className="space-y-6">
                 <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
                   <Utensils className="h-5 w-5" />
@@ -355,7 +366,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Workout Suggestions - 2 columns */}
+              {/* Workout Suggestions */}
               <div className="space-y-6">
                 <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
                   <Dumbbell className="h-5 w-5" />
