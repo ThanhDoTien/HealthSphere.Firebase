@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview AI flow to analyze meal text and extract nutritional data.
- * Vị trí của Prompt: analyzeMealPrompt bên dưới.
+ * Hỗ trợ hội thoại để tinh chỉnh thông tin món ăn.
  */
 
 import { ai } from '@/ai/genkit';
@@ -10,39 +10,49 @@ import { z } from 'zod';
 
 const AnalyzeMealInputSchema = z.object({
   text: z.string().describe('The user\'s description of what they ate.'),
+  history: z.array(z.object({
+    role: z.enum(['user', 'model']),
+    content: z.string(),
+  })).optional().describe('Previous chat history for context.'),
   language: z.string().optional().default('vi'),
 });
 export type AnalyzeMealInput = z.infer<typeof AnalyzeMealInputSchema>;
 
 const AnalyzeMealOutputSchema = z.object({
-  name: z.string().describe('The identified name of the meal.'),
-  calories: z.number().describe('Total calories in kcal.'),
-  protein: z.number().describe('Protein in grams.'),
-  carbs: z.number().describe('Carbohydrates in grams.'),
-  fat: z.number().describe('Fat in grams.'),
-  fiber: z.number().describe('Fiber in grams.'),
-  explanation: z.string().describe('A brief explanation of the nutritional analysis in the requested language.'),
+  explanation: z.string().describe('A friendly response to the user in the requested language.'),
+  mealData: z.object({
+    name: z.string().describe('The identified name of the meal.'),
+    calories: z.number().describe('Total calories in kcal.'),
+    protein: z.number().describe('Protein in grams.'),
+    carbs: z.number().describe('Carbohydrates in grams.'),
+    fat: z.number().describe('Fat in grams.'),
+    fiber: z.number().describe('Fiber in grams.'),
+  }).nullable().describe('The structured nutritional data if a meal is identified, otherwise null.'),
 });
 export type AnalyzeMealOutput = z.infer<typeof AnalyzeMealOutputSchema>;
 
-// ĐÂY LÀ PHẦN PROMPT BẠN ĐANG TÌM KIẾM
 const analyzeMealPrompt = ai.definePrompt({
   name: 'analyzeMealPrompt',
   model: 'googleai/gemini-1.5-flash',
   input: { schema: AnalyzeMealInputSchema },
   output: { schema: AnalyzeMealOutputSchema },
   prompt: `
-Bạn là một chuyên gia dinh dưỡng chuyên nghiệp. Người dùng đã mô tả những gì họ đã ăn: "{{{text}}}".
+Bạn là chuyên gia dinh dưỡng HealthSphere. Nhiệm vụ của bạn là thảo luận và phân tích bữa ăn của người dùng.
 
-Nhiệm vụ của bạn:
-1. Xác định tên món ăn (hoặc tóm tắt ngắn gọn các món).
-2. Ước tính calo, protein, carbs, fat, và xơ (fiber) cho phần ăn được mô tả.
-3. Cung cấp một lời giải thích ngắn gọn, thân thiện bằng tiếng {{language}}.
+Lịch sử trò chuyện:
+{{#each history}}
+{{role}}: {{content}}
+{{/each}}
 
-Nếu mô tả mơ hồ, hãy đưa ra ước tính hợp lý dựa trên khẩu phần ăn trung bình.
-Quan trọng: Luôn trả về dữ liệu số cho các chỉ số dinh dưỡng (không để trống).
+Người dùng nói: "{{{text}}}"
 
-Trả về kết quả DUY NHẤT dưới dạng JSON có cấu trúc.
+Yêu cầu:
+1. Nếu người dùng mô tả món ăn, hãy tính toán calo, protein, carbs, fat và fiber.
+2. Nếu người dùng yêu cầu thay đổi (ví dụ: "thêm trứng", "ít cơm hơn"), hãy cập nhật các con số dựa trên ngữ cảnh trước đó.
+3. Luôn trả lời bằng tiếng {{language}} một cách thân thiện.
+4. Nếu không thể xác định món ăn, hãy đặt mealData là null và yêu cầu người dùng mô tả rõ hơn.
+
+Trả về JSON có cấu trúc explanation và mealData.
 `,
 });
 
@@ -53,7 +63,6 @@ export async function analyzeMealText(input: AnalyzeMealInput): Promise<AnalyzeM
     return output;
   } catch (error: any) {
     console.error('Analyze Meal Flow Error:', error);
-    // Trả về lỗi chi tiết hơn để dễ debug
-    throw new Error(error.message || 'Could not analyze your meal. Please try describing it differently.');
+    throw new Error(error.message || 'Could not analyze your meal.');
   }
 }
