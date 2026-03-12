@@ -250,7 +250,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ROW 2: AI TIP CALLOUT - ABOVE WEIGHT TRACKING */}
+        {/* AI TIP CALLOUT */}
         {!isGenerating && !isAllLoading && suggestionData && (
           <Card className="border-primary/20 bg-primary/5 shadow-sm">
             <div className="p-4 flex gap-4">
@@ -268,7 +268,7 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        {/* ROW 3: WEIGHT TRACKING */}
+        {/* WEIGHT TRACKING */}
         <Card className="shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>
@@ -291,11 +291,11 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* ROW 4: ACTIVITIES & AI SUGGESTIONS */}
+        {/* ACTIVITIES & AI SUGGESTIONS SECTION */}
         <div className="grid gap-6 md:grid-cols-2">
           {/* LEFT: TODAY ACTIVITIES */}
           <div className="space-y-6">
-            <Card className="shadow-md">
+            <Card className="shadow-md h-full">
               <CardHeader>
                 <CardTitle className="text-xl font-bold">{t('dashboard.todaysActivitiesTitle')}</CardTitle>
                 <CardDescription>{t('dashboard.todaysActivitiesDescription')}</CardDescription>
@@ -317,88 +317,93 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* RIGHT: AI SUGGESTIONS - MEALS & WORKOUTS */}
+          {/* RIGHT: AI ASSISTANT (Suggestions as Boxes) */}
           <div className="space-y-6">
-            <h3 className="flex items-center gap-2 text-xl font-bold">
-              <Sparkles className="h-5 w-5 text-primary" />
-              {t('ai.title')}
-            </h3>
-            {!isGenerating && !isAllLoading && suggestionData ? (
-              <div className="space-y-6">
-                <div className="space-y-3">
-                  <h4 className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
-                    <Utensils className="h-4 w-4" />
-                    {t('ai.mealsTitle')}
-                  </h4>
-                  <div className="grid gap-3">
-                    {suggestionData.mealSuggestions?.map((meal, idx) => (
-                      <Card key={idx} className="overflow-hidden hover:shadow-sm transition-shadow">
-                        <div className="flex">
-                          <div className="relative h-20 w-20 shrink-0 bg-muted">
-                            <Image 
-                              src={meal.imageUrl || `https://picsum.photos/seed/${meal.name}/200/200`} 
-                              alt={meal.name} 
-                              fill 
-                              className="object-cover" 
-                              unoptimized 
-                            />
-                          </div>
-                          <div className="p-3 flex-1 min-w-0">
-                            <div className="flex justify-between items-start mb-0.5">
-                              <h5 className="font-bold text-xs truncate">{meal.name}</h5>
-                              <span className="text-[10px] font-semibold text-primary shrink-0">~{meal.calories} kcal</span>
+            <Card className="shadow-md h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl font-bold">
+                   <Sparkles className="h-5 w-5 text-primary" />
+                   {t('ai.title')}
+                </CardTitle>
+                <CardDescription>{t('dashboard.aiSuggestionsDescription')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {!isGenerating && !isAllLoading && suggestionData ? (
+                  <div className="space-y-8">
+                    {/* Meal Boxes */}
+                    <div className="space-y-3">
+                      <h4 className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                        <Utensils className="h-4 w-4" />
+                        {t('ai.mealsTitle')}
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {suggestionData.mealSuggestions?.map((meal, idx) => (
+                          <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow">
+                            <div className="relative h-28 w-full bg-muted">
+                              <Image 
+                                src={meal.imageUrl || `https://picsum.photos/seed/${meal.name}/400/300`} 
+                                alt={meal.name} 
+                                fill 
+                                className="object-cover" 
+                                unoptimized 
+                              />
                             </div>
-                            <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">{meal.recipe}</p>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
+                            <div className="p-3">
+                              <div className="flex justify-between items-start mb-1">
+                                <h5 className="font-bold text-xs truncate max-w-[70%]">{meal.name}</h5>
+                                <span className="text-[10px] font-bold text-primary shrink-0">~{meal.calories} kcal</span>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">{meal.recipe}</p>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
 
-                <div className="space-y-3">
-                  <h4 className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
-                    <Dumbbell className="h-4 w-4" />
-                    {t('ai.workoutTitle')}
-                  </h4>
-                  <div className="grid gap-3">
-                    {suggestionData.workoutSuggestion?.map((exercise, idx) => (
-                      <Card key={idx} className="overflow-hidden hover:shadow-sm transition-shadow">
-                        <div className="flex">
-                          <div className="relative h-20 w-20 shrink-0 bg-muted">
-                            <Image 
-                              src={exercise.imageUrl || `https://picsum.photos/seed/${exercise.name}/200/200`} 
-                              alt={exercise.name} 
-                              fill 
-                              className="object-cover" 
-                              unoptimized 
-                            />
-                          </div>
-                          <div className="p-3 flex-1 min-w-0">
-                            <h5 className="font-bold text-xs mb-0.5 truncate">{exercise.name}</h5>
-                            <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">{exercise.description}</p>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
+                    {/* Workout Boxes */}
+                    <div className="space-y-3">
+                      <h4 className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                        <Dumbbell className="h-4 w-4" />
+                        {t('ai.workoutTitle')}
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {suggestionData.workoutSuggestion?.map((exercise, idx) => (
+                          <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow">
+                            <div className="relative h-28 w-full bg-muted">
+                              <Image 
+                                src={exercise.imageUrl || `https://picsum.photos/seed/${exercise.name}/400/300`} 
+                                alt={exercise.name} 
+                                fill 
+                                className="object-cover" 
+                                unoptimized 
+                              />
+                            </div>
+                            <div className="p-3">
+                              <h5 className="font-bold text-xs mb-1 truncate">{exercise.name}</h5>
+                              <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">{exercise.description}</p>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ) : (isGenerating || isAllLoading) ? (
-              <div className="flex flex-col items-center justify-center py-10 gap-4 border border-dashed rounded-lg bg-muted/5">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <p className="text-xs font-medium animate-pulse text-muted-foreground">
-                  {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
-                </p>
-              </div>
-            ) : null}
+                ) : (isGenerating || isAllLoading) ? (
+                  <div className="flex flex-col items-center justify-center py-10 gap-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    <p className="text-xs font-medium animate-pulse text-muted-foreground">
+                      {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
+                    </p>
+                  </div>
+                ) : null}
 
-            {aiError && (
-              <Alert variant="destructive" className="mt-4">
-                <AlertTitle>{t('ai.errorTitle')}</AlertTitle>
-                <AlertDescription>{aiError}</AlertDescription>
-              </Alert>
-            )}
+                {aiError && (
+                  <Alert variant="destructive">
+                    <AlertTitle>{t('ai.errorTitle')}</AlertTitle>
+                    <AlertDescription>{aiError}</AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>

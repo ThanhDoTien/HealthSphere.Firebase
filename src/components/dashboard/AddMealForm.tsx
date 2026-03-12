@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, Controller } from 'react-hook-form';
@@ -69,6 +70,7 @@ export default function AddMealForm({ userId }: AddMealFormProps) {
     try {
       await addDoc(mealLogRef, mealLogData);
       
+      // Đồng bộ sang Middleware Backend với định dạng JSON chuẩn
       const syncPayload = {
         id: 0,
         userId: userId, 

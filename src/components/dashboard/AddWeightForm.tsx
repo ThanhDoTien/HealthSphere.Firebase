@@ -64,7 +64,7 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
     try {
       await addDoc(weightLogRef, weightLogData);
 
-      // Tự động cập nhật vào Hồ sơ chính
+      // Tự động cập nhật vào Hồ sơ chính (Profile)
       const userRef = doc(firestore, 'users', userId);
       await updateDoc(userRef, { weight: data.weight });
 
