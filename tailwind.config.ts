@@ -19,8 +19,8 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-be-vietnam-pro)", "Inter", "sans-serif"],
-        heading: ["var(--font-plus-jakarta-sans)", "Inter", "sans-serif"],
+        sans: ["var(--font-open-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        heading: ["var(--font-be-vietnam-pro)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

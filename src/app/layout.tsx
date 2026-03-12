@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Be_Vietnam_Pro } from "next/font/google";
+import { Be_Vietnam_Pro, Open_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,16 +7,16 @@ import FirebaseClientProvider from "@/firebase/client-provider";
 import { LanguageProvider } from "@/context/LanguageContext";
 import ConditionalLayout from "@/components/ConditionalLayout";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-plus-jakarta-sans",
-  weight: ["400", "500", "600", "700", "800"],
-});
-
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
   variable: "--font-be-vietnam-pro",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
+const openSans = Open_Sans({
+  subsets: ["latin"],
+  variable: "--font-open-sans",
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -34,8 +34,8 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
-          plusJakartaSans.variable,
-          beVietnamPro.variable
+          beVietnamPro.variable,
+          openSans.variable
         )}
       >
         <LanguageProvider>
