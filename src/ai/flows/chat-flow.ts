@@ -1,19 +1,18 @@
+
 'use server';
 /**
  * @fileOverview Luồng xử lý Chatbot Sức khỏe thông minh.
  */
 
+import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
 const ChatInputSchema = z.object({
-  message: z.string(),
-  history: z.array(
-    z.object({
-      role: z.enum(['user', 'model']),
-      content: z.string(),
-    })
-  ).optional(),
-
+  message: z.string().describe('Tin nhắn mới nhất từ người dùng.'),
+  history: z.array(z.object({
+    role: z.enum(['user', 'model']),
+    content: z.string(),
+  })).optional().describe('Lịch sử cuộc trò chuyện.'),
   userProfile: z.object({
     name: z.string(),
     goal: z.string(),
@@ -23,86 +22,54 @@ const ChatInputSchema = z.object({
     gender: z.string(),
     activityLevel: z.string(),
   }).optional(),
-
   dailySummary: z.object({
     caloriesConsumed: z.number(),
     caloriesBurned: z.number(),
     sleepHours: z.number(),
   }).optional(),
-
   language: z.string().optional(),
-  token: z.string().optional(),
 });
 
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
-const BACKEND_URL = process.env.BACKEND_API_URL || 'http://localhost:8080/ai/chat';
+const healthChatPrompt = ai.definePrompt({
+  name: 'healthChatPrompt',
+  model: 'googleai/gemini-2.5-flash',
+
+  input: { schema: ChatInputSchema },
+  prompt: `Bạn là HealthSphere AI - Chuyên gia tư vấn sức khỏe, dinh dưỡng và thể hình cao cấp.
+
+Thông tin người dùng:
+{{#if userProfile}}
+- Tên: {{userProfile.name}}
+- Mục tiêu: {{userProfile.goal}}
+- Chỉ số: {{userProfile.weight}}kg, {{userProfile.height}}cm, {{userProfile.age}} tuổi
+- Cường độ: {{userProfile.activityLevel}}
+{{/if}}
+
+Tiến độ hôm nay:
+{{#if dailySummary}}
+- Calo nạp: {{dailySummary.caloriesConsumed}} kcal
+- Calo đốt: {{dailySummary.caloriesBurned}} kcal
+- Ngủ: {{dailySummary.sleepHours}} giờ
+{{/if}}
+
+Ngôn ngữ ưu tiên: {{language}}
+
+Nhiệm vụ:
+1. Trả lời các thắc mắc về sức khỏe, dinh dưỡng dựa trên dữ liệu thực tế của họ.
+2. Đưa ra lời khuyên khoa học, khích lệ và dễ thực hiện.
+3. Trả lời ngắn gọn, súc tích nhưng đầy đủ thông tin.
+
+Tin nhắn người dùng: {{message}}`,
+});
 
 export async function healthChat(input: ChatInput): Promise<string> {
   try {
-
-    const historyText =
-      input.history
-        ?.map((m) => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`)
-        .join('\n') || '';
-
-    const prompt = `
-Bạn là HealthSphere AI - Chuyên gia tư vấn sức khỏe và dinh dưỡng.
-
-Thông tin người dùng:
-${input.userProfile ? `
-Tên: ${input.userProfile.name}
-Mục tiêu: ${input.userProfile.goal}
-Chỉ số: ${input.userProfile.weight}kg, ${input.userProfile.height}cm, ${input.userProfile.age} tuổi
-Cường độ vận động: ${input.userProfile.activityLevel}
-` : ''}
-
-Tiến độ hôm nay:
-${input.dailySummary ? `
-Calo nạp: ${input.dailySummary.caloriesConsumed} kcal
-Calo đốt: ${input.dailySummary.caloriesBurned} kcal
-Ngủ: ${input.dailySummary.sleepHours} giờ
-` : ''}
-
-Lịch sử trò chuyện:
-${historyText}
-
-Tin nhắn mới của người dùng:
-${input.message}
-
-Yêu cầu:
-- Trả lời ngắn gọn
-- Đưa lời khuyên sức khỏe khoa học
-- Ngôn ngữ: ${input.language || 'vi'}
-`;
-
-    const response = await fetch(BACKEND_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': input.token ? `Bearer ${input.token}` : '',
-      },
-      body: JSON.stringify({ prompt }),
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      const errorMsg = await response.text();
-      throw new Error(`AI Backend Error: ${response.status} - ${errorMsg}`);
-    }
-
-    const data = await response.json();
-
-    // backend có thể trả {text: "..."} hoặc {response: "..."}
-    return data.text || data.response || "AI không trả lời.";
-
-  } catch (error: any) {
-    console.error("Chatbot AI Error:", error);
-  
-    return `AI ERROR:
-  ${error?.message || error}
-  
-  Stack:
-  ${error?.stack || "no stack"}`;
+    const { text } = await healthChatPrompt(input);
+    return text || 'Xin lỗi, tôi gặp chút trục trặc khi xử lý câu hỏi này.';
+  } catch (error) {
+    console.error('Genkit Chat Error:', error);
+    throw new Error('Could not connect to AI services.');
   }
 }
