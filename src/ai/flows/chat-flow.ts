@@ -1,17 +1,16 @@
 'use server';
-/**
- * @fileOverview Luồng xử lý Chatbot Sức khỏe thông minh.
- */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
 const ChatInputSchema = z.object({
-  message: z.string().describe('Tin nhắn mới nhất từ người dùng.'),
-  history: z.array(z.object({
-    role: z.enum(['user', 'model']),
-    content: z.string(),
-  })).optional().describe('Lịch sử cuộc trò chuyện.'),
+  message: z.string(),
+  history: z.array(
+    z.object({
+      role: z.enum(['user', 'model']),
+      content: z.string(),
+    })
+  ).optional(),
   userProfile: z.object({
     name: z.string(),
     goal: z.string(),
@@ -33,40 +32,44 @@ export type ChatInput = z.infer<typeof ChatInputSchema>;
 
 const healthChatPrompt = ai.definePrompt({
   name: 'healthChatPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-3-flash-preview',
   input: { schema: ChatInputSchema },
-  prompt: `Bạn là HealthSphere AI - Chuyên gia tư vấn sức khỏe, dinh dưỡng và thể hình cao cấp.
+
+  prompt: `
+Bạn là HealthSphere AI - chuyên gia tư vấn sức khỏe.
 
 Thông tin người dùng:
 {{#if userProfile}}
-- Tên: {{userProfile.name}}
-- Mục tiêu: {{userProfile.goal}}
-- Chỉ số: {{userProfile.weight}}kg, {{userProfile.height}}cm, {{userProfile.age}} tuổi
-- Cường độ: {{userProfile.activityLevel}}
+Tên: {{userProfile.name}}
+Mục tiêu: {{userProfile.goal}}
+Cân nặng: {{userProfile.weight}} kg
+Chiều cao: {{userProfile.height}} cm
+Tuổi: {{userProfile.age}}
 {{/if}}
 
 Tiến độ hôm nay:
 {{#if dailySummary}}
-- Calo nạp: {{dailySummary.caloriesConsumed}} kcal
-- Calo đốt: {{dailySummary.caloriesBurned}} kcal
-- Ngủ: {{dailySummary.sleepHours}} giờ
+Calo nạp: {{dailySummary.caloriesConsumed}}
+Calo đốt: {{dailySummary.caloriesBurned}}
+Ngủ: {{dailySummary.sleepHours}} giờ
 {{/if}}
 
-Ngôn ngữ ưu tiên: {{language}}
+Lịch sử hội thoại:
+{{#each history}}
+{{this.role}}: {{this.content}}
+{{/each}}
 
-Nhiệm vụ:
-1. Trả lời các thắc mắc về sức khỏe, dinh dưỡng dựa trên dữ liệu thực tế của họ.
-2. Đưa ra lời khuyên khoa học, khích lệ và dễ thực hiện.
-3. Trả lời ngắn gọn, súc tích nhưng đầy đủ thông tin.
-4. LUÔN SỬ DỤNG ký tự xuống dòng (\n) để phân tách các ý cho dễ đọc.
+Tin nhắn người dùng:
+{{message}}
 
-Tin nhắn người dùng: {{message}}`,
+Trả lời ngắn gọn, dễ hiểu, xuống dòng giữa các ý.
+`,
 });
 
 export async function healthChat(input: ChatInput): Promise<string> {
   try {
     const { text } = await healthChatPrompt(input);
-    return text || 'Xin lỗi, tôi gặp chút trục trặc khi xử lý câu hỏi này.';
+    return text ?? 'AI hiện không phản hồi.';
   } catch (error) {
     console.error('Genkit Chat Error:', error);
     throw new Error('Could not connect to AI services.');
