@@ -60,7 +60,7 @@ export async function getHealthSuggestions(
   - Tiến độ hôm nay: Đã nạp ${input.dailySummary.caloriesConsumed} kcal, Đã đốt tổng cộng ${input.dailySummary.caloriesBurned} kcal, Đã ngủ ${input.dailySummary.sleepHours}h
   
   Nhiệm vụ của bạn:
-  1. Đưa ra 1 lời khuyên (generalTip) cực kỳ chi tiết, tập trung vào việc họ có đang đạt chỉ tiêu calo hôm nay không. Sử dụng xuống dòng (\n) để phân tách các ý chính.
+  1. Đưa ra 1 lời khuyên (generalTip) cực kỳ chi tiết, tập trung vào việc họ có đang đạt chỉ tiêu calo hôm nay không. HÃY SỬ DỤNG KÝ TỰ XUỐNG DÒNG (\n) để phân tách các ý chính.
   2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) phù hợp với mục tiêu ${input.userProfile.goal}. 
   3. Trong phần 'recipe' và 'description', HÃY SỬ DỤNG KÝ TỰ XUỐNG DÒNG (\n) để phân tách rõ ràng các bước thực hiện hoặc các thành phần. Ví dụ: "Bước 1: ... \nBước 2: ...".
   4. Ngôn ngữ phản hồi: ${input.language || 'vi'}.
