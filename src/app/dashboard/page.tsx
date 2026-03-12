@@ -249,7 +249,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* AI TIP CALLOUT */}
+        {/* AI TIP CALLOUT - Luôn hiển thị trên biểu đồ cân nặng */}
         {!isGenerating && !isAllLoading && suggestionData && (
           <Card className="border-primary/20 bg-primary/5 shadow-sm">
             <div className="p-4 flex gap-4">
@@ -258,10 +258,12 @@ export default function DashboardPage() {
               </div>
               <div className="space-y-1 flex-1">
                 <h4 className="text-lg font-bold text-primary">{t('ai.tipTitle')}</h4>
-                <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line">{suggestionData.generalTip}</p>
+                <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line font-medium">
+                  {suggestionData.generalTip}
+                </p>
               </div>
               <Button variant="ghost" size="sm" onClick={handleGenerateSuggestions} disabled={isGenerating}>
-                <RefreshCcw className="h-4 w-4" />
+                <RefreshCcw className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
               </Button>
             </div>
           </Card>
@@ -312,7 +314,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* AI ASSISTANT (Suggestions) */}
+        {/* AI ASSISTANT (Suggestions) - Dưới cùng, 2 ô một dòng */}
         <div className="space-y-8">
           <div className="flex items-center gap-2 px-1">
             <Sparkles className="h-6 w-6 text-primary" />
@@ -321,7 +323,7 @@ export default function DashboardPage() {
 
           {!isGenerating && !isAllLoading && suggestionData ? (
             <div className="space-y-12">
-              {/* Meal Suggestions */}
+              {/* Meal Suggestions - 2 columns */}
               <div className="space-y-6">
                 <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
                   <Utensils className="h-5 w-5" />
@@ -337,7 +339,6 @@ export default function DashboardPage() {
                           fill 
                           className="object-cover" 
                           unoptimized 
-                          data-ai-hint="healthy meal"
                         />
                       </div>
                       <div className="p-5 flex-1 flex flex-col space-y-3">
@@ -345,7 +346,7 @@ export default function DashboardPage() {
                           <h5 className="font-bold text-xl leading-tight">{meal.name}</h5>
                           <span className="text-base font-bold text-primary shrink-0 ml-2">~{meal.calories} kcal</span>
                         </div>
-                        <p className="text-base text-muted-foreground leading-relaxed flex-1 whitespace-pre-line">
+                        <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">
                           {meal.recipe}
                         </p>
                       </div>
@@ -354,7 +355,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Workout Suggestions */}
+              {/* Workout Suggestions - 2 columns */}
               <div className="space-y-6">
                 <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
                   <Dumbbell className="h-5 w-5" />
@@ -370,12 +371,11 @@ export default function DashboardPage() {
                           fill 
                           className="object-cover" 
                           unoptimized 
-                          data-ai-hint="exercise workout"
                         />
                       </div>
                       <div className="p-5 flex-1 flex flex-col space-y-3">
                         <h5 className="font-bold text-xl leading-tight">{exercise.name}</h5>
-                        <p className="text-base text-muted-foreground leading-relaxed flex-1 whitespace-pre-line">
+                        <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">
                           {exercise.description}
                         </p>
                       </div>

@@ -60,18 +60,17 @@ export async function getHealthSuggestions(
   - Tiến độ hôm nay: Đã nạp ${input.dailySummary.caloriesConsumed} kcal, Đã đốt tổng cộng ${input.dailySummary.caloriesBurned} kcal, Đã ngủ ${input.dailySummary.sleepHours}h
   
   Nhiệm vụ của bạn:
-  1. Đưa ra 1 lời khuyên (generalTip) cực kỳ chi tiết, tập trung vào việc họ có đang đạt chỉ tiêu calo hôm nay không. HÃY SỬ DỤNG KÝ TỰ XUỐNG DÒNG (\n) để phân tách các ý chính.
-  2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) phù hợp với mục tiêu ${input.userProfile.goal}. 
-  3. Trong phần 'recipe' và 'description', HÃY SỬ DỤNG KÝ TỰ XUỐNG DÒNG (\n) để phân tách rõ ràng các bước thực hiện hoặc các thành phần. Ví dụ: "Bước 1: ... \nBước 2: ...".
+  1. Đưa ra 1 lời khuyên (generalTip) chi tiết. HÃY SỬ DỤNG KÝ TỰ XUỐNG DÒNG (\n) để phân tách các ý.
+  2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) phù hợp với mục tiêu. 
+  3. QUAN TRỌNG: Trong phần 'recipe' và 'description', HÃY SỬ DỤNG KÝ TỰ XUỐNG DÒNG (\n) sau mỗi bước hoặc mỗi ý để văn bản không bị dính liền. Ví dụ: "Bước 1: ...\nBước 2: ...".
   4. Ngôn ngữ phản hồi: ${input.language || 'vi'}.
-  5. Đối với 'imagePrompt': Viết bằng tiếng Anh, mô tả cực kỳ chi tiết về món ăn/bài tập theo phong cách nhiếp ảnh chuyên nghiệp (ví dụ: "high-quality food photography of a healthy grilled chicken salad, soft lighting, 4k").
+  5. Đối với 'imagePrompt': Viết bằng tiếng Anh, mô tả chi tiết món ăn/bài tập (4k high-quality).
 
   TRẢ VỀ KẾT QUẢ DƯỚI DẠNG MỘT ĐỐI TƯỢNG JSON DUY NHẤT. KHÔNG BAO GỒM CÁC KHỐI MÃ (CODE FENCES) HOẶC VĂN BẢN THỪA.
-  Cấu trúc JSON yêu cầu:
   {
     "generalTip": "Nội dung lời khuyên...",
-    "mealSuggestions": [{"name": "Tên món", "recipe": "Bước 1: ...\\nBước 2: ...", "calories": 350, "imagePrompt": "Detailed English prompt for Imagen 4"}],
-    "workoutSuggestion": [{"name": "Tên bài tập", "description": "Hướng dẫn:\\n- Bước 1...\\n- Bước 2...", "imagePrompt": "Detailed English prompt for Imagen 4"}]
+    "mealSuggestions": [{"name": "Tên món", "recipe": "Bước 1: ...\\nBước 2: ...", "calories": 350, "imagePrompt": "..."}],
+    "workoutSuggestion": [{"name": "Tên bài tập", "description": "Hướng dẫn:\\n- Bước 1...\\n- Bước 2...", "imagePrompt": "..."}]
   }`;
 
   try {
@@ -83,6 +82,7 @@ export async function getHealthSuggestions(
       },
       body: JSON.stringify({ prompt }),
       cache: 'no-store',
+      signal: AbortSignal.timeout(60000), // 60s timeout cho Render
     });
 
     if (!response.ok) {
