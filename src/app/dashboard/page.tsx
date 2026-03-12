@@ -249,7 +249,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* AI TIP CALLOUT (AI Nhận xét) */}
+        {/* AI TIP CALLOUT */}
         {!isGenerating && !isAllLoading && suggestionData && (
           <Card className="border-primary/20 bg-primary/5 shadow-sm">
             <div className="p-4 flex gap-4">
@@ -290,7 +290,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* TODAY ACTIVITIES (Nhật ký tập luyện hôm nay) */}
+        {/* TODAY ACTIVITIES */}
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle className="text-xl font-bold">{t('dashboard.todaysActivitiesTitle')}</CardTitle>
@@ -312,7 +312,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* AI ASSISTANT (Suggestions) (Trợ lý sức khỏe AI) */}
+        {/* AI ASSISTANT (Suggestions) */}
         <div className="space-y-8">
           <div className="flex items-center gap-2 px-1">
             <Sparkles className="h-6 w-6 text-primary" />
@@ -321,7 +321,7 @@ export default function DashboardPage() {
 
           {!isGenerating && !isAllLoading && suggestionData ? (
             <div className="space-y-12">
-              {/* Meal Suggestions - 2 columns per row */}
+              {/* Meal Suggestions */}
               <div className="space-y-6">
                 <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
                   <Utensils className="h-5 w-5" />
@@ -354,7 +354,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Workout Suggestions - 2 columns per row */}
+              {/* Workout Suggestions */}
               <div className="space-y-6">
                 <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
                   <Dumbbell className="h-5 w-5" />
