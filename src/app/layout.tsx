@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,10 +7,16 @@ import FirebaseClientProvider from "@/firebase/client-provider";
 import { LanguageProvider } from "@/context/LanguageContext";
 import ConditionalLayout from "@/components/ConditionalLayout";
 
-const inter = Inter({ 
-  subsets: ["latin"], 
-  variable: "--font-inter",
-  weight: ["400", "500", "600", "700"]
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-plus-jakarta-sans",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const beVietnamPro = Be_Vietnam_Pro({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-be-vietnam-pro",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -28,14 +34,13 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
-          inter.variable
+          plusJakartaSans.variable,
+          beVietnamPro.variable
         )}
       >
         <LanguageProvider>
           <FirebaseClientProvider>
-            <ConditionalLayout>
-              {children}
-            </ConditionalLayout>
+            <ConditionalLayout>{children}</ConditionalLayout>
           </FirebaseClientProvider>
           <Toaster />
         </LanguageProvider>
