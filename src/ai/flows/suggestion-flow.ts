@@ -64,7 +64,7 @@ export async function getHealthSuggestions(
   QUAN TRỌNG: Hãy sử dụng ký tự xuống dòng (\\n) để phân tách các ý trong 'generalTip', 'recipe' và 'description'. Văn bản không được dính liền thành một khối. Sau mỗi ý hoặc mỗi bước nấu ăn, HÃY XUỐNG DÒNG (\n).
   2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) phù hợp với mục tiêu. 
   3. Đề Xuất 2-3 bài tập phù hợp với mục tiêu.
-  4. Đối với 'recipe' và 'description', trình bày theo từng bước và sử dụng \\n sau mỗi bước.
+  4. Đối với 'recipe' , 'workoutSuggestion' và 'description', trình bày theo từng bước và sử dụng \\n sau mỗi bước.
   5. Ngôn ngữ phản hồi: ${input.language || 'vi'}.
   6. Đối với 'imagePrompt': Viết bằng tiếng Anh, mô tả chi tiết món ăn/bài tập (4k high-quality).
 

@@ -144,6 +144,28 @@
       },
       "required": ["userId", "date", "duration"]
     },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "type": "object",
+      "description": "A single message in a chat conversation between a user and the AI assistant.",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["user", "model"],
+          "description": "The role of the message sender."
+        },
+        "content": {
+          "type": "string",
+          "description": "The text content of the message."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the message was created."
+        }
+      },
+      "required": ["role", "content", "createdAt"]
+    },
     "TodaySnapshot": {
       "title": "TodaySnapshot",
       "type": "object",
@@ -265,6 +287,16 @@
             "$ref": "#/backend/entities/SleepLog"
           },
           "description": "Stores a user's daily sleep entries. Private to the user."
+        }
+      },
+      {
+        "path": "/users/{userId}/chats/{chatId}",
+        "definition": {
+          "entityName": "ChatMessage",
+          "schema": {
+            "$ref": "#/backend/entities/ChatMessage"
+          },
+          "description": "Stores individual chat messages for a user."
         }
       },
       {
