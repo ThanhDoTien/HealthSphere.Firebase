@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -16,7 +15,6 @@ import { useMemoFirebase } from '@/firebase/provider';
 import { collection, query, orderBy, limit, doc, deleteDoc } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
-import AddActivityForm from '@/components/dashboard/AddActivityForm';
 import { Loader2, Zap, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { useTranslation } from '@/context/LanguageContext';
@@ -55,6 +53,7 @@ import EditActivityForm from '@/components/dashboard/EditActivityForm';
 import { useToast } from '@/components/ui/toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import AiActivityChatLog from '@/components/dashboard/AiActivityChatLog';
 
 type Activity = {
   name: string;
@@ -268,7 +267,7 @@ export default function ActivityPage() {
           )}
           <div>
             <h3 className="mb-4 text-lg font-medium">{t('activity.logTitle')}</h3>
-            {user && <AddActivityForm userId={user.uid} />}
+            {user && <AiActivityChatLog userId={user.uid} />}
           </div>
 
           <div className="space-y-6 border-t pt-6">
