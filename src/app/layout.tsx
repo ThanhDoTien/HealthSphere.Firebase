@@ -1,5 +1,6 @@
+
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Sora } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,7 +8,15 @@ import FirebaseClientProvider from "@/firebase/client-provider";
 import { LanguageProvider } from "@/context/LanguageContext";
 import ConditionalLayout from "@/components/ConditionalLayout";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const inter = Inter({ 
+  subsets: ["latin"], 
+  variable: "--font-inter" 
+});
+
+const sora = Sora({ 
+  subsets: ["latin"], 
+  variable: "--font-sora" 
+});
 
 export const metadata: Metadata = {
   title: "HealthSphere",
@@ -24,7 +33,8 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
-          inter.variable
+          inter.variable,
+          sora.variable
         )}
       >
         <LanguageProvider>
