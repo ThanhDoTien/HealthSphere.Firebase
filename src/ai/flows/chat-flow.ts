@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Luồng xử lý Chatbot Sức khỏe thông minh.
@@ -34,7 +33,7 @@ export type ChatInput = z.infer<typeof ChatInputSchema>;
 
 const healthChatPrompt = ai.definePrompt({
   name: 'healthChatPrompt',
-  model: 'googleai/gemini-2.0-flash-exp',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: ChatInputSchema },
   prompt: `Bạn là HealthSphere AI - Chuyên gia tư vấn sức khỏe, dinh dưỡng và thể hình cao cấp.
 
@@ -59,6 +58,7 @@ Nhiệm vụ:
 1. Trả lời các thắc mắc về sức khỏe, dinh dưỡng dựa trên dữ liệu thực tế của họ.
 2. Đưa ra lời khuyên khoa học, khích lệ và dễ thực hiện.
 3. Trả lời ngắn gọn, súc tích nhưng đầy đủ thông tin.
+4. LUÔN SỬ DỤNG ký tự xuống dòng (\n) để phân tách các ý cho dễ đọc.
 
 Tin nhắn người dùng: {{message}}`,
 });
@@ -72,4 +72,3 @@ export async function healthChat(input: ChatInput): Promise<string> {
     throw new Error('Could not connect to AI services.');
   }
 }
-

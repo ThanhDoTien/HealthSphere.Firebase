@@ -250,35 +250,48 @@ export default function DashboardPage() {
         </div>
 
         {/* AI TIP CALLOUT & LOADING */}
-        {(isGenerating || isAllLoading) && !suggestionData ? (
-          <Card className="border-primary/20 bg-primary/5 shadow-sm animate-pulse">
-            <div className="p-4 flex items-center gap-4">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <p className="text-base font-medium text-primary">
-                {isGenerating ? "HealthSphere AI đang chuẩn bị lời khuyên cho bạn..." : t('ai.loadingData')}
-              </p>
-            </div>
-          </Card>
-        ) : suggestionData ? (
-          <Card className="border-primary/20 bg-primary/5 shadow-sm">
-            <div className="p-4 flex gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Lightbulb className="h-6 w-6" />
-              </div>
-              <div className="space-y-1 flex-1">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-lg font-bold text-primary">{t('ai.tipTitle')}</h4>
-                  <Button variant="ghost" size="sm" onClick={handleGenerateSuggestions} disabled={isGenerating}>
-                    <RefreshCcw className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
-                  </Button>
-                </div>
-                <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line font-medium">
-                  {suggestionData.generalTip}
+        <div className="space-y-4">
+          {isGenerating && (
+            <Card className="border-primary/20 bg-primary/5 shadow-sm animate-pulse">
+              <div className="p-4 flex items-center gap-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <p className="text-base font-medium text-primary">
+                  HealthSphere AI đang chuẩn bị lời khuyên cho bạn...
                 </p>
               </div>
-            </div>
-          </Card>
-        ) : null}
+            </Card>
+          )}
+
+          {!isGenerating && suggestionData && (
+            <Card className="border-primary/20 bg-primary/5 shadow-sm">
+              <div className="p-4 flex gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Lightbulb className="h-6 w-6" />
+                </div>
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-lg font-bold text-primary">{t('ai.tipTitle')}</h4>
+                    <Button variant="ghost" size="sm" onClick={handleGenerateSuggestions} disabled={isGenerating}>
+                      <RefreshCcw className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
+                    </Button>
+                  </div>
+                  <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line font-medium">
+                    {suggestionData.generalTip}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {isAllLoading && !suggestionData && !isGenerating && (
+             <Card className="border-primary/20 bg-primary/5 shadow-sm animate-pulse">
+              <div className="p-4 flex items-center gap-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <p className="text-base font-medium text-primary">{t('ai.loadingData')}</p>
+              </div>
+            </Card>
+          )}
+        </div>
 
         {/* WEIGHT TRACKING */}
         <Card className="shadow-md">

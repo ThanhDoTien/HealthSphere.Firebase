@@ -61,7 +61,7 @@ export async function getHealthSuggestions(
   
   Nhiệm vụ của bạn:
   1. Đưa ra 1 lời khuyên (generalTip) chi tiết và mang tính khích lệ. 
-  QUAN TRỌNG: Hãy sử dụng ký tự xuống dòng (\\n) để phân tách các ý trong 'generalTip', 'recipe' và 'description'. Văn bản không được dính liền thành một khối.
+  QUAN TRỌNG: Hãy sử dụng ký tự xuống dòng (\\n) để phân tách các ý trong 'generalTip', 'recipe' và 'description'. Văn bản không được dính liền thành một khối. Sau mỗi ý hoặc mỗi bước nấu ăn, HÃY XUỐNG DÒNG (\n).
   2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) phù hợp với mục tiêu. 
   3. Đối với 'recipe' và 'description', trình bày theo từng bước và sử dụng \\n sau mỗi bước.
   4. Ngôn ngữ phản hồi: ${input.language || 'vi'}.
