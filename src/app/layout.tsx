@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Poppins } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
@@ -9,13 +9,8 @@ import ConditionalLayout from "@/components/ConditionalLayout";
 
 const inter = Inter({ 
   subsets: ["latin"], 
-  variable: "--font-inter" 
-});
-
-const poppins = Poppins({ 
-  subsets: ["latin"], 
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-poppins" 
+  variable: "--font-inter",
+  weight: ["400", "500", "600", "700"]
 });
 
 export const metadata: Metadata = {
@@ -33,8 +28,7 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
-          inter.variable,
-          poppins.variable
+          inter.variable
         )}
       >
         <LanguageProvider>
