@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -15,8 +15,9 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
 import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
+import { PieChart } from '@/components/ui/pie-chart';
 import { type ChartConfig } from '@/components/ui/chart';
-import { Loader2, MoreHorizontal, Pencil, Trash2, Info } from 'lucide-react';
+import { Loader2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import {
   DropdownMenu,
@@ -75,12 +76,24 @@ export default function CaloriesPage() {
   const { t } = useTranslation();
 
   const [calorieFilter, setCalorieFilter] = useState('30');
+  const [today, setToday] = useState('');
+
+  useEffect(() => {
+    setToday(new Date().toISOString().split('T')[0]);
+  }, []);
 
   const calorieChartConfig = useMemo(() => ({
     calories: {
       label: t('calories.chart.calories'),
       color: 'hsl(var(--accent))',
     },
+  }), [t]) satisfies ChartConfig;
+
+  const macroChartConfig = useMemo(() => ({
+    protein: { label: t('calories.chart.protein'), color: '#3b82f6' }, // Blue
+    carbs: { label: t('calories.chart.carbs'), color: '#f97316' },  // Orange
+    fat: { label: t('calories.chart.fat'), color: '#eab308' },    // Yellow
+    fiber: { label: t('calories.chart.fiber'), color: '#22c55e' },  // Green
   }), [t]) satisfies ChartConfig;
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -129,6 +142,32 @@ export default function CaloriesPage() {
       )
       .slice(-limitCount);
   }, [mealData, calorieFilter]);
+
+  const macroData = useMemo(() => {
+    if (!mealData || !today) return [];
+    
+    let protein = 0;
+    let carbs = 0;
+    let fat = 0;
+    let fiber = 0;
+
+    mealData.filter(m => m.date === today).forEach(meal => {
+      protein += meal.protein || 0;
+      carbs += meal.carbs || 0;
+      fat += meal.fat || 0;
+      fiber += meal.fiber || 0;
+    });
+
+    const total = protein + carbs + fat + fiber;
+    if (total === 0) return [];
+
+    return [
+      { name: 'protein', value: protein, fill: '#3b82f6' },
+      { name: 'carbs', value: carbs, fill: '#f97316' },
+      { name: 'fat', value: fat, fill: '#eab308' },
+      { name: 'fiber', value: fiber, fill: '#22c55e' },
+    ];
+  }, [mealData, today]);
 
   const dailyMeals = useMemo(() => {
     if (!mealData) return {};
@@ -182,42 +221,73 @@ export default function CaloriesPage() {
   const isLoading = userLoading || mealLoading;
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle>{t('calories.title')}</CardTitle>
+              <CardDescription>
+                {t('calories.description')}
+              </CardDescription>
+            </div>
+            <Select value={calorieFilter} onValueChange={setCalorieFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">{t('common.filter.last7')}</SelectItem>
+                <SelectItem value="30">{t('common.filter.last30')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent>
+            {isLoading && !mealData ? (
+              <div className="flex h-64 items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <BarChart
+                data={chartData}
+                config={calorieChartConfig}
+                yAxisWidth={40}
+                className="h-64"
+                showLegend={false}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('calories.chart.macrosTitle')}</CardTitle>
+            <CardDescription>{t('dashboard.summary')}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center h-64">
+            {isLoading && !mealData ? (
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            ) : macroData.length > 0 ? (
+              <PieChart
+                data={macroData}
+                config={macroChartConfig}
+                className="h-full w-full"
+                showLegend={true}
+              />
+            ) : (
+              <div className="text-center text-muted-foreground text-sm py-10 italic">
+                {t('calories.noMeals')}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle>{t('calories.title')}</CardTitle>
-            <CardDescription>
-              {t('calories.description')}
-            </CardDescription>
-          </div>
-          <Select value={calorieFilter} onValueChange={setCalorieFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">{t('common.filter.last7')}</SelectItem>
-              <SelectItem value="30">{t('common.filter.last30')}</SelectItem>
-            </SelectContent>
-          </Select>
+        <CardHeader>
+           <CardTitle>{t('calories.logTitle')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isLoading && !mealData ? (
-            <div className="flex h-64 items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <BarChart
-              data={chartData}
-              config={calorieChartConfig}
-              yAxisWidth={40}
-              className="h-64"
-              showLegend={false}
-            />
-          )}
           <div className="space-y-6">
-            <h3 className="text-lg font-medium">{t('calories.logTitle')}</h3>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <LogMealWithAiDialog userId={user?.uid || ''} />
                <div className="bg-muted/30 rounded-xl p-4 border border-dashed flex items-center justify-center text-xs text-muted-foreground text-center">
@@ -267,11 +337,12 @@ export default function CaloriesPage() {
                             <p className="text-xs capitalize text-muted-foreground">
                               {t(`form.add_meal.type${meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1)}`)}
                             </p>
-                            {(meal.protein || meal.carbs || meal.fat) && (
-                              <div className="flex gap-3 pt-1">
+                            {(meal.protein || meal.carbs || meal.fat || meal.fiber) && (
+                              <div className="flex flex-wrap gap-2 pt-1">
                                 {meal.protein !== undefined && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">P: {meal.protein}g</span>}
                                 {meal.carbs !== undefined && <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">C: {meal.carbs}g</span>}
                                 {meal.fat !== undefined && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">F: {meal.fat}g</span>}
+                                {meal.fiber !== undefined && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Fib: {meal.fiber}g</span>}
                               </div>
                             )}
                           </div>
