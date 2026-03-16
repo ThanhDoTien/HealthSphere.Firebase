@@ -184,23 +184,14 @@ export default function CaloriesPage() {
 
   const dailyMeals = useMemo(() => {
     if (!mealData) return {};
-    const groupedMeals: { [date: string]: WithId<Meal>[] } = {};
+    const grouped: { [date: string]: WithId<Meal>[] } = {};
     mealData.forEach((meal) => {
-      const date = meal.date;
-      if (groupedActivities[date]) {
-          groupedMeals[date] = groupedMeals[date] || [];
-          groupedMeals[date].push(meal);
-      } else {
-          groupedMeals[date] = [meal];
+      if (!grouped[meal.date]) {
+        grouped[meal.date] = [];
       }
+      grouped[meal.date].push(meal);
     });
-    // Fixing a potential typo in the groupedMeals logic
-    const fixedGroups: { [date: string]: WithId<Meal>[] } = {};
-    mealData.forEach(meal => {
-        if (!fixedGroups[meal.date]) fixedGroups[meal.date] = [];
-        fixedGroups[meal.date].push(meal);
-    });
-    return fixedGroups;
+    return grouped;
   }, [mealData]);
 
   const handleDeleteMeal = () => {
