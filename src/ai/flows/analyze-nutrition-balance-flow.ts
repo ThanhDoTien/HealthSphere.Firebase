@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview AI flow to analyze daily nutrition balance.
@@ -7,12 +8,12 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
 const AnalyzeNutritionInputSchema = z.object({
-  totalCalories: z.number(),
-  protein: z.number(),
-  carbs: z.number(),
-  fat: z.number(),
-  fiber: z.number(),
-  goal: z.string().optional(),
+  totalCalories: z.number().describe('Total calories consumed today.'),
+  protein: z.number().describe('Total protein in grams.'),
+  carbs: z.number().describe('Total carbohydrates in grams.'),
+  fat: z.number().describe('Total fat in grams.'),
+  fiber: z.number().describe('Total fiber in grams.'),
+  goal: z.string().optional().describe('User health goal.'),
   language: z.string().optional().default('vi'),
 });
 export type AnalyzeNutritionInput = z.infer<typeof AnalyzeNutritionInputSchema>;
@@ -29,22 +30,27 @@ const analyzeNutritionPrompt = ai.definePrompt({
   input: { schema: AnalyzeNutritionInputSchema },
   output: { schema: AnalyzeNutritionOutputSchema },
   prompt: `
-Bạn là chuyên gia dinh dưỡng cao cấp của HealthSphere. Hãy phân tích các chỉ số dinh dưỡng của người dùng trong ngày hôm nay:
+Bạn là chuyên gia dinh dưỡng cao cấp của HealthSphere. Hãy phân tích các chỉ số dinh dưỡng của người dùng trong ngày hôm nay để đưa ra lời khuyên cân bằng:
 
+Dữ liệu dinh dưỡng hôm nay:
 - Tổng Calo: {{totalCalories}} kcal
-- Protein: {{protein}}g
-- Carbs: {{carbs}}g
-- Fat: {{fat}}g
-- Fiber: {{fiber}}g
-- Mục tiêu: {{goal}}
+- Protein (Đạm): {{protein}}g
+- Carbs (Tinh bột): {{carbs}}g
+- Fat (Chất béo): {{fat}}g
+- Fiber (Chất xơ): {{fiber}}g
+- Mục tiêu người dùng: {{goal}}
 
 Nhiệm vụ:
-1. Đánh giá xem tỉ lệ các chất (Macros) đã cân bằng chưa dựa trên mục tiêu của người dùng.
-2. Kiểm tra lượng chất xơ (Fiber) đã đủ chưa (thường cần ~25-30g).
-3. Trả về một phân tích ngắn gọn, súc tích và đưa ra lời khuyên thực tế bằng tiếng {{language}}.
-4. Xác định trạng thái chung (status): 'good' nếu cân bằng, 'warning' nếu hơi lệch, 'bad' nếu quá lệch hoặc nạp quá ít/nhiều.
+1. Đánh giá tỉ lệ các chất sinh năng lượng (Protein/Carbs/Fat). Tỉ lệ chuẩn thường là 30/40/30 hoặc 25/50/25 tùy mục tiêu.
+2. Kiểm tra lượng chất xơ (Fiber). Mục tiêu lý tưởng là 25-30g mỗi ngày.
+3. So sánh với mục tiêu "{{goal}}" của người dùng để đưa ra lời khuyên thực tế.
+4. Trình bày nội dung phân tích (analysis) ngắn gọn, súc tích, chia thành các ý rõ ràng bằng tiếng {{language}}.
+5. Xác định trạng thái chung (status):
+   - 'good': Cân bằng tốt, đủ chất xơ, calo hợp lý.
+   - 'warning': Có một vài chỉ số chưa ổn (ví dụ: quá nhiều fat, quá ít xơ).
+   - 'bad': Mất cân bằng nghiêm trọng hoặc nạp quá ít/nhiều so với nhu cầu.
 
-Trả về JSON có cấu trúc: analysis (string), status (enum).
+Trả về JSON có cấu trúc analysis và status.
 `,
 });
 

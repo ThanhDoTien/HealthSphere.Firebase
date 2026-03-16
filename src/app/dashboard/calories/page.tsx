@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -127,7 +128,9 @@ export default function CaloriesPage() {
     }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
   }, [mealData, today]);
 
+  // Logic phân tích AI nằm ở đây
   useEffect(() => {
+    // Chỉ chạy khi có calo (đã ăn) và hồ sơ người dùng (để biết mục tiêu)
     if (totals.calories > 0 && userProfile) {
       const runAnalysis = async () => {
         setIsAnalyzing(true);
@@ -149,10 +152,10 @@ export default function CaloriesPage() {
         }
       };
       runAnalysis();
-    } else {
+    } else if (!mealLoading && totals.calories === 0) {
       setAiAnalysis(null);
     }
-  }, [totals, userProfile, locale]);
+  }, [totals.calories, totals.protein, totals.carbs, totals.fat, totals.fiber, userProfile, locale, mealLoading]);
 
   const chartData = useMemo(() => {
     if (!mealData) return [];
@@ -215,7 +218,6 @@ export default function CaloriesPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      {/* Top: Calorie History Chart */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
@@ -249,7 +251,6 @@ export default function CaloriesPage() {
         </CardContent>
       </Card>
 
-      {/* Middle Row: Macros Pie Chart & AI Analysis */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="flex flex-col">
           <CardHeader>
@@ -274,6 +275,7 @@ export default function CaloriesPage() {
           </CardContent>
         </Card>
 
+        {/* Panel Phân tích AI hiển thị ở đây */}
         <Card className="flex flex-col border-primary/20 bg-primary/5">
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
             <BrainCircuit className="h-5 w-5 text-primary" />
@@ -311,7 +313,6 @@ export default function CaloriesPage() {
         </Card>
       </div>
 
-      {/* Logging & History */}
       <Card>
         <CardHeader>
            <CardTitle>{t('calories.logTitle')}</CardTitle>
