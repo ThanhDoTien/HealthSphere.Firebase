@@ -1,4 +1,3 @@
-
 {
   "home.login": "Đăng nhập",
   "home.signup": "Đăng ký",
@@ -101,6 +100,11 @@
   "calories.chart.carbs": "Tinh bột (Carbs)",
   "calories.chart.fat": "Chất béo (Fat)",
   "calories.chart.fiber": "Chất xơ (Fiber)",
+  "calories.aiAnalysisTitle": "Phân tích Dinh dưỡng AI",
+  "calories.aiNoData": "Ghi lại bữa ăn để AI bắt đầu phân tích dinh dưỡng cho bạn.",
+  "calories.status.good": "Cân bằng tốt",
+  "calories.status.warning": "Cần điều chỉnh",
+  "calories.status.bad": "Chưa ổn định",
   "calories.logTitle": "Ghi lại Bữa ăn",
   "calories.manualSeparator": "Hoặc thêm bằng AI",
   "calories.dailyLogTitle": "Nhật ký Bữa ăn Hàng ngày",

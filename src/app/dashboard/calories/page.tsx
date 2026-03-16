@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -17,7 +16,7 @@ import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { PieChart } from '@/components/ui/pie-chart';
 import { type ChartConfig } from '@/components/ui/chart';
-import { Loader2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Loader2, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import {
   DropdownMenu,
@@ -56,6 +55,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import AiMealChatLog from '@/components/dashboard/AiMealChatLog';
+import { analyzeNutritionBalance, type AnalyzeNutritionOutput } from '@/ai/flows/analyze-nutrition-balance-flow';
+import { cn } from '@/lib/utils';
 
 type Meal = {
   name: string;
@@ -70,13 +71,15 @@ type Meal = {
 };
 
 export default function CaloriesPage() {
-  const { user, loading: userLoading } = useUser();
+  const { user, userProfile, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const [calorieFilter, setCalorieFilter] = useState('30');
   const [today, setToday] = useState('');
+  const [aiAnalysis, setAiAnalysis] = useState<AnalyzeNutritionOutput | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     setToday(new Date().toISOString().split('T')[0]);
@@ -90,10 +93,10 @@ export default function CaloriesPage() {
   }), [t]) satisfies ChartConfig;
 
   const macroChartConfig = useMemo(() => ({
-    protein: { label: t('calories.chart.protein'), color: '#3b82f6' }, // Blue
-    carbs: { label: t('calories.chart.carbs'), color: '#f97316' },  // Orange
-    fat: { label: t('calories.chart.fat'), color: '#eab308' },    // Yellow
-    fiber: { label: t('calories.chart.fiber'), color: '#22c55e' },  // Green
+    protein: { label: t('calories.chart.protein'), color: '#3b82f6' },
+    carbs: { label: t('calories.chart.carbs'), color: '#f97316' },
+    fat: { label: t('calories.chart.fat'), color: '#eab308' },
+    fiber: { label: t('calories.chart.fiber'), color: '#22c55e' },
   }), [t]) satisfies ChartConfig;
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -112,105 +115,104 @@ export default function CaloriesPage() {
     mealQuery
   );
 
+  const totals = useMemo(() => {
+    if (!mealData || !today) return { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
+    return mealData.filter(m => m.date === today).reduce((acc, meal) => {
+      acc.calories += meal.calories || 0;
+      acc.protein += meal.protein || 0;
+      acc.carbs += meal.carbs || 0;
+      acc.fat += meal.fat || 0;
+      acc.fiber += meal.fiber || 0;
+      return acc;
+    }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
+  }, [mealData, today]);
+
+  useEffect(() => {
+    if (totals.calories > 0 && userProfile) {
+      const runAnalysis = async () => {
+        setIsAnalyzing(true);
+        try {
+          const result = await analyzeNutritionBalance({
+            totalCalories: totals.calories,
+            protein: totals.protein,
+            carbs: totals.carbs,
+            fat: totals.fat,
+            fiber: totals.fiber,
+            goal: userProfile.goal,
+            language: locale,
+          });
+          setAiAnalysis(result);
+        } catch (error) {
+          console.error("AI Analysis Error:", error);
+        } finally {
+          setIsAnalyzing(false);
+        }
+      };
+      runAnalysis();
+    } else {
+      setAiAnalysis(null);
+    }
+  }, [totals, userProfile, locale]);
+
   const chartData = useMemo(() => {
     if (!mealData) return [];
-
     const dailyCalories: { [date: string]: number } = {};
-
     mealData.forEach((meal) => {
       const date = meal.date;
-      if (dailyCalories[date]) {
-        dailyCalories[date] += meal.calories;
-      } else {
-        dailyCalories[date] = meal.calories;
-      }
+      dailyCalories[date] = (dailyCalories[date] || 0) + meal.calories;
     });
-
     const limitCount = parseInt(calorieFilter);
-
     return Object.keys(dailyCalories)
       .map((date) => ({
-        date: new Date(date + 'T00:00').toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-        }),
+        date: new Date(date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         calories: dailyCalories[date],
         fullDate: date,
       }))
-      .sort(
-        (a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime()
-      )
+      .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
       .slice(-limitCount);
   }, [mealData, calorieFilter]);
 
   const macroData = useMemo(() => {
-    if (!mealData || !today) return [];
-    
-    let protein = 0;
-    let carbs = 0;
-    let fat = 0;
-    let fiber = 0;
-
-    mealData.filter(m => m.date === today).forEach(meal => {
-      protein += meal.protein || 0;
-      carbs += meal.carbs || 0;
-      fat += meal.fat || 0;
-      fiber += meal.fiber || 0;
-    });
-
-    const total = protein + carbs + fat + fiber;
-    if (total === 0) return [];
-
+    if (totals.calories === 0) return [];
     return [
-      { name: 'protein', value: protein, fill: '#3b82f6' },
-      { name: 'carbs', value: carbs, fill: '#f97316' },
-      { name: 'fat', value: fat, fill: '#eab308' },
-      { name: 'fiber', value: fiber, fill: '#22c55e' },
-    ];
-  }, [mealData, today]);
+      { name: 'protein', value: totals.protein, fill: '#3b82f6' },
+      { name: 'carbs', value: totals.carbs, fill: '#f97316' },
+      { name: 'fat', value: totals.fat, fill: '#eab308' },
+      { name: 'fiber', value: totals.fiber, fill: '#22c55e' },
+    ].filter(item => item.value > 0);
+  }, [totals]);
 
   const dailyMeals = useMemo(() => {
     if (!mealData) return {};
     const groupedMeals: { [date: string]: WithId<Meal>[] } = {};
-
     mealData.forEach((meal) => {
       const date = meal.date;
-      if (groupedMeals[date]) {
-        groupedMeals[date].push(meal);
+      if (groupedActivities[date]) {
+          groupedMeals[date] = groupedMeals[date] || [];
+          groupedMeals[date].push(meal);
       } else {
-        groupedMeals[date] = [meal];
+          groupedMeals[date] = [meal];
       }
     });
-    return groupedMeals;
+    // Fixing a potential typo in the groupedMeals logic
+    const fixedGroups: { [date: string]: WithId<Meal>[] } = {};
+    mealData.forEach(meal => {
+        if (!fixedGroups[meal.date]) fixedGroups[meal.date] = [];
+        fixedGroups[meal.date].push(meal);
+    });
+    return fixedGroups;
   }, [mealData]);
 
   const handleDeleteMeal = () => {
     if (!selectedMeal || !user) return;
-    const mealDocRef = doc(
-      firestore,
-      `users/${user.uid}/meals/${selectedMeal.id}`
-    );
-
+    const mealDocRef = doc(firestore, `users/${user.uid}/meals/${selectedMeal.id}`);
     deleteDoc(mealDocRef)
       .then(() => {
-        toast({
-          title: t('form.common.success'),
-          description: t('calories.deleteSuccess'),
-        });
+        toast({ title: t('form.common.success'), description: t('calories.deleteSuccess') });
       })
       .catch((error) => {
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: mealDocRef.path,
-            operation: 'delete',
-          })
-        );
-        toast({
-          variant: 'destructive',
-          title: t('form.common.error'),
-          description: t('calories.deleteError'),
-        });
+        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: mealDocRef.path, operation: 'delete' }));
+        toast({ variant: 'destructive', title: t('form.common.error'), description: t('calories.deleteError') });
       })
       .finally(() => {
         setIsDeleteDialogOpen(false);
@@ -222,55 +224,55 @@ export default function CaloriesPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>{t('calories.title')}</CardTitle>
-              <CardDescription>
-                {t('calories.description')}
-              </CardDescription>
+      {/* Top: Calorie History Chart */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>{t('calories.title')}</CardTitle>
+            <CardDescription>{t('calories.description')}</CardDescription>
+          </div>
+          <Select value={calorieFilter} onValueChange={setCalorieFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">{t('common.filter.last7')}</SelectItem>
+              <SelectItem value="30">{t('common.filter.last30')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent>
+          {isLoading && !mealData ? (
+            <div className="flex h-64 items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-            <Select value={calorieFilter} onValueChange={setCalorieFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">{t('common.filter.last7')}</SelectItem>
-                <SelectItem value="30">{t('common.filter.last30')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </CardHeader>
-          <CardContent>
-            {isLoading && !mealData ? (
-              <div className="flex h-64 items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <BarChart
-                data={chartData}
-                config={calorieChartConfig}
-                yAxisWidth={40}
-                className="h-64"
-                showLegend={false}
-              />
-            )}
-          </CardContent>
-        </Card>
+          ) : (
+            <BarChart
+              data={chartData}
+              config={calorieChartConfig}
+              yAxisWidth={40}
+              className="h-64"
+              showLegend={false}
+            />
+          )}
+        </CardContent>
+      </Card>
 
-        <Card>
+      {/* Middle Row: Macros Pie Chart & AI Analysis */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="flex flex-col">
           <CardHeader>
             <CardTitle>{t('calories.chart.macrosTitle')}</CardTitle>
             <CardDescription>{t('dashboard.summary')}</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center h-64">
+          <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[250px]">
             {isLoading && !mealData ? (
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             ) : macroData.length > 0 ? (
               <PieChart
                 data={macroData}
                 config={macroChartConfig}
-                className="h-full w-full"
+                className="h-full w-full max-h-[250px]"
                 showLegend={true}
               />
             ) : (
@@ -280,63 +282,79 @@ export default function CaloriesPage() {
             )}
           </CardContent>
         </Card>
+
+        <Card className="flex flex-col border-primary/20 bg-primary/5">
+          <CardHeader className="flex flex-row items-center gap-2 pb-2">
+            <BrainCircuit className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">{t('calories.aiAnalysisTitle') || 'Phân tích Dinh dưỡng AI'}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 space-y-4">
+            {isAnalyzing ? (
+              <div className="flex flex-col items-center justify-center h-full gap-2 text-primary animate-pulse">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <p className="text-sm font-medium">HealthSphere AI đang phân tích...</p>
+              </div>
+            ) : aiAnalysis ? (
+              <div className="space-y-4 animate-in fade-in duration-500">
+                <div className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold w-fit",
+                  aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" : 
+                  aiAnalysis.status === 'warning' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
+                )}>
+                  {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> : 
+                   aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                  {aiAnalysis.status === 'good' ? (t('calories.status.good') || 'Cân bằng tốt') : 
+                   aiAnalysis.status === 'warning' ? (t('calories.status.warning') || 'Cần điều chỉnh') : (t('calories.status.bad') || 'Chưa ổn định')}
+                </div>
+                <p className="text-sm leading-relaxed whitespace-pre-line font-medium text-foreground/80">
+                  {aiAnalysis.analysis}
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-2 py-10">
+                <BrainCircuit className="h-10 w-10 opacity-20" />
+                <p className="text-xs italic">{t('calories.aiNoData') || 'Ghi lại bữa ăn để AI bắt đầu phân tích dinh dưỡng cho bạn.'}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
+      {/* Logging & History */}
       <Card>
         <CardHeader>
            <CardTitle>{t('calories.logTitle')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <LogMealWithAiDialog userId={user?.uid || ''} />
-               <div className="bg-muted/30 rounded-xl p-4 border border-dashed flex items-center justify-center text-xs text-muted-foreground text-center">
-                  <p>Mẹo: Bạn có thể chụp ảnh món ăn để AI phân tích nhanh hơn.</p>
-               </div>
-            </div>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">
-                  {t('calories.manualSeparator')}
-                </span>
-              </div>
-            </div>
-
-            {user && <AiMealChatLog userId={user.uid} />}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <LogMealWithAiDialog userId={user?.uid || ''} />
+             <div className="bg-muted/30 rounded-xl p-4 border border-dashed flex items-center justify-center text-xs text-muted-foreground text-center">
+                <p>Mẹo: Bạn có thể chụp ảnh món ăn để AI phân tích nhanh hơn.</p>
+             </div>
           </div>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+            <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">{t('calories.manualSeparator')}</span></div>
+          </div>
+          {user && <AiMealChatLog userId={user.uid} />}
 
           <div className="space-y-6 border-t pt-6">
             <h3 className="text-lg font-medium">{t('calories.dailyLogTitle')}</h3>
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
+              <div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
             ) : Object.keys(dailyMeals).length > 0 ? (
               <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
-                {Object.entries(dailyMeals).map(([date, meals]) => (
+                {Object.entries(dailyMeals).sort((a,b) => b[0].localeCompare(a[0])).map(([date, meals]) => (
                   <div key={date}>
                     <h4 className="sticky top-0 mb-2 border-b bg-card py-2 font-semibold text-md">
-                      {new Date(date + 'T00:00').toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
+                      {new Date(date + 'T00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                     </h4>
                     <ul className="space-y-3 pt-2">
                       {meals.map((meal) => (
-                        <li
-                          key={meal.id}
-                          className="flex items-start justify-between rounded-xl bg-muted/50 p-4 border"
-                        >
+                        <li key={meal.id} className="flex items-start justify-between rounded-xl bg-muted/50 p-4 border">
                           <div className="space-y-1">
                             <p className="font-bold">{meal.name}</p>
-                            <p className="text-xs capitalize text-muted-foreground">
-                              {t(`form.add_meal.type${meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1)}`)}
-                            </p>
+                            <p className="text-xs capitalize text-muted-foreground">{t(`form.add_meal.type${meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1)}`)}</p>
                             {(meal.protein || meal.carbs || meal.fat || meal.fiber) && (
                               <div className="flex flex-wrap gap-2 pt-1">
                                 {meal.protein !== undefined && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">P: {meal.protein}g</span>}
@@ -348,38 +366,14 @@ export default function CaloriesPage() {
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="text-right">
-                              <p className="font-bold text-primary">
-                                {meal.calories}
-                              </p>
+                              <p className="font-bold text-primary">{meal.calories}</p>
                               <p className="text-[10px] text-muted-foreground">kcal</p>
                             </div>
                             <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <span className="sr-only">Open menu</span>
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
+                              <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setSelectedMeal(meal);
-                                    setIsEditDialogOpen(true);
-                                  }}
-                                >
-                                  <Pencil className="mr-2 h-4 w-4" />
-                                  {t('form.common.edit')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-destructive"
-                                  onClick={() => {
-                                    setSelectedMeal(meal);
-                                    setIsDeleteDialogOpen(true);
-                                  }}
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  {t('form.common.delete')}
-                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { setSelectedMeal(meal); setIsEditDialogOpen(true); }}><Pencil className="mr-2 h-4 w-4" />{t('form.common.edit')}</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive" onClick={() => { setSelectedMeal(meal); setIsDeleteDialogOpen(true); }}><Trash2 className="mr-2 h-4 w-4" />{t('form.common.delete')}</DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -390,50 +384,28 @@ export default function CaloriesPage() {
                 ))}
               </div>
             ) : (
-              <p className="py-8 text-center text-muted-foreground">
-                {t('calories.noMeals')}
-              </p>
+              <p className="py-8 text-center text-muted-foreground">{t('calories.noMeals')}</p>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('calories.editTitle')}</DialogTitle>
-          </DialogHeader>
-          {selectedMeal && user && (
-            <EditMealForm
-              userId={user.uid}
-              meal={selectedMeal}
-              onSuccess={() => setIsEditDialogOpen(false)}
-            />
-          )}
+          <DialogHeader><DialogTitle>{t('calories.editTitle')}</DialogTitle></DialogHeader>
+          {selectedMeal && user && <EditMealForm userId={user.uid} meal={selectedMeal} onSuccess={() => setIsEditDialogOpen(false)} />}
         </DialogContent>
       </Dialog>
 
-      {/* Delete Alert Dialog */}
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('calories.deleteTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('calories.deleteDescription', { name: selectedMeal?.name || '' })}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t('calories.deleteDescription', { name: selectedMeal?.name || '' })}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('form.common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteMeal}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              {t('calories.deleteConfirm')}
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDeleteMeal} className="bg-destructive hover:bg-destructive/90">{t('calories.deleteConfirm')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

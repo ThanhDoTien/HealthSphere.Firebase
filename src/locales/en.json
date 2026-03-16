@@ -1,4 +1,3 @@
-
 {
   "home.login": "Login",
   "home.signup": "Sign Up",
@@ -101,6 +100,11 @@
   "calories.chart.carbs": "Carbs",
   "calories.chart.fat": "Fat",
   "calories.chart.fiber": "Fiber",
+  "calories.aiAnalysisTitle": "AI Nutrition Analysis",
+  "calories.aiNoData": "Log a meal to let AI analyze your daily nutrition balance.",
+  "calories.status.good": "Balanced",
+  "calories.status.warning": "Needs Attention",
+  "calories.status.bad": "Imbalanced",
   "calories.logTitle": "Log a Meal",
   "calories.manualSeparator": "Or use AI chat",
   "calories.dailyLogTitle": "Daily Meal Log",
