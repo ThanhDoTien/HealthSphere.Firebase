@@ -17,6 +17,7 @@ const ArticleSchema = z.object({
   description: z.string().describe('A brief summary of the article.'),
   source: z.string().describe('The source name (e.g., WHO, Harvard Health).'),
   url: z.string().describe('A simulated or real URL for more info.'),
+  imageUrl: z.string().describe('A URL for a high-quality relevant thumbnail image.'),
   category: z.string().describe('Category like Nutrition, Fitness, Mental Health.'),
 });
 
@@ -31,13 +32,14 @@ const discoverArticlesPrompt = ai.definePrompt({
   input: { schema: DiscoverArticlesInputSchema },
   output: { schema: DiscoverArticlesOutputSchema },
   prompt: `
-Bạn là chuyên gia nghiên cứu y khoa của HealthSphere. Dựa trên mục tiêu sức khỏe của người dùng là "{{goal}}", hãy thực hiện "tìm kiếm ảo" và đề xuất 5 bài báo hoặc bài viết khoa học uy tín nhất từ internet (như WHO, Mayo Clinic, Harvard Health, PubMed, v.v.).
+Bạn là chuyên gia nghiên cứu y khoa và sức khỏe của HealthSphere. Dựa trên mục tiêu sức khỏe của người dùng là "{{goal}}", hãy thực hiện "tìm kiếm ảo" và đề xuất 5 bài báo hoặc bài viết khoa học uy tín, mang tính ứng dụng cao nhất từ internet (như WHO, Mayo Clinic, Harvard Health, PubMed, Vinmec, Bệnh viện 108, v.v.).
 
 Yêu cầu:
-1. Mỗi đề xuất phải có tiêu đề (title), mô tả ngắn gọn (description), nguồn (source), và thể loại (category).
-2. URL có thể là các trang uy tín tương ứng với chủ đề.
-3. Toàn bộ nội dung trả về bằng tiếng {{language}}.
-4. Đảm bảo các bài viết mang tính cập nhật và có giá trị khoa học cao.
+1. Mỗi đề xuất phải có tiêu đề (title), mô tả ngắn gọn (description), nguồn (source), địa chỉ ảnh minh họa (imageUrl) và thể loại (category).
+2. URL phải dẫn đến các trang uy tín hoặc các bài viết liên quan thực tế.
+3. Hình ảnh (imageUrl) phải là liên kết ảnh chất lượng cao (từ Unsplash hoặc các nguồn ảnh y tế uy tín) mô tả đúng nội dung bài viết.
+4. Toàn bộ nội dung trả về bằng tiếng {{language}}. Ưu tiên các kiến thức y khoa đã được Việt hóa hoặc phù hợp với người Việt Nam.
+5. Đảm bảo các bài viết mang tính cập nhật, khoa học và dễ hiểu cho người dùng phổ thông.
 
 Mục tiêu người dùng: {{goal}}
 `,
