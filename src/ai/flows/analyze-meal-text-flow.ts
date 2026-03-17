@@ -22,18 +22,18 @@ const AnalyzeMealOutputSchema = z.object({
   explanation: z.string().describe('A friendly response to the user in the requested language.'),
   mealData: z.object({
     name: z.string().describe('The identified name of the meal.'),
-    calories: z.number().describe('Total calories in kcal.'),
-    protein: z.number().describe('Protein in grams.'),
-    carbs: z.number().describe('Carbohydrates in grams.'),
-    fat: z.number().describe('Fat in grams.'),
-    fiber: z.number().describe('Fiber in grams.'),
+    calories: z.number().min(0).describe('Total calories in kcal.'),
+    protein: z.number().min(0).describe('Protein in grams.'),
+    carbs: z.number().min(0).describe('Carbohydrates in grams.'),
+    fat: z.number().min(0).describe('Fat in grams.'),
+    fiber: z.number().min(0).describe('Fiber in grams.'),
   }).nullable().describe('The structured nutritional data if a meal is identified, otherwise null.'),
 });
 export type AnalyzeMealOutput = z.infer<typeof AnalyzeMealOutputSchema>;
 
 const analyzeMealPrompt = ai.definePrompt({
   name: 'analyzeMealPrompt',
-  model: 'googleai/gemini-3-flash-preview',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: AnalyzeMealInputSchema },
   output: { schema: AnalyzeMealOutputSchema },
   prompt: `
@@ -47,7 +47,7 @@ Lịch sử trò chuyện:
 Người dùng nói: "{{{text}}}"
 
 Yêu cầu:
-1. Nếu người dùng mô tả món ăn, hãy tính toán calo, protein, carbs, fat và fiber.
+1. Nếu người dùng mô tả món ăn, hãy tính toán calo, protein, carbs, fat và fiber. Đảm bảo tất cả các con số đều là số dương.
 2. Nếu người dùng yêu cầu thay đổi (ví dụ: "thêm trứng", "ít cơm hơn"), hãy cập nhật các con số dựa trên ngữ cảnh trước đó.
 3. Luôn trả lời bằng tiếng {{language}} một cách thân thiện.
 4. Nếu không thể xác định món ăn, hãy đặt mealData là null và yêu cầu người dùng mô tả rõ hơn.

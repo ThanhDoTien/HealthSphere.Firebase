@@ -23,7 +23,8 @@ import { useTranslation } from '@/context/LanguageContext';
 const FormSchema = z.object({
   weight: z.coerce
     .number({ invalid_type_error: 'Vui lòng nhập số.' })
-    .min(20, { message: 'Cân nặng phải là một con số hợp lý.' }),
+    .min(20, { message: 'Cân nặng phải ít nhất 20kg.' })
+    .max(500, { message: 'Cân nặng không hợp lệ.' }),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Vui lòng nhập ngày hợp lệ.",
   }),
@@ -109,6 +110,8 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
           id="weight"
           type="number"
           step="0.1"
+          min="20"
+          max="500"
           placeholder={t('form.add_weight.placeholder')}
           {...register('weight')}
         />
@@ -122,4 +125,3 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
     </form>
   );
 }
-

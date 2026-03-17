@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview AI flow to analyze activity text and extract exercise data.
@@ -20,15 +21,15 @@ const AnalyzeActivityOutputSchema = z.object({
   explanation: z.string().describe('A friendly response to the user in the requested language.'),
   activityData: z.object({
     name: z.string().describe('The identified name of the activity.'),
-    duration: z.number().describe('Duration in minutes.'),
-    caloriesBurned: z.number().describe('Estimated calories burned.'),
+    duration: z.number().min(1).describe('Duration in minutes.'),
+    caloriesBurned: z.number().min(0).describe('Estimated calories burned.'),
   }).nullable().describe('The structured activity data if identified, otherwise null.'),
 });
 export type AnalyzeActivityOutput = z.infer<typeof AnalyzeActivityOutputSchema>;
 
 const analyzeActivityPrompt = ai.definePrompt({
   name: 'analyzeActivityPrompt',
-  model: 'googleai/gemini-3-flash-preview',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: AnalyzeActivityInputSchema },
   output: { schema: AnalyzeActivityOutputSchema },
   prompt: `
@@ -42,7 +43,7 @@ Lịch sử trò chuyện:
 Người dùng nói: "{{{text}}}"
 
 Yêu cầu:
-1. Nếu người dùng mô tả hoạt động (ví dụ: "chạy bộ 30p", "tập gym 1 tiếng"), hãy tính toán lượng calo đốt cháy dựa trên các yếu tố phổ biến.
+1. Nếu người dùng mô tả hoạt động (ví dụ: "chạy bộ 30p", "tập gym 1 tiếng"), hãy tính toán lượng calo đốt cháy dựa trên các yếu tố phổ biến. Luôn sử dụng số dương cho thời gian và calo.
 2. Nếu người dùng yêu cầu thay đổi (ví dụ: "thực ra là 45 phút", "tôi tập nặng hơn"), hãy cập nhật các con số dựa trên ngữ cảnh trước đó.
 3. Luôn trả lời bằng tiếng {{language}} một cách thân thiện và khích lệ.
 4. Nếu không thể xác định hoạt động hoặc thiếu thời gian, hãy đặt activityData là null và yêu cầu người dùng mô tả rõ hơn.

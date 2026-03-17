@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -20,8 +21,8 @@ import { useTranslation } from '@/context/LanguageContext';
 const FormSchema = z.object({
   duration: z.coerce
     .number({ invalid_type_error: 'Please enter a number.' })
-    .min(0, { message: 'Sleep duration must be a positive number.' })
-    .max(24, { message: 'Sleep duration cannot exceed 24 hours.' }),
+    .min(0, { message: 'Thời lượng ngủ không thể là số âm.' })
+    .max(24, { message: 'Thời lượng ngủ không thể vượt quá 24 giờ.' }),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Please enter a valid date.",
   }),
@@ -103,6 +104,8 @@ export default function AddSleepForm({ userId }: AddSleepFormProps) {
           id="duration"
           type="number"
           step="0.1"
+          min="0"
+          max="24"
           placeholder={t('form.add_sleep.placeholder')}
           {...register('duration')}
         />

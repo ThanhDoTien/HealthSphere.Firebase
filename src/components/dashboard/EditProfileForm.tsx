@@ -24,9 +24,9 @@ import { useTranslation } from "@/context/LanguageContext";
 const ProfileFormSchema = z.object({
   name: z.string().min(1, { message: "Full name is required." }),
   email: z.string().email(), // Readonly, but needed for the form
-  age: z.coerce.number().min(1, { message: "Age is required." }),
-  height: z.coerce.number().min(1, { message: "Height is required." }),
-  weight: z.coerce.number().min(1, { message: "Weight is required." }),
+  age: z.coerce.number().min(1, { message: "Tuổi phải lớn hơn 0." }).max(120),
+  height: z.coerce.number().min(50, { message: "Chiều cao tối thiểu là 50cm." }).max(300),
+  weight: z.coerce.number().min(20, { message: "Cân nặng tối thiểu là 20kg." }).max(500),
   gender: z.string().min(1, { message: "Gender is required." }),
   goal: z.string().min(1, { message: "Health goal is required." }),
   activityLevel: z.string().min(1, { message: "Activity level is required." }),
@@ -94,17 +94,17 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
          <div className="grid gap-2">
             <Label htmlFor="age">{t('signup.ageLabel')}</Label>
-            <Input id="age" type="number" {...register("age")} />
+            <Input id="age" type="number" min="1" max="120" {...register("age")} />
             {errors.age && <p className="text-sm text-destructive">{errors.age.message}</p>}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="height">{t('signup.heightLabel')}</Label>
-            <Input id="height" type="number" {...register("height")} />
+            <Input id="height" type="number" min="50" max="300" {...register("height")} />
             {errors.height && <p className="text-sm text-destructive">{errors.height.message}</p>}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="weight">{t('signup.weightLabel')}</Label>
-            <Input id="weight" type="number" {...register("weight")} />
+            <Input id="weight" type="number" min="20" max="500" {...register("weight")} />
             {errors.weight && <p className="text-sm text-destructive">{errors.weight.message}</p>}
           </div>
           <div className="grid gap-2">
