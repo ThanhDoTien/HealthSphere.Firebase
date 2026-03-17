@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -12,10 +12,10 @@ import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy, limit, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc, deleteDoc, where } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
-import { Loader2, Zap, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Loader2, Zap, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { useTranslation } from '@/context/LanguageContext';
 import {
@@ -54,6 +54,8 @@ import { useToast } from '@/components/ui/toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import AiActivityChatLog from '@/components/dashboard/AiActivityChatLog';
+import { analyzeActivityBalance, type AnalyzeActivityBalanceOutput } from '@/ai/flows/analyze-activity-balance-flow';
+import { cn } from '@/lib/utils';
 
 type Activity = {
   name: string;
@@ -71,13 +73,20 @@ type WeightLog = {
 export default function ActivityPage() {
   const { user, userProfile, loading: userLoading } = useUser();
   const firestore = useFirestore();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { toast } = useToast();
 
   const [activityFilter, setActivityFilter] = useState('30');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<WithId<Activity> | null>(null);
+  const [today, setToday] = useState('');
+  const [aiAnalysis, setAiAnalysis] = useState<AnalyzeActivityBalanceOutput | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  useEffect(() => {
+    setToday(new Date().toISOString().split('T')[0]);
+  }, []);
 
   const activityChartConfig = useMemo(() => ({
     calories: {
@@ -124,6 +133,41 @@ export default function ActivityPage() {
     
     return { bmr, tdee };
   }, [userProfile, latestWeightData]);
+
+  const todayActivities = useMemo(() => {
+    if (!activityData || !today) return [];
+    return activityData.filter(a => a.date === today);
+  }, [activityData, today]);
+
+  const totalBurnedToday = useMemo(() => {
+    return todayActivities.reduce((sum, a) => sum + a.caloriesBurned, 0);
+  }, [todayActivities]);
+
+  // AI Analysis Effect
+  useEffect(() => {
+    if (todayActivities.length > 0 && userProfile && baseBurn.tdee > 0) {
+      const runAnalysis = async () => {
+        setIsAnalyzing(true);
+        try {
+          const result = await analyzeActivityBalance({
+            totalBurned: totalBurnedToday,
+            tdee: baseBurn.tdee,
+            activities: todayActivities.map(a => a.name),
+            goal: userProfile.goal,
+            language: locale,
+          });
+          setAiAnalysis(result);
+        } catch (error) {
+          console.error("AI Activity Analysis Error:", error);
+        } finally {
+          setIsAnalyzing(false);
+        }
+      };
+      runAnalysis();
+    } else if (!activityLoading && todayActivities.length === 0) {
+      setAiAnalysis(null);
+    }
+  }, [totalBurnedToday, todayActivities, userProfile, baseBurn.tdee, locale, activityLoading]);
 
   const chartData = useMemo(() => {
     if (!activityData) return [];
@@ -209,29 +253,68 @@ export default function ActivityPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <Card className="border-accent/20 bg-accent/5">
-        <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent">
-            <Zap className="h-6 w-6" />
-          </div>
-          <div>
-            <CardTitle className="text-xl">{t('activity.baseBurn.title')}</CardTitle>
-            <CardDescription>{t('activity.baseBurn.description')}</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-            <div className="rounded-lg border bg-card p-4 shadow-sm">
-              <p className="text-sm font-medium text-muted-foreground">{t('activity.baseBurn.bmr')}</p>
-              <p className="mt-1 text-2xl font-bold">{Math.round(baseBurn.bmr)} <span className="text-sm font-normal">kcal/day</span></p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 border-accent/20 bg-accent/5">
+          <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <Zap className="h-6 w-6" />
             </div>
-            <div className="rounded-lg border border-accent bg-card p-4 shadow-sm">
-              <p className="text-sm font-medium text-accent">{t('activity.baseBurn.tdee')}</p>
-              <p className="mt-1 text-3xl font-bold text-accent">{Math.round(baseBurn.tdee)} <span className="text-sm font-normal text-foreground">kcal/day</span></p>
+            <div>
+              <CardTitle className="text-xl">{t('activity.baseBurn.title')}</CardTitle>
+              <CardDescription>{t('activity.baseBurn.description')}</CardDescription>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+              <div className="rounded-lg border bg-card p-4 shadow-sm">
+                <p className="text-sm font-medium text-muted-foreground">{t('activity.baseBurn.bmr')}</p>
+                <p className="mt-1 text-2xl font-bold">{Math.round(baseBurn.bmr)} <span className="text-sm font-normal">kcal/day</span></p>
+              </div>
+              <div className="rounded-lg border border-accent bg-card p-4 shadow-sm">
+                <p className="text-sm font-medium text-accent">{t('activity.baseBurn.tdee')}</p>
+                <p className="mt-1 text-3xl font-bold text-accent">{Math.round(baseBurn.tdee)} <span className="text-sm font-normal text-foreground">kcal/day</span></p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Activity AI Analysis */}
+        <Card className="border-primary/20 bg-primary/5 flex flex-col">
+          <CardHeader className="flex flex-row items-center gap-2 pb-2">
+            <BrainCircuit className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">{t('activity.aiAnalysisTitle') || 'Phân tích Vận động AI'}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1">
+            {isAnalyzing ? (
+              <div className="flex flex-col items-center justify-center h-full gap-2 text-primary animate-pulse py-6">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <p className="text-xs font-medium">HealthSphere AI đang đánh giá...</p>
+              </div>
+            ) : aiAnalysis ? (
+              <div className="space-y-3 animate-in fade-in duration-500">
+                <div className={cn(
+                  "flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold w-fit",
+                  aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" : 
+                  aiAnalysis.status === 'warning' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
+                )}>
+                  {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> : 
+                   aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                  {aiAnalysis.status === 'good' ? (t('activity.status.good') || 'Vận động tốt') : 
+                   aiAnalysis.status === 'warning' ? (t('activity.status.warning') || 'Cần nỗ lực hơn') : (t('activity.status.bad') || 'Ít vận động')}
+                </div>
+                <p className="text-sm leading-relaxed whitespace-pre-line font-medium text-foreground/80">
+                  {aiAnalysis.analysis}
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-2 py-10">
+                <BrainCircuit className="h-10 w-10 opacity-20" />
+                <p className="text-xs italic">{t('activity.aiNoData') || 'Hãy ghi lại hoạt động hôm nay để AI bắt đầu phân tích.'}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -278,7 +361,7 @@ export default function ActivityPage() {
               </div>
             ) : Object.keys(dailyActivities).length > 0 ? (
               <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
-                {Object.entries(dailyActivities).map(([date, activities]) => (
+                {Object.entries(dailyActivities).sort((a,b) => b[0].localeCompare(a[0])).map(([date, activities]) => (
                   <div key={date}>
                     <h4 className="sticky top-0 mb-2 border-b bg-card py-2 font-semibold text-md">
                       {new Date(date + 'T00:00').toLocaleDateString('en-US', {
