@@ -1,10 +1,9 @@
-
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Apple, Flame, Sparkles, User, Bed, Globe, Menu } from 'lucide-react';
+import { Home, Apple, Flame, Sparkles, User, Bed, Globe, Menu, Search } from 'lucide-react';
 import { useTranslation } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +19,7 @@ const navItems = [
   { href: '/dashboard/calories', labelKey: 'bottomNav.calories', icon: Apple },
   { href: '/dashboard/activity', labelKey: 'bottomNav.activity', icon: Flame },
   { href: '/dashboard/sleep', labelKey: 'bottomNav.sleep', icon: Bed },
+  { href: '/dashboard/discover', labelKey: 'bottomNav.discover', icon: Search },
   { href: '/dashboard/ai', labelKey: 'bottomNav.ai', icon: Sparkles },
   { href: '/dashboard/profile', labelKey: 'bottomNav.profile', icon: User },
 ];
