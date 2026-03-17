@@ -1,3 +1,4 @@
+
 {
   "home.login": "Đăng nhập",
   "home.signup": "Đăng ký",
@@ -101,7 +102,7 @@
   "calories.chart.fat": "Chất béo (Fat)",
   "calories.chart.fiber": "Chất xơ (Fiber)",
   "calories.aiAnalysisTitle": "Phân tích Dinh dưỡng AI",
-  "calories.aiNoData": "Ghi lại bữa ăn để AI bắt đầu phân tích dinh dưỡng cho bạn.",
+  "calories.aiNoData": "Hãy chia sẻ thực đơn hôm nay của bạn, HealthSphere AI sẽ giúp bạn cân bằng dinh dưỡng và tối ưu hóa năng lượng.",
   "calories.status.good": "Cân bằng tốt",
   "calories.status.warning": "Cần điều chỉnh",
   "calories.status.bad": "Chưa ổn định",
@@ -128,7 +129,7 @@
   "activity.deleteDescription": "Bạn có chắc chắn muốn xóa hoạt động '{name}' không?",
   "activity.deleteConfirm": "Xóa ngay",
   "activity.aiAnalysisTitle": "Phân tích Vận động AI",
-  "activity.aiNoData": "Hãy ghi lại hoạt động hôm nay để AI bắt đầu phân tích.",
+  "activity.aiNoData": "Mọi nỗ lực vận động đều đáng giá. Ghi lại hoạt động để tôi giúp bạn đánh giá hiệu quả luyện tập so với mục tiêu.",
   "activity.status.good": "Vận động tốt",
   "activity.status.warning": "Cần nỗ lực hơn",
   "activity.status.bad": "Ít vận động",
@@ -140,7 +141,7 @@
   "sleep.noSleep": "Chưa có giấc ngủ nào được ghi. Thêm một mục để bắt đầu!",
   "sleep.unit.hours": "giờ",
   "sleep.aiAnalysisTitle": "Phân tích Giấc ngủ AI",
-  "sleep.aiNoData": "Ghi nhận giấc ngủ hôm nay để nhận phản hồi từ AI.",
+  "sleep.aiNoData": "Giấc ngủ là nền tảng của sức khỏe. Hãy cho tôi biết bạn đã nghỉ ngơi bao lâu để đánh giá mức độ phục hồi của cơ thể.",
   "sleep.status.good": "Hồi phục tốt",
   "sleep.status.warning": "Thiếu ngủ nhẹ",
   "sleep.status.bad": "Thiếu ngủ nghiêm trọng",

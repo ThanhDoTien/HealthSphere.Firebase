@@ -1,3 +1,4 @@
+
 {
   "home.login": "Login",
   "home.signup": "Sign Up",
@@ -101,7 +102,7 @@
   "calories.chart.fat": "Fat",
   "calories.chart.fiber": "Fiber",
   "calories.aiAnalysisTitle": "AI Nutrition Analysis",
-  "calories.aiNoData": "Log a meal to let AI analyze your daily nutrition balance.",
+  "calories.aiNoData": "Share your menu for today; HealthSphere AI will help you balance nutrition and optimize your energy levels.",
   "calories.status.good": "Balanced",
   "calories.status.warning": "Needs Attention",
   "calories.status.bad": "Imbalanced",
@@ -128,7 +129,7 @@
   "activity.deleteDescription": "Are you sure you want to delete activity '{name}'?",
   "activity.deleteConfirm": "Delete Now",
   "activity.aiAnalysisTitle": "AI Activity Analysis",
-  "activity.aiNoData": "Log an activity today to get AI feedback.",
+  "activity.aiNoData": "Every effort counts. Log your activity so I can help you evaluate your training efficiency against your goals.",
   "activity.status.good": "Good Effort",
   "activity.status.warning": "Need More",
   "activity.status.bad": "Sedentary",
@@ -140,7 +141,7 @@
   "sleep.noSleep": "No sleep logged yet.",
   "sleep.unit.hours": "hours",
   "sleep.aiAnalysisTitle": "AI Sleep Analysis",
-  "sleep.aiNoData": "Log your sleep today to get AI feedback.",
+  "sleep.aiNoData": "Sleep is the foundation of health. Tell me how long you rested to assess your body's recovery level.",
   "sleep.status.good": "Well Rested",
   "sleep.status.warning": "Slight Deprivation",
   "sleep.status.bad": "Severe Deprivation",
