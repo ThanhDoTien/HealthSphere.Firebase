@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { Utensils, Dumbbell, Loader2, Bed, Scale, Lightbulb, RefreshCcw, Sparkles, AlertCircle } from 'lucide-react';
+import { Utensils, Dumbbell, Loader2, Bed, Scale, Lightbulb, RefreshCcw, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -67,7 +68,12 @@ export default function DashboardPage() {
   const [aiError, setAiError] = useState<string | null>(null);
 
   useEffect(() => {
-    setToday(new Date().toISOString().split('T')[0]);
+    // Sử dụng giờ địa phương thay vì UTC để tránh lệch ngày
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    setToday(`${year}-${month}-${day}`);
   }, []);
 
   const weightQuery = useMemoFirebase(() => {
@@ -105,6 +111,8 @@ export default function DashboardPage() {
   const { data: mealData, isLoading: mealLoading } = useCollection(mealsQuery);
   const { data: activityData, isLoading: activityLoading } = useCollection(activitiesQuery);
   const { data: sleepData, isLoading: sleepLoading } = useCollection(sleepQuery);
+  
+  // useDoc luôn lắng nghe DB thời gian thực, đảm bảo không bị cache ở client
   const { data: suggestionData, isLoading: suggestionLoading } = useDoc<SuggestionWithMetadata>(suggestionDocRef);
 
   const dailySummary = useMemo(() => {
@@ -123,14 +131,12 @@ export default function DashboardPage() {
     return summary;
   }, [mealData, activityData, sleepData, userProfile, latestWeightData]);
 
-  // Kiểm tra xem dữ liệu AI có bị "cũ" (stale) không
   const isStale = useMemo(() => {
-    if (!suggestionData || !suggestionData.snapshotSummary) return false;
+    if (!suggestionData || !suggestionData.snapshotSummary || isGenerating) return false;
     const diffConsumed = Math.abs(dailySummary.caloriesConsumed - (suggestionData.snapshotSummary.caloriesConsumed || 0));
     const diffBurned = Math.abs(dailySummary.caloriesBurned - (suggestionData.snapshotSummary.caloriesBurned || 0));
-    // Nếu chênh lệch quá 50 calo nạp hoặc 50 calo đốt thì coi là "cũ"
     return diffConsumed > 50 || diffBurned > 50;
-  }, [dailySummary, suggestionData]);
+  }, [dailySummary, suggestionData, isGenerating]);
 
   const chartData = useMemo(() => {
     if (!weightData) return [];
@@ -162,30 +168,9 @@ export default function DashboardPage() {
         token,
       });
 
-      const mealSuggestionsWithCache = await Promise.all(
-        suggestions.mealSuggestions.map(async (meal) => {
-          if (meal.imageUrl?.startsWith('data:')) {
-            const cachedUrl = await uploadBase64WithCache(meal.imageUrl, meal.imagePrompt, 'meals');
-            return { ...meal, imageUrl: cachedUrl || meal.imageUrl };
-          }
-          return meal;
-        })
-      );
-
-      const workoutSuggestionsWithCache = await Promise.all(
-        suggestions.workoutSuggestion.map(async (workout) => {
-          if (workout.imageUrl?.startsWith('data:')) {
-            const cachedUrl = await uploadBase64WithCache(workout.imageUrl, workout.imagePrompt, 'exercises');
-            return { ...workout, imageUrl: cachedUrl || workout.imageUrl };
-          }
-          return workout;
-        })
-      );
-
+      // Lưu trữ trực tiếp vào Firestore - useDoc sẽ tự động cập nhật UI khi xong
       await setDoc(suggestionDocRef, {
         ...suggestions,
-        mealSuggestions: mealSuggestionsWithCache,
-        workoutSuggestion: workoutSuggestionsWithCache,
         updatedAt: serverTimestamp(),
         snapshotSummary: {
           caloriesConsumed: dailySummary.caloriesConsumed,
@@ -207,7 +192,7 @@ export default function DashboardPage() {
   }, [suggestionLoading, suggestionData, isGenerating, today, userProfile, handleGenerateSuggestions]);
 
   const currentWeight = latestWeightData?.[0]?.weight || weightData?.[0]?.weight;
-  const isAllLoading = userLoading || mealLoading || activityLoading || sleepLoading || suggestionLoading;
+  const isAllLoading = userLoading || mealLoading || activityLoading || sleepLoading || (suggestionLoading && !suggestionData);
 
   return (
     <div className="flex flex-col space-y-6 pb-10">
@@ -219,7 +204,6 @@ export default function DashboardPage() {
       </header>
 
       <main className="px-4 sm:px-6 space-y-8">
-        {/* STATS & BMI */}
         <div className="grid gap-4 md:grid-cols-4">
           <div className="md:col-span-2">
             {userProfile && <BmiMeter height={userProfile.height} weight={currentWeight || userProfile.weight} />}
@@ -272,14 +256,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* AI TIP CALLOUT & LOADING */}
         <div className="space-y-4">
           {isGenerating && (
             <Card className="border-primary/20 bg-primary/5 shadow-sm animate-pulse">
               <div className="p-4 flex items-center gap-4">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 <p className="text-base font-medium text-primary">
-                  HealthSphere AI đang chuẩn bị lời khuyên cho bạn...
+                  {t('ai.loadingButton') || 'HealthSphere AI đang chuẩn bị lời khuyên...'}
                 </p>
               </div>
             </Card>
@@ -300,7 +283,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2">
                          <h4 className="text-lg font-bold text-primary">{t('ai.tipTitle')}</h4>
                          {suggestionData.updatedAt && (
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-[10px] text-muted-foreground italic">
                                 • {t('ai.lastUpdated', { time: new Date(suggestionData.updatedAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) })}
                             </span>
                          )}
@@ -310,9 +293,10 @@ export default function DashboardPage() {
                         size="sm" 
                         onClick={handleGenerateSuggestions} 
                         disabled={isGenerating}
-                        className={cn(isStale && "text-primary animate-pulse")}
+                        className={cn("h-8 w-8 p-0", isStale && "text-primary animate-bounce")}
+                        title={t('ai.refreshNow')}
                       >
-                        <RefreshCcw className={cn("h-4 w-4", isGenerating && "animate-spin")} />
+                        <RefreshCw className={cn("h-4 w-4", isGenerating && "animate-spin")} />
                       </Button>
                     </div>
                     <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line font-medium">
@@ -323,12 +307,12 @@ export default function DashboardPage() {
               </Card>
 
               {isStale && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg text-primary text-xs font-medium animate-in fade-in slide-in-from-top-2">
+                <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg text-primary text-xs font-bold animate-in fade-in slide-in-from-top-2 border border-primary/20 shadow-sm">
                     <AlertCircle className="h-4 w-4" />
                     <span>{t('ai.staleDataMessage')}</span>
                     <button 
                         onClick={handleGenerateSuggestions}
-                        className="ml-auto underline font-bold"
+                        className="ml-auto underline font-extrabold hover:text-primary/80 transition-colors"
                     >
                         {t('ai.refreshNow')}
                     </button>
@@ -347,7 +331,6 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* WEIGHT TRACKING */}
         <Card className="shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>
@@ -370,7 +353,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* TODAY ACTIVITIES */}
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle className="text-xl font-bold">{t('dashboard.todaysActivitiesTitle')}</CardTitle>
@@ -392,16 +374,14 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* AI ASSISTANT (Suggestions) */}
         <div className="space-y-8">
           <div className="flex items-center gap-2 px-1">
             <Sparkles className="h-6 w-6 text-primary" />
             <h2 className="text-2xl font-bold text-primary">{t('ai.title')}</h2>
           </div>
 
-          {!isGenerating && !isAllLoading && suggestionData ? (
+          {!isGenerating && suggestionData ? (
             <div className="space-y-12">
-              {/* Meal Suggestions */}
               <div className="space-y-6">
                 <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
                   <Utensils className="h-5 w-5" />
@@ -433,7 +413,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Workout Suggestions */}
               <div className="space-y-6">
                 <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
                   <Dumbbell className="h-5 w-5" />
@@ -462,7 +441,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-          ) : (isGenerating || isAllLoading) ? (
+          ) : (isGenerating || (suggestionLoading && !suggestionData)) ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4 border rounded-xl bg-muted/10">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
               <p className="text-base font-medium animate-pulse text-muted-foreground">
@@ -482,3 +461,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
