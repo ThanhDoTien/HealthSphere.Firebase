@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { Utensils, Dumbbell, Loader2, Bed, Scale, Lightbulb, RefreshCcw, Sparkles } from 'lucide-react';
+import { Utensils, Dumbbell, Loader2, Bed, Scale, Lightbulb, RefreshCcw, Sparkles, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -17,7 +17,7 @@ import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore, useDoc } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy, limit, where, doc, setDoc } from 'firebase/firestore';
+import { collection, query, orderBy, limit, where, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
 import AddWeightForm from '@/components/dashboard/AddWeightForm';
@@ -34,6 +34,7 @@ import { getHealthSuggestions, type HealthSuggestionResponse } from '@/ai/flows/
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
 import { uploadBase64WithCache } from '@/firebase/storage/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 
 const weightChartConfig = {
   weight: {
@@ -46,6 +47,14 @@ type WeightLog = {
   weight: number;
   date: string;
 };
+
+interface SuggestionWithMetadata extends HealthSuggestionResponse {
+  updatedAt?: any;
+  snapshotSummary?: {
+    caloriesConsumed: number;
+    caloriesBurned: number;
+  };
+}
 
 export default function DashboardPage() {
   const { user, userProfile, loading: userLoading } = useUser();
@@ -96,7 +105,7 @@ export default function DashboardPage() {
   const { data: mealData, isLoading: mealLoading } = useCollection(mealsQuery);
   const { data: activityData, isLoading: activityLoading } = useCollection(activitiesQuery);
   const { data: sleepData, isLoading: sleepLoading } = useCollection(sleepQuery);
-  const { data: suggestionData, isLoading: suggestionLoading } = useDoc<HealthSuggestionResponse>(suggestionDocRef);
+  const { data: suggestionData, isLoading: suggestionLoading } = useDoc<SuggestionWithMetadata>(suggestionDocRef);
 
   const dailySummary = useMemo(() => {
     const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
@@ -113,6 +122,15 @@ export default function DashboardPage() {
     if (sleepData) summary.sleepHours = sleepData.reduce((sum, sleep: any) => sum + sleep.duration, 0);
     return summary;
   }, [mealData, activityData, sleepData, userProfile, latestWeightData]);
+
+  // Kiểm tra xem dữ liệu AI có bị "cũ" (stale) không
+  const isStale = useMemo(() => {
+    if (!suggestionData || !suggestionData.snapshotSummary) return false;
+    const diffConsumed = Math.abs(dailySummary.caloriesConsumed - (suggestionData.snapshotSummary.caloriesConsumed || 0));
+    const diffBurned = Math.abs(dailySummary.caloriesBurned - (suggestionData.snapshotSummary.caloriesBurned || 0));
+    // Nếu chênh lệch quá 50 calo nạp hoặc 50 calo đốt thì coi là "cũ"
+    return diffConsumed > 50 || diffBurned > 50;
+  }, [dailySummary, suggestionData]);
 
   const chartData = useMemo(() => {
     if (!weightData) return [];
@@ -168,6 +186,11 @@ export default function DashboardPage() {
         ...suggestions,
         mealSuggestions: mealSuggestionsWithCache,
         workoutSuggestion: workoutSuggestionsWithCache,
+        updatedAt: serverTimestamp(),
+        snapshotSummary: {
+          caloriesConsumed: dailySummary.caloriesConsumed,
+          caloriesBurned: dailySummary.caloriesBurned,
+        }
       });
     } catch (err: any) {
       console.error("AI Error:", err);
@@ -263,24 +286,55 @@ export default function DashboardPage() {
           )}
 
           {!isGenerating && suggestionData && (
-            <Card className="border-primary/20 bg-primary/5 shadow-sm">
-              <div className="p-4 flex gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Lightbulb className="h-6 w-6" />
-                </div>
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-lg font-bold text-primary">{t('ai.tipTitle')}</h4>
-                    <Button variant="ghost" size="sm" onClick={handleGenerateSuggestions} disabled={isGenerating}>
-                      <RefreshCcw className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
-                    </Button>
+            <div className="space-y-3">
+              <Card className={cn(
+                "border-primary/20 bg-primary/5 shadow-sm transition-all duration-300",
+                isStale && "ring-2 ring-primary/40 ring-offset-2"
+              )}>
+                <div className="p-4 flex gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Lightbulb className="h-6 w-6" />
                   </div>
-                  <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line font-medium">
-                    {suggestionData.generalTip}
-                  </p>
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                         <h4 className="text-lg font-bold text-primary">{t('ai.tipTitle')}</h4>
+                         {suggestionData.updatedAt && (
+                            <span className="text-[10px] text-muted-foreground">
+                                • {t('ai.lastUpdated', { time: new Date(suggestionData.updatedAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) })}
+                            </span>
+                         )}
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleGenerateSuggestions} 
+                        disabled={isGenerating}
+                        className={cn(isStale && "text-primary animate-pulse")}
+                      >
+                        <RefreshCcw className={cn("h-4 w-4", isGenerating && "animate-spin")} />
+                      </Button>
+                    </div>
+                    <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line font-medium">
+                      {suggestionData.generalTip}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+
+              {isStale && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg text-primary text-xs font-medium animate-in fade-in slide-in-from-top-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{t('ai.staleDataMessage')}</span>
+                    <button 
+                        onClick={handleGenerateSuggestions}
+                        className="ml-auto underline font-bold"
+                    >
+                        {t('ai.refreshNow')}
+                    </button>
+                </div>
+              )}
+            </div>
           )}
 
           {isAllLoading && !suggestionData && !isGenerating && (

@@ -53,24 +53,24 @@ export async function getHealthSuggestions(
   input: HealthSuggestionRequest
 ): Promise<HealthSuggestionResponse> {
   const prompt = `Bạn là một chuyên gia sức khỏe AI cao cấp. 
-  Dựa trên dữ liệu thực tế của người dùng:
+  Dựa trên dữ liệu thực tế và tiến độ hiện tại của người dùng:
   - Mục tiêu: ${input.userProfile.goal}
-  - Chỉ số: ${input.userProfile.weight}kg, ${input.userProfile.height}cm, ${input.userProfile.age} tuổi, Giới tính: ${input.userProfile.gender}
-  - Cường độ vận động: ${input.userProfile.activityLevel || 'moderate'}
-  - Tiến độ hôm nay: Đã nạp ${input.dailySummary.caloriesConsumed} kcal, Đã đốt tổng cộng ${input.dailySummary.caloriesBurned} kcal, Đã ngủ ${input.dailySummary.sleepHours}h
+  - Chỉ số cơ thể: ${input.userProfile.weight}kg, ${input.userProfile.height}cm, ${input.userProfile.age} tuổi, Giới tính: ${input.userProfile.gender}
+  - Mức độ hoạt động cơ bản: ${input.userProfile.activityLevel || 'moderate'}
+  - TIẾN ĐỘ THỰC TẾ HÔM NAY: Đã nạp ${input.dailySummary.caloriesConsumed} kcal, Đã đốt tổng cộng ${input.dailySummary.caloriesBurned} kcal (bao gồm vận động và trao đổi chất cơ bản), Đã ngủ ${input.dailySummary.sleepHours}h
   
   Nhiệm vụ của bạn:
-  1. Đưa ra 1 lời khuyên (generalTip) chi tiết và mang tính khích lệ. 
+  1. Đưa ra 1 lời khuyên (generalTip) cụ thể dựa trên TIẾN ĐỘ THỰC TẾ HÔM NAY. Ví dụ: Nếu calo nạp quá nhiều so với đốt, hãy nhắc nhở điều chỉnh. Nếu vận động nhiều, hãy khích lệ phục hồi.
   QUAN TRỌNG: Hãy sử dụng ký tự xuống dòng (\\n) để phân tách các ý trong 'generalTip', 'recipe' và 'description'. Văn bản không được dính liền thành một khối. Sau mỗi ý hoặc mỗi bước nấu ăn, HÃY XUỐNG DÒNG (\n).
-  2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) phù hợp với mục tiêu. 
-  3. Đề Xuất 2-3 bài tập phù hợp với mục tiêu.
+  2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) để cân bằng với lượng calo còn lại hoặc mục tiêu giảm/tăng cân. 
+  3. Đề Xuất 2-3 bài tập phù hợp với mục tiêu và mức độ mệt mỏi hiện tại.
   4. Đối với 'recipe' , 'workoutSuggestion' và 'description', trình bày theo từng bước và sử dụng \\n sau mỗi bước.
   5. Ngôn ngữ phản hồi: ${input.language || 'vi'}.
   6. Đối với 'imagePrompt': Viết bằng tiếng Anh, mô tả chi tiết món ăn/bài tập (4k high-quality).
 
   TRẢ VỀ KẾT QUẢ DƯỚI DẠNG MỘT ĐỐI TƯỢNG JSON DUY NHẤT. KHÔNG BAO GỒM CÁC KHỐI MÃ (CODE FENCES) HOẶC VĂN BẢN THỪA.
   {
-    "generalTip": "Nội dung lời khuyên...\\nÝ tiếp theo...",
+    "generalTip": "Nội dung lời khuyên dựa trên tiến độ thực tế...\\nÝ tiếp theo...",
     "mealSuggestions": [{"name": "Tên món", "recipe": "Bước 1...\\nBước 2...", "calories": 350, "imagePrompt": "..."}],
     "workoutSuggestion": [{"name": "Tên bài tập", "description": "Hướng dẫn:\\n- Bước 1...\\n- Bước 2...", "imagePrompt": "..."}]
   }`;

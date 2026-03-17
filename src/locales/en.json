@@ -1,4 +1,3 @@
-
 {
   "home.login": "Login",
   "home.signup": "Sign Up",
@@ -163,6 +162,9 @@
   "ai.tipTitle": "Daily Tip",
   "ai.mealsTitle": "Meal Suggestions",
   "ai.workoutTitle": "Workout Suggestions",
+  "ai.lastUpdated": "Updated at {time}",
+  "ai.staleDataMessage": "Your progress has changed. Refresh to get more accurate suggestions.",
+  "ai.refreshNow": "Refresh Now",
   "profile.title": "Profile",
   "profile.description": "View and manage your account details.",
   "profile.logout": "Logout",
