@@ -142,7 +142,7 @@ export default function DiscoverPage() {
             <div className="col-span-full py-24 text-center border-2 border-dashed rounded-3xl bg-muted/20">
               <BookOpen className="h-16 w-16 mx-auto text-muted-foreground opacity-20 mb-4" />
               <p className="text-muted-foreground italic font-medium">
-                Chưa có nội dung nào được cập nhật. Hãy nhấn "Làm mới" để AI tìm kiếm cho bạn.
+                Chưa có nội dung nào được cập nhật. Hãy nhấn &quot;Làm mới&quot; để AI tìm kiếm cho bạn.
               </p>
             </div>
           )}
