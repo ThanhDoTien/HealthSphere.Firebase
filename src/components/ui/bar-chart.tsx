@@ -27,7 +27,7 @@ const barChartDefaultProps = {
   layout: "horizontal" as const,
   stackOffset: "none" as const,
   margin: {
-    top: 0,
+    top: 20,
     right: 0,
     bottom: 0,
     left: 0,
@@ -49,6 +49,8 @@ type BarChartProps = Omit<
   showLegend?: boolean
   showTooltip?: boolean
   yAxisWidth?: number
+  referenceLineValue?: number
+  referenceLineLabel?: string
 }
 
 const BarChart = React.forwardRef<
@@ -66,6 +68,8 @@ const BarChart = React.forwardRef<
       showLegend = false,
       showTooltip = true,
       yAxisWidth,
+      referenceLineValue,
+      referenceLineLabel,
       ...props
     },
     ref
@@ -123,6 +127,20 @@ const BarChart = React.forwardRef<
             )
           })}
           <ReferenceLine y={0} stroke="hsl(var(--border))" strokeDasharray="3 3" />
+          {referenceLineValue !== undefined && (
+            <ReferenceLine 
+              y={referenceLineValue} 
+              stroke="hsl(var(--destructive))" 
+              strokeDasharray="5 5"
+              label={{ 
+                position: 'top', 
+                value: referenceLineLabel, 
+                fill: 'hsl(var(--destructive))', 
+                fontSize: 10,
+                fontWeight: 'bold'
+              }} 
+            />
+          )}
         </RechartsBarChart>
       </ChartContainer>
     )

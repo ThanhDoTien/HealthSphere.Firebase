@@ -12,11 +12,11 @@ import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, limit } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { PieChart } from '@/components/ui/pie-chart';
 import { type ChartConfig } from '@/components/ui/chart';
-import { Loader2, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Loader2, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle, Target } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import {
   DropdownMenu,
@@ -57,6 +57,7 @@ import {
 import AiMealChatLog from '@/components/dashboard/AiMealChatLog';
 import { analyzeNutritionBalance, type AnalyzeNutritionOutput } from '@/ai/flows/analyze-nutrition-balance-flow';
 import { cn } from '@/lib/utils';
+import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
 
 type Meal = {
   name: string;
@@ -68,6 +69,11 @@ type Meal = {
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   date: string;
   userId: string;
+};
+
+type WeightLog = {
+  weight: number;
+  date: string;
 };
 
 export default function CaloriesPage() {
@@ -111,9 +117,27 @@ export default function CaloriesPage() {
     );
   }, [firestore, user]);
 
+  const weightQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'weights'),
+      orderBy('date', 'desc'),
+      limit(1)
+    );
+  }, [firestore, user]);
+
   const { data: mealData, isLoading: mealLoading } = useCollection<Meal>(
     mealQuery
   );
+
+  const { data: latestWeightData } = useCollection<WeightLog>(weightQuery);
+
+  const dailyGoal = useMemo(() => {
+    if (!userProfile) return 0;
+    const currentWeight = latestWeightData?.[0]?.weight || userProfile.weight;
+    const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
+    return Math.round(calculateTDEE(bmr, userProfile.activityLevel));
+  }, [userProfile, latestWeightData]);
 
   const totals = useMemo(() => {
     if (!mealData || !today) return { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
@@ -215,6 +239,24 @@ export default function CaloriesPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Target className="h-6 w-6" />
+          </div>
+          <div>
+            <CardTitle className="text-xl">{t('calories.recommendation.title') || 'Mục tiêu Calo Phù hợp'}</CardTitle>
+            <CardDescription>{t('calories.recommendation.description') || 'Lượng năng lượng nạp vào tối ưu dựa trên chỉ số cơ thể của bạn.'}</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-baseline gap-2">
+            <span className="text-4xl font-black text-primary">{dailyGoal}</span>
+            <span className="text-lg font-medium text-muted-foreground">kcal / {t('common.day') || 'ngày'}</span>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
@@ -243,6 +285,8 @@ export default function CaloriesPage() {
               yAxisWidth={40}
               className="h-64"
               showLegend={false}
+              referenceLineValue={dailyGoal}
+              referenceLineLabel={t('calories.goalLine') || 'Mục tiêu'}
             />
           )}
         </CardContent>
