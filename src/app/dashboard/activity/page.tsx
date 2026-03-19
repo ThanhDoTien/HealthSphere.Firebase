@@ -323,43 +323,6 @@ export default function ActivityPage() {
         </Card>
       </div>
 
-      {/* AI Analysis Row (Full Width) */}
-      <Card className="border-primary/20 bg-primary/5 shadow-sm">
-        <CardHeader className="flex flex-row items-center gap-2 pb-2">
-          <BrainCircuit className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">{t('activity.aiAnalysisTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isAnalyzing ? (
-            <div className="flex flex-col items-center justify-center min-h-[120px] gap-2 text-primary animate-pulse py-10">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <p className="text-sm font-medium">HealthSphere AI đang đánh giá hiệu quả vận động...</p>
-            </div>
-          ) : aiAnalysis ? (
-            <div className="space-y-4 animate-in fade-in duration-500">
-              <div className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold w-fit",
-                aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" : 
-                aiAnalysis.status === 'warning' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
-              )}>
-                {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> : 
-                 aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                {aiAnalysis.status === 'good' ? t('activity.status.good') : 
-                 aiAnalysis.status === 'warning' ? t('activity.status.warning') : t('activity.status.bad')}
-              </div>
-              <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
-                {formatAiText(aiAnalysis.analysis)}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center min-h-[120px] text-center text-muted-foreground space-y-2 py-10">
-              <BrainCircuit className="h-10 w-10 opacity-20" />
-              <p className="text-sm italic">{t('activity.aiNoData')}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
@@ -474,6 +437,43 @@ export default function ActivityPage() {
               </p>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* AI Analysis Row - Moved below Tracking Section */}
+      <Card className="border-primary/20 bg-primary/5 shadow-sm">
+        <CardHeader className="flex flex-row items-center gap-2 pb-2">
+          <BrainCircuit className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">{t('activity.aiAnalysisTitle')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isAnalyzing ? (
+            <div className="flex flex-col items-center justify-center min-h-[120px] gap-2 text-primary animate-pulse py-10">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <p className="text-sm font-medium">HealthSphere AI đang đánh giá hiệu quả vận động...</p>
+            </div>
+          ) : aiAnalysis ? (
+            <div className="space-y-4 animate-in fade-in duration-500">
+              <div className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold w-fit",
+                aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" : 
+                aiAnalysis.status === 'warning' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
+              )}>
+                {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> : 
+                 aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                {aiAnalysis.status === 'good' ? t('activity.status.good') : 
+                 aiAnalysis.status === 'warning' ? t('activity.status.warning') : t('activity.status.bad')}
+              </div>
+              <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
+                {formatAiText(aiAnalysis.analysis)}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center min-h-[120px] text-center text-muted-foreground space-y-2 py-10">
+              <BrainCircuit className="h-10 w-10 opacity-20" />
+              <p className="text-sm italic">{t('activity.aiNoData')}</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
