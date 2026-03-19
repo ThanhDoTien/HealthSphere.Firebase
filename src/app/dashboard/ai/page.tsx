@@ -36,10 +36,10 @@ export default function AiChatPage() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [today, setToday] = useState('');
+  const [todayStr, setTodayStr] = useState('');
 
   useEffect(() => {
-    setToday(new Date().toISOString().split('T')[0]);
+    setTodayStr(new Date().toISOString().split('T')[0]);
   }, []);
 
   const chatQuery = useMemoFirebase(() => {
@@ -53,19 +53,19 @@ export default function AiChatPage() {
   const { data: messages } = useCollection(chatQuery);
 
   const mealsQuery = useMemoFirebase(() => {
-    if (!user || !today) return null;
-    return query(collection(firestore, 'users', user.uid, 'meals'), where('date', '==', today));
-  }, [firestore, user, today]);
+    if (!user || !todayStr) return null;
+    return query(collection(firestore, 'users', user.uid, 'meals'), where('date', '==', todayStr));
+  }, [firestore, user, todayStr]);
 
   const activitiesQuery = useMemoFirebase(() => {
-    if (!user || !today) return null;
-    return query(collection(firestore, 'users', user.uid, 'activities'), where('date', '==', today));
-  }, [firestore, user, today]);
+    if (!user || !todayStr) return null;
+    return query(collection(firestore, 'users', user.uid, 'activities'), where('date', '==', todayStr));
+  }, [firestore, user, todayStr]);
 
   const sleepQuery = useMemoFirebase(() => {
-    if (!user || !today) return null;
-    return query(collection(firestore, 'users', user.uid, 'sleep'), where('date', '==', today));
-  }, [firestore, user, today]);
+    if (!user || !todayStr) return null;
+    return query(collection(firestore, 'users', user.uid, 'sleep'), where('date', '==', todayStr));
+  }, [firestore, user, todayStr]);
 
   const { data: mealData } = useCollection(mealsQuery);
   const { data: activityData } = useCollection(activitiesQuery);
@@ -94,6 +94,26 @@ export default function AiChatPage() {
     if (!createdAt) return '';
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDateLabel = (createdAt: any) => {
+    if (!createdAt) return '';
+    const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+
+    if (isToday) return locale === 'vi' ? 'Hôm nay' : 'Today';
+    if (isYesterday) return locale === 'vi' ? 'Hôm qua' : 'Yesterday';
+    
+    return date.toLocaleDateString(locale === 'vi' ? 'vi-VN' : 'en-US', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long'
+    });
   };
 
   const handleSend = async () => {
@@ -181,38 +201,52 @@ export default function AiChatPage() {
             </div>
           )}
 
-          {messages?.map((msg, idx) => (
-            <div
-              key={msg.id || idx}
-              className={cn(
-                "flex w-full items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
-                msg.role === 'user' ? "flex-row-reverse" : "flex-row"
-              )}
-            >
-              <div className={cn(
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-sm mt-1",
-                msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-              )}>
-                {msg.role === 'user' ? <User className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-              </div>
-              <div className={cn(
-                "flex flex-col gap-1 max-w-[80%]",
-                msg.role === 'user' ? "items-end" : "items-start"
-              )}>
-                <div className={cn(
-                  "rounded-2xl px-4 py-2 text-sm shadow-sm",
-                  msg.role === 'user' 
-                    ? "bg-primary text-primary-foreground rounded-tr-none" 
-                    : "bg-muted/80 text-foreground rounded-tl-none border border-border/50"
-                )}>
-                  <p className="whitespace-pre-line leading-relaxed">{msg.content}</p>
+          {messages?.map((msg, idx) => {
+            const currentMsgDate = msg.createdAt?.toDate ? msg.createdAt.toDate().toDateString() : new Date(msg.createdAt).toDateString();
+            const prevMsgDate = idx > 0 ? (messages[idx - 1].createdAt?.toDate ? messages[idx - 1].createdAt.toDate().toDateString() : new Date(messages[idx - 1].createdAt).toDateString()) : null;
+            const showDateHeader = currentMsgDate !== prevMsgDate;
+
+            return (
+              <div key={msg.id || idx} className="space-y-6">
+                {showDateHeader && (
+                  <div className="flex justify-center my-4">
+                    <span className="bg-muted px-3 py-1 rounded-full text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      {formatDateLabel(msg.createdAt)}
+                    </span>
+                  </div>
+                )}
+                <div
+                  className={cn(
+                    "flex w-full items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
+                    msg.role === 'user' ? "flex-row-reverse" : "flex-row"
+                  )}
+                >
+                  <div className={cn(
+                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-sm mt-1",
+                    msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  )}>
+                    {msg.role === 'user' ? <User className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                  </div>
+                  <div className={cn(
+                    "flex flex-col gap-1 max-w-[80%]",
+                    msg.role === 'user' ? "items-end" : "items-start"
+                  )}>
+                    <div className={cn(
+                      "rounded-2xl px-4 py-2 text-sm shadow-sm",
+                      msg.role === 'user' 
+                        ? "bg-primary text-primary-foreground rounded-tr-none" 
+                        : "bg-muted/80 text-foreground rounded-tl-none border border-border/50"
+                    )}>
+                      <p className="whitespace-pre-line leading-relaxed">{msg.content}</p>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground px-1">
+                      {formatTime(msg.createdAt)}
+                    </span>
+                  </div>
                 </div>
-                <span className="text-[10px] text-muted-foreground px-1">
-                  {formatTime(msg.createdAt)}
-                </span>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {isTyping && (
             <div className="flex w-full items-start gap-3 animate-pulse">

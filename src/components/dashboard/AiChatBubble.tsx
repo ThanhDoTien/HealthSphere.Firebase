@@ -35,14 +35,14 @@ export default function AiChatBubble() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [today, setToday] = useState('');
+  const [todayStr, setTodayStr] = useState('');
 
   useEffect(() => {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-    setToday(`${year}-${month}-${day}`);
+    setTodayStr(`${year}-${month}-${day}`);
   }, []);
 
   const chatQuery = useMemoFirebase(() => {
@@ -56,19 +56,19 @@ export default function AiChatBubble() {
   const { data: messages } = useCollection(chatQuery);
 
   const mealsQuery = useMemoFirebase(() => {
-    if (!user || !today || !isOpen) return null;
-    return query(collection(firestore, 'users', user.uid, 'meals'), where('date', '==', today));
-  }, [firestore, user, today, isOpen]);
+    if (!user || !todayStr || !isOpen) return null;
+    return query(collection(firestore, 'users', user.uid, 'meals'), where('date', '==', todayStr));
+  }, [firestore, user, todayStr, isOpen]);
 
   const activitiesQuery = useMemoFirebase(() => {
-    if (!user || !today || !isOpen) return null;
-    return query(collection(firestore, 'users', user.uid, 'activities'), where('date', '==', today));
-  }, [firestore, user, today, isOpen]);
+    if (!user || !todayStr || !isOpen) return null;
+    return query(collection(firestore, 'users', user.uid, 'activities'), where('date', '==', todayStr));
+  }, [firestore, user, todayStr, isOpen]);
 
   const sleepQuery = useMemoFirebase(() => {
-    if (!user || !today || !isOpen) return null;
-    return query(collection(firestore, 'users', user.uid, 'sleep'), where('date', '==', today));
-  }, [firestore, user, today, isOpen]);
+    if (!user || !todayStr || !isOpen) return null;
+    return query(collection(firestore, 'users', user.uid, 'sleep'), where('date', '==', todayStr));
+  }, [firestore, user, todayStr, isOpen]);
 
   const { data: mealData } = useCollection(mealsQuery);
   const { data: activityData } = useCollection(activitiesQuery);
@@ -97,6 +97,24 @@ export default function AiChatBubble() {
     if (!createdAt) return '';
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDateLabel = (createdAt: any) => {
+    if (!createdAt) return '';
+    const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    
+    if (isToday) return locale === 'vi' ? 'Hôm nay' : 'Today';
+    
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) return locale === 'vi' ? 'Hôm qua' : 'Yesterday';
+
+    return date.toLocaleDateString(locale === 'vi' ? 'vi-VN' : 'en-US', {
+      day: 'numeric',
+      month: 'short'
+    });
   };
 
   const handleSend = async () => {
@@ -180,7 +198,7 @@ export default function AiChatBubble() {
           
           {!isMinimized && (
             <>
-              <CardContent className="flex-1 overflow-y-auto p-4 space-y-6 bg-card/50" ref={scrollRef}>
+              <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 bg-card/50" ref={scrollRef}>
                 {(!messages || messages.length === 0) && !isTyping && (
                   <div className="flex h-full flex-col items-center justify-center text-center opacity-40 space-y-3 py-10">
                     <Bot className="h-12 w-12" />
@@ -188,38 +206,52 @@ export default function AiChatBubble() {
                   </div>
                 )}
 
-                {messages?.map((msg, idx) => (
-                  <div
-                    key={msg.id || idx}
-                    className={cn(
-                      "flex w-full items-start gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300",
-                      msg.role === 'user' ? "flex-row-reverse" : "flex-row"
-                    )}
-                  >
-                    <div className={cn(
-                      "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border shadow-sm mt-1",
-                      msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                    )}>
-                      {msg.role === 'user' ? <User className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}
-                    </div>
-                    <div className={cn(
-                      "flex flex-col gap-1 max-w-[85%]",
-                      msg.role === 'user' ? "items-end" : "items-start"
-                    )}>
-                      <div className={cn(
-                        "rounded-2xl px-3 py-2 text-[13px] shadow-sm",
-                        msg.role === 'user' 
-                          ? "bg-primary text-primary-foreground rounded-tr-none" 
-                          : "bg-muted/90 text-foreground rounded-tl-none border border-border/30"
-                      )}>
-                        <p className="whitespace-pre-line leading-relaxed">{msg.content}</p>
+                {messages?.map((msg, idx) => {
+                  const currentMsgDate = msg.createdAt?.toDate ? msg.createdAt.toDate().toDateString() : new Date(msg.createdAt).toDateString();
+                  const prevMsgDate = idx > 0 ? (messages[idx - 1].createdAt?.toDate ? messages[idx - 1].createdAt.toDate().toDateString() : new Date(messages[idx - 1].createdAt).toDateString()) : null;
+                  const showDateHeader = currentMsgDate !== prevMsgDate;
+
+                  return (
+                    <div key={msg.id || idx} className="space-y-4">
+                      {showDateHeader && (
+                        <div className="flex justify-center my-2">
+                          <span className="bg-muted px-2 py-0.5 rounded-full text-[9px] font-bold text-muted-foreground uppercase">
+                            {formatDateLabel(msg.createdAt)}
+                          </span>
+                        </div>
+                      )}
+                      <div
+                        className={cn(
+                          "flex w-full items-start gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300",
+                          msg.role === 'user' ? "flex-row-reverse" : "flex-row"
+                        )}
+                      >
+                        <div className={cn(
+                          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border shadow-sm mt-1",
+                          msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                        )}>
+                          {msg.role === 'user' ? <User className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}
+                        </div>
+                        <div className={cn(
+                          "flex flex-col gap-1 max-w-[85%]",
+                          msg.role === 'user' ? "items-end" : "items-start"
+                        )}>
+                          <div className={cn(
+                            "rounded-2xl px-3 py-2 text-[13px] shadow-sm",
+                            msg.role === 'user' 
+                              ? "bg-primary text-primary-foreground rounded-tr-none" 
+                              : "bg-muted/90 text-foreground rounded-tl-none border border-border/30"
+                          )}>
+                            <p className="whitespace-pre-line leading-relaxed">{msg.content}</p>
+                          </div>
+                          <span className="text-[9px] text-muted-foreground px-1">
+                            {formatTime(msg.createdAt)}
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-[9px] text-muted-foreground px-1">
-                        {formatTime(msg.createdAt)}
-                      </span>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {isTyping && (
                   <div className="flex w-full items-start gap-2 animate-pulse">

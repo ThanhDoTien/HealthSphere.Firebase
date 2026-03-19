@@ -280,7 +280,7 @@ export default function CaloriesPage() {
             <CardDescription className="text-sm font-medium mt-1">
               {t('calories.recommendation.dynamic_desc', { 
                 tdee: stats.tdee, 
-                burn: stats.totalActivityBurn,
+                burn: stats.totalActivityBurn ?? 0,
                 goal: t(`calories.goal.${stats.weightGoal}`)
               })}
             </CardDescription>
