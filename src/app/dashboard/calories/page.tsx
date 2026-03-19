@@ -94,7 +94,7 @@ export default function CaloriesPage() {
   const calorieChartConfig = useMemo(() => ({
     calories: {
       label: t('calories.chart.calories'),
-      color: '#06b6d4', // Cyan
+      color: '#3b82f6', // Chuyển sang Blue-500 đậm nét hơn
     },
   }), [t]) satisfies ChartConfig;
 
@@ -245,14 +245,14 @@ export default function CaloriesPage() {
             <Target className="h-6 w-6" />
           </div>
           <div>
-            <CardTitle className="text-xl">{t('calories.recommendation.title') || 'Mục tiêu Calo Phù hợp'}</CardTitle>
-            <CardDescription>{t('calories.recommendation.description') || 'Lượng năng lượng nạp vào tối ưu dựa trên chỉ số cơ thể của bạn.'}</CardDescription>
+            <CardTitle className="text-xl">{t('calories.recommendation.title')}</CardTitle>
+            <CardDescription>{t('calories.recommendation.description')}</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-black text-primary">{dailyGoal}</span>
-            <span className="text-lg font-medium text-muted-foreground">kcal / {t('common.day') || 'ngày'}</span>
+            <span className="text-lg font-medium text-muted-foreground">kcal / {t('common.day')}</span>
           </div>
         </CardContent>
       </Card>
@@ -286,7 +286,7 @@ export default function CaloriesPage() {
               className="h-64"
               showLegend={false}
               referenceLineValue={dailyGoal}
-              referenceLineLabel={t('calories.goalLine') || 'Mục tiêu'}
+              referenceLineLabel={t('calories.goalLine')}
             />
           )}
         </CardContent>
@@ -319,7 +319,7 @@ export default function CaloriesPage() {
         <Card className="flex flex-col border-primary/20 bg-primary/5">
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
             <BrainCircuit className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">{t('calories.aiAnalysisTitle') || 'Phân tích Dinh dưỡng AI'}</CardTitle>
+            <CardTitle className="text-lg">{t('calories.aiAnalysisTitle')}</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 space-y-4">
             {isAnalyzing ? (
@@ -336,8 +336,8 @@ export default function CaloriesPage() {
                 )}>
                   {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> : 
                    aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                  {aiAnalysis.status === 'good' ? (t('calories.status.good') || 'Cân bằng tốt') : 
-                   aiAnalysis.status === 'warning' ? (t('calories.status.warning') || 'Cần điều chỉnh') : (t('calories.status.bad') || 'Chưa ổn định')}
+                  {aiAnalysis.status === 'good' ? t('calories.status.good') : 
+                   aiAnalysis.status === 'warning' ? t('calories.status.warning') : t('calories.status.bad')}
                 </div>
                 <p className="text-sm leading-relaxed whitespace-pre-line font-medium text-foreground/80">
                   {aiAnalysis.analysis}
@@ -346,7 +346,7 @@ export default function CaloriesPage() {
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-2 py-10">
                 <BrainCircuit className="h-10 w-10 opacity-20" />
-                <p className="text-xs italic">{t('calories.aiNoData') || 'Ghi lại bữa ăn để AI bắt đầu phân tích dinh dưỡng cho bạn.'}</p>
+                <p className="text-xs italic">{t('calories.aiNoData')}</p>
               </div>
             )}
           </CardContent>

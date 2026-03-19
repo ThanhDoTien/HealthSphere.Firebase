@@ -111,9 +111,12 @@
   "calories.dailyLogTitle": "Nhật ký Bữa ăn Hàng ngày",
   "calories.noMeals": "Chưa có bữa ăn nào được ghi. Thêm một bữa để bắt đầu!",
   "calories.editTitle": "Chỉnh sửa Bữa ăn",
+  "calories.recommendation.title": "Mục tiêu Calo Phù hợp",
+  "calories.recommendation.description": "Lượng năng lượng nạp vào tối ưu dựa trên chỉ số cơ thể của bạn.",
+  "calories.goalLine": "Mục tiêu",
   "activity.title": "Theo dõi Hoạt động",
   "activity.description": "Ghi lại các hoạt động thể chất và theo dõi lượng calo đã đốt cháy.",
-  "activity.baseBurn.title": "Mức tiêuhtu năng lượng nền",
+  "activity.baseBurn.title": "Mức tiêu thụ năng lượng nền",
   "activity.baseBurn.description": "Năng lượng cơ thể bạn đốt cháy ngay cả khi nghỉ ngơi.",
   "activity.baseBurn.bmr": "Tỷ lệ trao đổi chất (BMR)",
   "activity.baseBurn.tdee": "Tổng năng lượng tiêu thụ (TDEE)",
@@ -218,5 +221,6 @@
   "form.add_weight.success": "Đã ghi nhận cân nặng ngày {date}.",
   "form.add_weight.error": "Có lỗi khi ghi nhận cân nặng.",
   "common.filter.last7": "7 ngày qua",
-  "common.filter.last30": "30 ngày qua"
+  "common.filter.last30": "30 ngày qua",
+  "common.day": "ngày"
 }

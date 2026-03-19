@@ -111,6 +111,9 @@
   "calories.dailyLogTitle": "Daily Meal Log",
   "calories.noMeals": "No meals logged yet. Add one above to get started!",
   "calories.editTitle": "Edit Meal",
+  "calories.recommendation.title": "Target Calorie Goal",
+  "calories.recommendation.description": "Optimal energy intake based on your body metrics.",
+  "calories.goalLine": "Goal",
   "activity.title": "Activity Tracking",
   "activity.description": "Log your physical activities and track burned calories.",
   "activity.baseBurn.title": "Base Metabolism",
@@ -218,5 +221,6 @@
   "form.add_weight.success": "Weight logged for {date}.",
   "form.add_weight.error": "Error adding weight entry.",
   "common.filter.last7": "Last 7 days",
-  "common.filter.last30": "Last 30 days"
+  "common.filter.last30": "Last 30 days",
+  "common.day": "day"
 }
