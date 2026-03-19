@@ -13,11 +13,11 @@ import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy, doc, deleteDoc, limit } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, limit, where } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { PieChart } from '@/components/ui/pie-chart';
 import { type ChartConfig } from '@/components/ui/chart';
-import { Loader2, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle, Target } from 'lucide-react';
+import { Loader2, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle, Target, Flame } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import {
   DropdownMenu,
@@ -72,6 +72,14 @@ type Meal = {
   userId: string;
 };
 
+type Activity = {
+  name: string;
+  duration: number;
+  caloriesBurned: number;
+  date: string;
+  userId: string;
+};
+
 type WeightLog = {
   weight: number;
   date: string;
@@ -95,7 +103,7 @@ export default function CaloriesPage() {
   const calorieChartConfig = useMemo(() => ({
     calories: {
       label: t('calories.chart.calories'),
-      color: '#f59e0b', // Amber-500
+      color: '#f59e0b', // Amber
     },
   }), [t]) satisfies ChartConfig;
 
@@ -118,6 +126,14 @@ export default function CaloriesPage() {
     );
   }, [firestore, user]);
 
+  const activityQuery = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'activities'),
+      where('date', '==', today)
+    );
+  }, [firestore, user, today]);
+
   const weightQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -127,11 +143,14 @@ export default function CaloriesPage() {
     );
   }, [firestore, user]);
 
-  const { data: mealData, isLoading: mealLoading } = useCollection<Meal>(
-    mealQuery
-  );
-
+  const { data: mealData, isLoading: mealLoading } = useCollection<Meal>(mealQuery);
+  const { data: activityData } = useCollection<Activity>(activityQuery);
   const { data: latestWeightData } = useCollection<WeightLog>(weightQuery);
+
+  const totalActivityBurn = useMemo(() => {
+    if (!activityData) return 0;
+    return activityData.reduce((sum, act) => sum + act.caloriesBurned, 0);
+  }, [activityData]);
 
   const stats = useMemo(() => {
     if (!userProfile) return { tdee: 0, target: 0, weightGoal: 'maintain' };
@@ -140,14 +159,16 @@ export default function CaloriesPage() {
     const tdee = Math.round(calculateTDEE(bmr, userProfile.activityLevel));
     const weightGoal = userProfile.weightGoal || 'maintain';
     
-    let target = tdee;
-    if (weightGoal === 'lose') target = tdee - 500;
-    if (weightGoal === 'gain') target = tdee + 500;
+    // Dynamic Target = (TDEE + Logged Activity) +/- Adjustment
+    const baseTarget = tdee + totalActivityBurn;
+    let target = baseTarget;
+    if (weightGoal === 'lose') target = baseTarget - 500;
+    if (weightGoal === 'gain') target = baseTarget + 500;
     
-    return { tdee, target, weightGoal };
-  }, [userProfile, latestWeightData]);
+    return { tdee, target, weightGoal, totalActivityBurn };
+  }, [userProfile, latestWeightData, totalActivityBurn]);
 
-  const dailyGoal = stats.target;
+  const dailyTarget = stats.target;
 
   const totals = useMemo(() => {
     if (!mealData || !today) return { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
@@ -186,7 +207,7 @@ export default function CaloriesPage() {
     } else if (!mealLoading && totals.calories === 0) {
       setAiAnalysis(null);
     }
-  }, [totals.calories, totals.protein, totals.carbs, totals.fat, totals.fiber, userProfile, locale, mealLoading]);
+  }, [totals, userProfile, locale, mealLoading]);
 
   const chartData = useMemo(() => {
     if (!mealData) return [];
@@ -247,13 +268,6 @@ export default function CaloriesPage() {
 
   const isLoading = userLoading || mealLoading;
 
-  const recommendationText = useMemo(() => {
-    const params = { tdee: stats.tdee };
-    if (stats.weightGoal === 'lose') return t('calories.recommendation.lose', params);
-    if (stats.weightGoal === 'gain') return t('calories.recommendation.gain', params);
-    return t('calories.recommendation.maintain', params);
-  }, [stats.weightGoal, stats.tdee, t]);
-
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <Card className="border-primary/20 bg-primary/5">
@@ -264,14 +278,31 @@ export default function CaloriesPage() {
           <div>
             <CardTitle className="text-xl">{t('calories.recommendation.title')}</CardTitle>
             <CardDescription className="text-sm font-medium mt-1">
-              {recommendationText}
+              {t('calories.recommendation.dynamic_desc', { 
+                tdee: stats.tdee, 
+                burn: stats.totalActivityBurn,
+                goal: t(`calories.goal.${stats.weightGoal}`)
+              })}
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-black text-primary">{dailyGoal}</span>
+            <span className="text-4xl font-black text-primary">{dailyTarget}</span>
             <span className="text-lg font-medium text-muted-foreground">kcal / {t('common.day')}</span>
+          </div>
+          <div className="flex flex-wrap gap-4 text-xs font-medium text-muted-foreground bg-background/50 p-3 rounded-lg border">
+            <div className="flex items-center gap-1.5">
+               <BrainCircuit className="h-3.5 w-3.5" />
+               <span>TDEE: {stats.tdee} kcal</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-accent">
+               <Flame className="h-3.5 w-3.5" />
+               <span>+{stats.totalActivityBurn} kcal (Vận động)</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-primary">
+               <span>Mục tiêu: {stats.weightGoal === 'lose' ? '-500' : stats.weightGoal === 'gain' ? '+500' : '0'} kcal</span>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -304,8 +335,8 @@ export default function CaloriesPage() {
               yAxisWidth={40}
               className="h-64"
               showLegend={false}
-              referenceLineValue={dailyGoal}
-              referenceLineLabel={t(`calories.goal.${stats.weightGoal}`)}
+              referenceLineValue={dailyTarget}
+              referenceLineLabel={t('calories.goalLine')}
             />
           )}
         </CardContent>
@@ -358,9 +389,9 @@ export default function CaloriesPage() {
                   {aiAnalysis.status === 'good' ? t('calories.status.good') : 
                    aiAnalysis.status === 'warning' ? t('calories.status.warning') : t('calories.status.bad')}
                 </div>
-                <p className="text-sm leading-relaxed whitespace-pre-line font-medium text-foreground/80">
+                <div className="text-sm leading-relaxed whitespace-pre-line font-medium text-foreground/80">
                   {aiAnalysis.analysis}
-                </p>
+                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-2 py-10">
@@ -407,7 +438,7 @@ export default function CaloriesPage() {
                             <p className="font-bold">{meal.name}</p>
                             <p className="text-xs capitalize text-muted-foreground">{t(`form.add_meal.type${meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1)}`)}</p>
                             {(meal.protein || meal.carbs || meal.fat || meal.fiber) && (
-                              <div className="flex wrap gap-2 pt-1">
+                              <div className="flex flex-wrap gap-2 pt-1">
                                 {meal.protein !== undefined && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">P: {meal.protein}g</span>}
                                 {meal.carbs !== undefined && <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">C: {meal.carbs}g</span>}
                                 {meal.fat !== undefined && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">F: {meal.fat}g</span>}
