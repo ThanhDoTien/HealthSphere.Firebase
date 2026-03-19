@@ -132,12 +132,21 @@ export default function CaloriesPage() {
 
   const { data: latestWeightData } = useCollection<WeightLog>(weightQuery);
 
-  const dailyGoal = useMemo(() => {
-    if (!userProfile) return 0;
+  const stats = useMemo(() => {
+    if (!userProfile) return { tdee: 0, target: 0, weightGoal: 'maintain' };
     const currentWeight = latestWeightData?.[0]?.weight || userProfile.weight;
     const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
-    return Math.round(calculateTDEE(bmr, userProfile.activityLevel));
+    const tdee = Math.round(calculateTDEE(bmr, userProfile.activityLevel));
+    const weightGoal = userProfile.weightGoal || 'maintain';
+    
+    let target = tdee;
+    if (weightGoal === 'lose') target = tdee - 500;
+    if (weightGoal === 'gain') target = tdee + 500;
+    
+    return { tdee, target, weightGoal };
   }, [userProfile, latestWeightData]);
+
+  const dailyGoal = stats.target;
 
   const totals = useMemo(() => {
     if (!mealData || !today) return { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
@@ -256,17 +265,26 @@ export default function CaloriesPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-             <div className="p-3 rounded-xl bg-blue-50/50 border border-blue-100 flex flex-col gap-1">
+             <div className={cn(
+               "p-3 rounded-xl border flex flex-col gap-1 transition-all",
+               stats.weightGoal === 'maintain' ? "bg-blue-100 border-blue-300 ring-2 ring-blue-500/20" : "bg-blue-50/50 border-blue-100 opacity-60"
+             )}>
                 <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">{t('calories.goal.maintain')}</span>
-                <span className="text-lg font-bold text-blue-700">{dailyGoal} <span className="text-[10px] font-normal">kcal</span></span>
+                <span className="text-lg font-bold text-blue-700">{stats.tdee} <span className="text-[10px] font-normal">kcal</span></span>
              </div>
-             <div className="p-3 rounded-xl bg-green-50/50 border border-green-100 flex flex-col gap-1">
+             <div className={cn(
+               "p-3 rounded-xl border flex flex-col gap-1 transition-all",
+               stats.weightGoal === 'lose' ? "bg-green-100 border-green-300 ring-2 ring-green-500/20" : "bg-green-50/50 border-green-100 opacity-60"
+             )}>
                 <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider">{t('calories.goal.lose')}</span>
-                <span className="text-lg font-bold text-green-700">{dailyGoal - 500} <span className="text-[10px] font-normal">kcal</span></span>
+                <span className="text-lg font-bold text-green-700">{stats.tdee - 500} <span className="text-[10px] font-normal">kcal</span></span>
              </div>
-             <div className="p-3 rounded-xl bg-orange-50/50 border border-orange-100 flex flex-col gap-1">
+             <div className={cn(
+               "p-3 rounded-xl border flex flex-col gap-1 transition-all",
+               stats.weightGoal === 'gain' ? "bg-orange-100 border-orange-300 ring-2 ring-orange-500/20" : "bg-orange-50/50 border-orange-100 opacity-60"
+             )}>
                 <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">{t('calories.goal.gain')}</span>
-                <span className="text-lg font-bold text-orange-700">{dailyGoal + 500} <span className="text-[10px] font-normal">kcal</span></span>
+                <span className="text-lg font-bold text-orange-700">{stats.tdee + 500} <span className="text-[10px] font-normal">kcal</span></span>
              </div>
           </div>
         </CardContent>
@@ -301,7 +319,7 @@ export default function CaloriesPage() {
               className="h-64"
               showLegend={false}
               referenceLineValue={dailyGoal}
-              referenceLineLabel={t('calories.goalLine')}
+              referenceLineLabel={t(`calories.goal.${stats.weightGoal}`)}
             />
           )}
         </CardContent>
