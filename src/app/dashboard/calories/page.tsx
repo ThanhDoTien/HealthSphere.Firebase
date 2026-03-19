@@ -246,6 +246,12 @@ export default function CaloriesPage() {
 
   const isLoading = userLoading || mealLoading;
 
+  const recommendationText = useMemo(() => {
+    if (stats.weightGoal === 'lose') return t('calories.recommendation.lose');
+    if (stats.weightGoal === 'gain') return t('calories.recommendation.gain');
+    return t('calories.recommendation.maintain');
+  }, [stats.weightGoal, t]);
+
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <Card className="border-primary/20 bg-primary/5">
@@ -255,7 +261,7 @@ export default function CaloriesPage() {
           </div>
           <div>
             <CardTitle className="text-xl">{t('calories.recommendation.title')}</CardTitle>
-            <CardDescription>{t('calories.recommendation.description')}</CardDescription>
+            <CardDescription>{recommendationText}</CardDescription>
           </div>
         </CardHeader>
         <CardContent>

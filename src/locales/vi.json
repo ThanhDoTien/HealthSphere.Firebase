@@ -1,4 +1,3 @@
-
 {
   "home.login": "Đăng nhập",
   "home.signup": "Đăng ký",
@@ -119,6 +118,9 @@
   "calories.editTitle": "Chỉnh sửa Bữa ăn",
   "calories.recommendation.title": "Mục tiêu Calo Phù hợp",
   "calories.recommendation.description": "Đây là mức năng lượng TDEE giúp bạn duy trì cân nặng hiện tại.",
+  "calories.recommendation.lose": "Đây là mức năng lượng mục tiêu để giúp bạn giảm cân an toàn.",
+  "calories.recommendation.maintain": "Đây là mức năng lượng TDEE giúp bạn duy trì cân nặng hiện tại.",
+  "calories.recommendation.gain": "Đây là mức năng lượng mục tiêu để hỗ trợ bạn tăng cân hiệu quả.",
   "calories.goal.maintain": "Duy trì",
   "calories.goal.lose": "Giảm cân",
   "calories.goal.gain": "Tăng cân",

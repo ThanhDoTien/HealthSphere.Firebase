@@ -1,4 +1,3 @@
-
 {
   "home.login": "Login",
   "home.signup": "Sign Up",
@@ -119,6 +118,9 @@
   "calories.editTitle": "Edit Meal",
   "calories.recommendation.title": "Target Calorie Goal",
   "calories.recommendation.description": "This is the TDEE energy level to maintain your current weight.",
+  "calories.recommendation.lose": "This is the target energy level to help you lose weight safely.",
+  "calories.recommendation.maintain": "This is the TDEE energy level to maintain your current weight.",
+  "calories.recommendation.gain": "This is the target energy level to support you in gaining weight effectively.",
   "calories.goal.maintain": "Maintain",
   "calories.goal.lose": "Lose weight",
   "calories.goal.gain": "Gain weight",
