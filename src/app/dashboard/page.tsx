@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { Utensils, Dumbbell, Loader2, Bed, Scale, Lightbulb, RefreshCcw, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import { Utensils, Dumbbell, Loader2, Bed, Scale, Lightbulb, RefreshCw, Sparkles, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -33,7 +32,6 @@ import {
 } from '@/components/ui/select';
 import { getHealthSuggestions, type HealthSuggestionResponse } from '@/ai/flows/suggestion-flow';
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
-import { uploadBase64WithCache } from '@/firebase/storage/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 
@@ -68,7 +66,6 @@ export default function DashboardPage() {
   const [aiError, setAiError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Sử dụng giờ địa phương thay vì UTC để tránh lệch ngày
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -111,8 +108,6 @@ export default function DashboardPage() {
   const { data: mealData, isLoading: mealLoading } = useCollection(mealsQuery);
   const { data: activityData, isLoading: activityLoading } = useCollection(activitiesQuery);
   const { data: sleepData, isLoading: sleepLoading } = useCollection(sleepQuery);
-  
-  // useDoc luôn lắng nghe DB thời gian thực, đảm bảo không bị cache ở client
   const { data: suggestionData, isLoading: suggestionLoading } = useDoc<SuggestionWithMetadata>(suggestionDocRef);
 
   const dailySummary = useMemo(() => {
@@ -168,7 +163,6 @@ export default function DashboardPage() {
         token,
       });
 
-      // Lưu trữ trực tiếp vào Firestore - useDoc sẽ tự động cập nhật UI khi xong
       await setDoc(suggestionDocRef, {
         ...suggestions,
         updatedAt: serverTimestamp(),
@@ -300,7 +294,7 @@ export default function DashboardPage() {
                       </Button>
                     </div>
                     <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line font-medium">
-                      {suggestionData.generalTip}
+                      {suggestionData.generalTip.replaceAll('\\n', '\n')}
                     </p>
                   </div>
                 </div>
@@ -405,7 +399,7 @@ export default function DashboardPage() {
                           <span className="text-base font-bold text-primary shrink-0 ml-2">~{meal.calories} kcal</span>
                         </div>
                         <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">
-                          {meal.recipe}
+                          {meal.recipe.replaceAll('\\n', '\n')}
                         </p>
                       </div>
                     </Card>
@@ -433,7 +427,7 @@ export default function DashboardPage() {
                       <div className="p-5 flex-1 flex flex-col space-y-3">
                         <h5 className="font-bold text-xl leading-tight">{exercise.name}</h5>
                         <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">
-                          {exercise.description}
+                          {exercise.description.replaceAll('\\n', '\n')}
                         </p>
                       </div>
                     </Card>
@@ -461,4 +455,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

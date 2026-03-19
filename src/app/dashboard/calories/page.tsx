@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -280,7 +279,7 @@ export default function CaloriesPage() {
             <CardDescription className="text-sm font-medium mt-1">
               {t('calories.recommendation.dynamic_desc', { 
                 tdee: stats.tdee, 
-                burn: stats.totalActivityBurn ?? 0,
+                burn: stats.totalActivityBurn || 0,
                 goal: t(`calories.goal.${stats.weightGoal}`)
               })}
             </CardDescription>
@@ -389,8 +388,8 @@ export default function CaloriesPage() {
                   {aiAnalysis.status === 'good' ? t('calories.status.good') : 
                    aiAnalysis.status === 'warning' ? t('calories.status.warning') : t('calories.status.bad')}
                 </div>
-                <div className="text-sm leading-relaxed whitespace-pre-line font-medium text-foreground/80">
-                  {aiAnalysis.analysis}
+                <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
+                  {aiAnalysis.analysis.replaceAll('\\n', '\n')}
                 </div>
               </div>
             ) : (

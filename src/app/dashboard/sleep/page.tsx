@@ -12,7 +12,7 @@ import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy, where } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
 import AddSleepForm from '@/components/dashboard/AddSleepForm';
@@ -148,7 +148,7 @@ export default function SleepPage() {
               </CardDescription>
             </div>
             <Select value={sleepFilter} onValueChange={setSleepFilter}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select range" />
               </SelectTrigger>
               <SelectContent>
@@ -174,7 +174,6 @@ export default function SleepPage() {
           </CardContent>
         </Card>
 
-        {/* Sleep AI Analysis */}
         <Card className="border-primary/20 bg-primary/5 flex flex-col">
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
             <BrainCircuit className="h-5 w-5 text-primary" />
@@ -198,8 +197,8 @@ export default function SleepPage() {
                   {aiAnalysis.status === 'good' ? (t('sleep.status.good') || 'Hồi phục tốt') : 
                    aiAnalysis.status === 'warning' ? (t('sleep.status.warning') || 'Thiếu ngủ nhẹ') : (t('sleep.status.bad') || 'Thiếu ngủ nghiêm trọng')}
                 </div>
-                <p className="text-sm leading-relaxed whitespace-pre-line font-medium text-foreground/80">
-                  {aiAnalysis.analysis}
+                <p className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
+                  {aiAnalysis.analysis.replaceAll('\\n', '\n')}
                 </p>
               </div>
             ) : (

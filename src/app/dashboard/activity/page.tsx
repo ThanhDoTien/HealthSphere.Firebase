@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -13,10 +12,10 @@ import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy, limit, doc, deleteDoc, where } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc, deleteDoc } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
-import { Loader2, Zap, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle, Target, TrendingUp } from 'lucide-react';
+import { Loader2, Zap, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle, TrendingUp } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { useTranslation } from '@/context/LanguageContext';
 import {
@@ -154,7 +153,6 @@ export default function ActivityPage() {
 
   const remainingToBurn = Math.max(0, movementGoal - totalBurnedToday);
 
-  // AI Analysis Effect
   useEffect(() => {
     if (todayActivities.length > 0 && userProfile && baseBurn.tdee > 0) {
       const runAnalysis = async () => {
@@ -317,7 +315,6 @@ export default function ActivityPage() {
           </CardContent>
         </Card>
 
-        {/* Activity AI Analysis - Spans full width on medium screens to avoid blank space */}
         <Card className="border-primary/20 bg-primary/5 flex flex-col h-full md:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
             <BrainCircuit className="h-4 w-4 text-primary" />
@@ -329,25 +326,25 @@ export default function ActivityPage() {
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : aiAnalysis ? (
-              <div className="space-y-2 animate-in fade-in duration-500">
+              <div className="space-y-3 animate-in fade-in duration-500">
                 <div className={cn(
-                  "flex items-center gap-2 px-2 py-0.5 rounded-full text-[9px] font-bold w-fit",
+                  "flex items-center gap-2 px-2 py-1 rounded-full text-[10px] font-bold w-fit",
                   aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" : 
                   aiAnalysis.status === 'warning' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
                 )}>
-                  {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-2.5 w-2.5" /> : 
-                   aiAnalysis.status === 'warning' ? <AlertTriangle className="h-2.5 w-2.5" /> : <AlertCircle className="h-2.5 w-2.5" />}
+                  {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> : 
+                   aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
                   {aiAnalysis.status === 'good' ? t('activity.status.good') : 
                    aiAnalysis.status === 'warning' ? t('activity.status.warning') : t('activity.status.bad')}
                 </div>
-                <p className="text-xs leading-relaxed whitespace-pre-line font-medium text-foreground/80">
-                  {aiAnalysis.analysis}
+                <p className="text-sm leading-relaxed whitespace-pre-line font-medium text-foreground/90">
+                  {aiAnalysis.analysis.replaceAll('\\n', '\n')}
                 </p>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full min-h-[100px] text-center text-muted-foreground space-y-1 py-4">
                 <BrainCircuit className="h-8 w-8 opacity-20" />
-                <p className="text-[10px] italic">{t('activity.aiNoData')}</p>
+                <p className="text-xs italic">{t('activity.aiNoData')}</p>
               </div>
             )}
           </CardContent>
