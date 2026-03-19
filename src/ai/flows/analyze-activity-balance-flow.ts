@@ -39,6 +39,7 @@ Nhiệm vụ:
 1. Đánh giá cường độ vận động hôm nay so với mức tiêu thụ năng lượng nền (TDEE).
 2. Kiểm tra xem các hoạt động có phù hợp với mục tiêu "{{goal}}" không.
 3. Đưa ra lời khuyên khích lệ hoặc điều chỉnh cường độ tập luyện một cách khoa học bằng tiếng {{language}}.
+   QUAN TRỌNG: Trình bày dưới dạng danh sách có đánh số (1, 2, 3...). HÃY SỬ DỤNG KÝ TỰ XUỐNG DÒNG (\n) SAU MỖI Ý ĐỂ VĂN BẢN KHÔNG BỊ DÍNH LIỀN THÀNH MỘT KHỐI.
 4. Xác định trạng thái (status):
    - 'good': Vận động tốt, phù hợp mục tiêu.
    - 'warning': Vận động hơi ít hoặc quá sức so với thể trạng.
