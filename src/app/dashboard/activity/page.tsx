@@ -265,7 +265,7 @@ export default function ActivityPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="border-accent/20 bg-accent/5">
+        <Card className="border-accent/20 bg-accent/5 h-full">
           <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent">
               <Zap className="h-5 w-5" />
@@ -289,8 +289,7 @@ export default function ActivityPage() {
           </CardContent>
         </Card>
 
-        {/* Suggestion Card */}
-        <Card className="border-primary/20 bg-primary/5">
+        <Card className="border-primary/20 bg-primary/5 h-full">
            <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
               <TrendingUp className="h-5 w-5" />
@@ -318,15 +317,15 @@ export default function ActivityPage() {
           </CardContent>
         </Card>
 
-        {/* Activity AI Analysis */}
-        <Card className="border-primary/20 bg-primary/5 flex flex-col">
+        {/* Activity AI Analysis - Spans full width on medium screens to avoid blank space */}
+        <Card className="border-primary/20 bg-primary/5 flex flex-col h-full md:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
             <BrainCircuit className="h-4 w-4 text-primary" />
             <CardTitle className="text-md">{t('activity.aiAnalysisTitle')}</CardTitle>
           </CardHeader>
           <CardContent className="flex-1">
             {isAnalyzing ? (
-              <div className="flex flex-col items-center justify-center h-full gap-2 text-primary animate-pulse py-4">
+              <div className="flex flex-col items-center justify-center h-full min-h-[100px] gap-2 text-primary animate-pulse py-4">
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : aiAnalysis ? (
@@ -346,7 +345,7 @@ export default function ActivityPage() {
                 </p>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-1 py-4">
+              <div className="flex flex-col items-center justify-center h-full min-h-[100px] text-center text-muted-foreground space-y-1 py-4">
                 <BrainCircuit className="h-8 w-8 opacity-20" />
                 <p className="text-[10px] italic">{t('activity.aiNoData')}</p>
               </div>
