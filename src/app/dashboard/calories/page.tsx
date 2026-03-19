@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -89,7 +88,7 @@ export default function CaloriesPage() {
   const calorieChartConfig = useMemo(() => ({
     calories: {
       label: t('calories.chart.calories'),
-      color: 'hsl(var(--accent))',
+      color: '#06b6d4', // Cyan
     },
   }), [t]) satisfies ChartConfig;
 
@@ -128,9 +127,7 @@ export default function CaloriesPage() {
     }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
   }, [mealData, today]);
 
-  // Logic phân tích AI nằm ở đây
   useEffect(() => {
-    // Chỉ chạy khi có calo (đã ăn) và hồ sơ người dùng (để biết mục tiêu)
     if (totals.calories > 0 && userProfile) {
       const runAnalysis = async () => {
         setIsAnalyzing(true);
@@ -275,7 +272,6 @@ export default function CaloriesPage() {
           </CardContent>
         </Card>
 
-        {/* Panel Phân tích AI hiển thị ở đây */}
         <Card className="flex flex-col border-primary/20 bg-primary/5">
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
             <BrainCircuit className="h-5 w-5 text-primary" />
@@ -348,7 +344,7 @@ export default function CaloriesPage() {
                             <p className="font-bold">{meal.name}</p>
                             <p className="text-xs capitalize text-muted-foreground">{t(`form.add_meal.type${meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1)}`)}</p>
                             {(meal.protein || meal.carbs || meal.fat || meal.fiber) && (
-                              <div className="flex flex-wrap gap-2 pt-1">
+                              <div className="flex wrap gap-2 pt-1">
                                 {meal.protein !== undefined && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">P: {meal.protein}g</span>}
                                 {meal.carbs !== undefined && <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">C: {meal.carbs}g</span>}
                                 {meal.fat !== undefined && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">F: {meal.fat}g</span>}

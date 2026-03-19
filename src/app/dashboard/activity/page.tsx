@@ -91,7 +91,7 @@ export default function ActivityPage() {
   const activityChartConfig = useMemo(() => ({
     calories: {
       label: t('activity.chart.calories'),
-      color: 'hsl(var(--accent))',
+      color: '#f97316', // Orange
     },
   }), [t]) satisfies ChartConfig;
 
