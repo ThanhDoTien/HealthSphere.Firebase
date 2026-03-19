@@ -94,7 +94,7 @@ export default function CaloriesPage() {
   const calorieChartConfig = useMemo(() => ({
     calories: {
       label: t('calories.chart.calories'),
-      color: '#3b82f6', // Chuyển sang Blue-500 đậm nét hơn
+      color: '#f59e0b', // Amber-500
     },
   }), [t]) satisfies ChartConfig;
 

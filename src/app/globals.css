@@ -13,8 +13,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 207 89% 68%; /* #64B5F6 */
-    --primary-foreground: 210 40% 98%;
+    --primary: 188 100% 47%; /* Cyan #06b6d4 */
+    --primary-foreground: 180 100% 98%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -22,7 +22,7 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 122 39% 49%; /* #4CAF50 */
+    --accent: 122 39% 49%; /* #4CAF50 - Giữ nguyên màu nhấn xanh lá cho các hành động tích cực */
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84.2% 60.2%;
@@ -30,7 +30,7 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 207 89% 68%;
+    --ring: 188 100% 47%;
 
     --radius: 0.5rem;
   }
@@ -45,7 +45,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 207 89% 68%;
+    --primary: 188 100% 47%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -62,7 +62,7 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 207 89% 68%;
+    --ring: 188 100% 47%;
   }
 }
 
