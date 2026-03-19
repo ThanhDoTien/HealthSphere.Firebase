@@ -262,7 +262,8 @@ export default function ActivityPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Metrics Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="border-accent/20 bg-accent/5 h-full">
           <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent">
@@ -314,42 +315,44 @@ export default function ActivityPage() {
             </div>
           </CardContent>
         </Card>
-
-        <Card className="border-primary/20 bg-primary/5 flex flex-col h-full md:col-span-2 lg:col-span-1">
-          <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <BrainCircuit className="h-4 w-4 text-primary" />
-            <CardTitle className="text-md">{t('activity.aiAnalysisTitle')}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1">
-            {isAnalyzing ? (
-              <div className="flex flex-col items-center justify-center h-full min-h-[100px] gap-2 text-primary animate-pulse py-4">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : aiAnalysis ? (
-              <div className="space-y-4 animate-in fade-in duration-500">
-                <div className={cn(
-                  "flex items-center gap-2 px-2 py-1 rounded-full text-[10px] font-bold w-fit",
-                  aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" : 
-                  aiAnalysis.status === 'warning' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
-                )}>
-                  {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> : 
-                   aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                  {aiAnalysis.status === 'good' ? t('activity.status.good') : 
-                   aiAnalysis.status === 'warning' ? t('activity.status.warning') : t('activity.status.bad')}
-                </div>
-                <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90 space-y-2">
-                  {aiAnalysis.analysis.replaceAll('\\n', '\n')}
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full min-h-[100px] text-center text-muted-foreground space-y-1 py-4">
-                <BrainCircuit className="h-8 w-8 opacity-20" />
-                <p className="text-xs italic">{t('activity.aiNoData')}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
+
+      {/* AI Analysis Row (Full Width) */}
+      <Card className="border-primary/20 bg-primary/5 shadow-sm">
+        <CardHeader className="flex flex-row items-center gap-2 pb-2">
+          <BrainCircuit className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">{t('activity.aiAnalysisTitle')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isAnalyzing ? (
+            <div className="flex flex-col items-center justify-center min-h-[120px] gap-2 text-primary animate-pulse py-6">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <p className="text-sm font-medium">HealthSphere AI đang đánh giá hiệu quả vận động...</p>
+            </div>
+          ) : aiAnalysis ? (
+            <div className="space-y-4 animate-in fade-in duration-500">
+              <div className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold w-fit",
+                aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" : 
+                aiAnalysis.status === 'warning' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
+              )}>
+                {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> : 
+                 aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                {aiAnalysis.status === 'good' ? t('activity.status.good') : 
+                 aiAnalysis.status === 'warning' ? t('activity.status.warning') : t('activity.status.bad')}
+              </div>
+              <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
+                {aiAnalysis.analysis.replaceAll('\\n', '\n')}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center min-h-[120px] text-center text-muted-foreground space-y-2 py-6">
+              <BrainCircuit className="h-10 w-10 opacity-20" />
+              <p className="text-sm italic">{t('activity.aiNoData')}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
