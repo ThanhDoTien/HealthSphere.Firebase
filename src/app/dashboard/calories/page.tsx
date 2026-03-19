@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -247,10 +248,11 @@ export default function CaloriesPage() {
   const isLoading = userLoading || mealLoading;
 
   const recommendationText = useMemo(() => {
-    if (stats.weightGoal === 'lose') return t('calories.recommendation.lose');
-    if (stats.weightGoal === 'gain') return t('calories.recommendation.gain');
-    return t('calories.recommendation.maintain');
-  }, [stats.weightGoal, t]);
+    const params = { tdee: stats.tdee };
+    if (stats.weightGoal === 'lose') return t('calories.recommendation.lose', params);
+    if (stats.weightGoal === 'gain') return t('calories.recommendation.gain', params);
+    return t('calories.recommendation.maintain', params);
+  }, [stats.weightGoal, stats.tdee, t]);
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
@@ -261,37 +263,15 @@ export default function CaloriesPage() {
           </div>
           <div>
             <CardTitle className="text-xl">{t('calories.recommendation.title')}</CardTitle>
-            <CardDescription>{recommendationText}</CardDescription>
+            <CardDescription className="text-sm font-medium mt-1">
+              {recommendationText}
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-black text-primary">{dailyGoal}</span>
             <span className="text-lg font-medium text-muted-foreground">kcal / {t('common.day')}</span>
-          </div>
-
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-             <div className={cn(
-               "p-3 rounded-xl border flex flex-col gap-1 transition-all",
-               stats.weightGoal === 'maintain' ? "bg-blue-100 border-blue-300 ring-2 ring-blue-500/20" : "bg-blue-50/50 border-blue-100 opacity-60"
-             )}>
-                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">{t('calories.goal.maintain')}</span>
-                <span className="text-lg font-bold text-blue-700">{stats.tdee} <span className="text-[10px] font-normal">kcal</span></span>
-             </div>
-             <div className={cn(
-               "p-3 rounded-xl border flex flex-col gap-1 transition-all",
-               stats.weightGoal === 'lose' ? "bg-green-100 border-green-300 ring-2 ring-green-500/20" : "bg-green-50/50 border-green-100 opacity-60"
-             )}>
-                <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider">{t('calories.goal.lose')}</span>
-                <span className="text-lg font-bold text-green-700">{stats.tdee - 500} <span className="text-[10px] font-normal">kcal</span></span>
-             </div>
-             <div className={cn(
-               "p-3 rounded-xl border flex flex-col gap-1 transition-all",
-               stats.weightGoal === 'gain' ? "bg-orange-100 border-orange-300 ring-2 ring-orange-500/20" : "bg-orange-50/50 border-orange-100 opacity-60"
-             )}>
-                <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">{t('calories.goal.gain')}</span>
-                <span className="text-lg font-bold text-orange-700">{stats.tdee + 500} <span className="text-[10px] font-normal">kcal</span></span>
-             </div>
           </div>
         </CardContent>
       </Card>

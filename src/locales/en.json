@@ -1,3 +1,4 @@
+
 {
   "home.login": "Login",
   "home.signup": "Sign Up",
@@ -117,10 +118,10 @@
   "calories.noMeals": "No meals logged yet. Add one above to get started!",
   "calories.editTitle": "Edit Meal",
   "calories.recommendation.title": "Target Calorie Goal",
-  "calories.recommendation.description": "This is the TDEE energy level to maintain your current weight.",
-  "calories.recommendation.lose": "This is the target energy level to help you lose weight safely.",
-  "calories.recommendation.maintain": "This is the TDEE energy level to maintain your current weight.",
-  "calories.recommendation.gain": "This is the target energy level to support you in gaining weight effectively.",
+  "calories.recommendation.description": "This is your TDEE (Total Daily Energy Expenditure) energy level to maintain your current weight.",
+  "calories.recommendation.lose": "To lose weight safely, we target 500 kcal below your TDEE ({tdee} kcal) to create an energy deficit.",
+  "calories.recommendation.maintain": "Based on your TDEE ({tdee} kcal), this is the amount you need to maintain your current weight.",
+  "calories.recommendation.gain": "To gain weight effectively, we target 500 kcal above your TDEE ({tdee} kcal) to support muscle growth.",
   "calories.goal.maintain": "Maintain",
   "calories.goal.lose": "Lose weight",
   "calories.goal.gain": "Gain weight",
