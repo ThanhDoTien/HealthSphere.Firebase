@@ -144,78 +144,76 @@ export default function SleepPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="flex flex-col">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>{t('sleep.title')}</CardTitle>
-              <CardDescription>
-                {t('sleep.description')}
-              </CardDescription>
+      <Card className="flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>{t('sleep.title')}</CardTitle>
+            <CardDescription>
+              {t('sleep.description')}
+            </CardDescription>
+          </div>
+          <Select value={sleepFilter} onValueChange={setSleepFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">{t('common.filter.last7')}</SelectItem>
+              <SelectItem value="30">{t('common.filter.last30')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent className="flex-1">
+          {isLoading && !sleepData ? (
+            <div className="flex h-64 items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-            <Select value={sleepFilter} onValueChange={setSleepFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">{t('common.filter.last7')}</SelectItem>
-                <SelectItem value="30">{t('common.filter.last30')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </CardHeader>
-          <CardContent className="flex-1">
-            {isLoading && !sleepData ? (
-              <div className="flex h-64 items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <BarChart
-                data={chartData}
-                config={sleepChartConfig}
-                yAxisWidth={40}
-                className="h-64"
-                showLegend={false}
-              />
-            )}
-          </CardContent>
-        </Card>
+          ) : (
+            <BarChart
+              data={chartData}
+              config={sleepChartConfig}
+              yAxisWidth={40}
+              className="h-64"
+              showLegend={false}
+            />
+          )}
+        </CardContent>
+      </Card>
 
-        <Card className="border-primary/20 bg-primary/5 flex flex-col">
-          <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <BrainCircuit className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">{t('sleep.aiAnalysisTitle') || 'Phân tích Giấc ngủ AI'}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1">
-            {isAnalyzing ? (
-              <div className="flex flex-col items-center justify-center h-full gap-2 text-primary animate-pulse py-10">
-                <Loader2 className="h-8 w-8 animate-spin" />
-                <p className="text-xs font-medium">AI đang đánh giá chất lượng nghỉ ngơi...</p>
+      <Card className="border-primary/20 bg-primary/5 flex flex-col">
+        <CardHeader className="flex flex-row items-center gap-2 pb-2">
+          <BrainCircuit className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">{t('sleep.aiAnalysisTitle') || 'Phân tích Giấc ngủ AI'}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1">
+          {isAnalyzing ? (
+            <div className="flex flex-col items-center justify-center min-h-[120px] gap-2 text-primary animate-pulse py-10">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <p className="text-sm font-medium">AI đang đánh giá chất lượng nghỉ ngơi...</p>
+            </div>
+          ) : aiAnalysis ? (
+            <div className="space-y-4 animate-in fade-in duration-500">
+              <div className={cn(
+                "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold w-fit",
+                aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" : 
+                aiAnalysis.status === 'warning' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
+              )}>
+                {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> : 
+                 aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                {aiAnalysis.status === 'good' ? (t('sleep.status.good') || 'Hồi phục tốt') : 
+                 aiAnalysis.status === 'warning' ? (t('sleep.status.warning') || 'Thiếu ngủ nhẹ') : (t('sleep.status.bad') || 'Thiếu ngủ nghiêm trọng')}
               </div>
-            ) : aiAnalysis ? (
-              <div className="space-y-4 animate-in fade-in duration-500">
-                <div className={cn(
-                  "flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold w-fit",
-                  aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" : 
-                  aiAnalysis.status === 'warning' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
-                )}>
-                  {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> : 
-                   aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                  {aiAnalysis.status === 'good' ? (t('sleep.status.good') || 'Hồi phục tốt') : 
-                   aiAnalysis.status === 'warning' ? (t('sleep.status.warning') || 'Thiếu ngủ nhẹ') : (t('sleep.status.bad') || 'Thiếu ngủ nghiêm trọng')}
-                </div>
-                <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
-                  {formatAiText(aiAnalysis.analysis)}
-                </div>
+              <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
+                {formatAiText(aiAnalysis.analysis)}
               </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-2 py-10">
-                <BrainCircuit className="h-10 w-10 opacity-20" />
-                <p className="text-xs italic">{t('sleep.aiNoData') || 'Ghi nhận giấc ngủ hôm nay để nhận phản hồi từ AI.'}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center min-h-[120px] text-center text-muted-foreground space-y-2 py-10">
+              <BrainCircuit className="h-10 w-10 opacity-20" />
+              <p className="text-sm italic">{t('sleep.aiNoData') || 'Ghi nhận giấc ngủ hôm nay để nhận phản hồi từ AI.'}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="pt-6 space-y-6">

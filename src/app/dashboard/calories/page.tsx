@@ -264,10 +264,8 @@ export default function CaloriesPage() {
       });
   };
 
-  // Helper to format text with line breaks and strip HTML tags
   const formatAiText = (text: string) => {
     if (!text) return '';
-    // Replace literal \n and <br/> with actual newlines
     return text.replace(/\\n/g, '\n').replace(/<br\s*\/?>/g, '\n');
   };
 
@@ -347,6 +345,32 @@ export default function CaloriesPage() {
         </CardContent>
       </Card>
 
+      {/* Phân bổ dinh dưỡng được đẩy lên trước phân tích AI */}
+      <div className="grid grid-cols-1 gap-6">
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle>{t('calories.chart.macrosTitle')}</CardTitle>
+            <CardDescription>{t('dashboard.summary')}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
+            {isLoading && !mealData ? (
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            ) : macroData.length > 0 ? (
+              <PieChart
+                data={macroData}
+                config={macroChartConfig}
+                className="h-full w-full max-h-[300px]"
+                showLegend={true}
+              />
+            ) : (
+              <div className="text-center text-muted-foreground text-sm py-10 italic">
+                {t('calories.noMeals')}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       {/* AI Analysis Row (Full Width) */}
       <Card className="border-primary/20 bg-primary/5 shadow-sm">
         <CardHeader className="flex flex-row items-center gap-2 pb-2">
@@ -383,31 +407,6 @@ export default function CaloriesPage() {
           )}
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-1 gap-6">
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>{t('calories.chart.macrosTitle')}</CardTitle>
-            <CardDescription>{t('dashboard.summary')}</CardDescription>
-          </CardHeader>
-          <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
-            {isLoading && !mealData ? (
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            ) : macroData.length > 0 ? (
-              <PieChart
-                data={macroData}
-                config={macroChartConfig}
-                className="h-full w-full max-h-[300px]"
-                showLegend={true}
-              />
-            ) : (
-              <div className="text-center text-muted-foreground text-sm py-10 italic">
-                {t('calories.noMeals')}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
       <Card>
         <CardHeader>
