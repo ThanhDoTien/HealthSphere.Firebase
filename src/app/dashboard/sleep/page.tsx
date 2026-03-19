@@ -197,9 +197,9 @@ export default function SleepPage() {
                   {aiAnalysis.status === 'good' ? (t('sleep.status.good') || 'Hồi phục tốt') : 
                    aiAnalysis.status === 'warning' ? (t('sleep.status.warning') || 'Thiếu ngủ nhẹ') : (t('sleep.status.bad') || 'Thiếu ngủ nghiêm trọng')}
                 </div>
-                <p className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
+                <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90 space-y-2">
                   {aiAnalysis.analysis.replaceAll('\\n', '\n')}
-                </p>
+                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-2 py-10">

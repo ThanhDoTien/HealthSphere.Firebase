@@ -158,7 +158,6 @@ export default function CaloriesPage() {
     const tdee = Math.round(calculateTDEE(bmr, userProfile.activityLevel));
     const weightGoal = userProfile.weightGoal || 'maintain';
     
-    // Dynamic Target = (TDEE + Logged Activity) +/- Adjustment
     const baseTarget = tdee + totalActivityBurn;
     let target = baseTarget;
     if (weightGoal === 'lose') target = baseTarget - 500;
@@ -388,7 +387,7 @@ export default function CaloriesPage() {
                   {aiAnalysis.status === 'good' ? t('calories.status.good') : 
                    aiAnalysis.status === 'warning' ? t('calories.status.warning') : t('calories.status.bad')}
                 </div>
-                <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
+                <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90 space-y-2">
                   {aiAnalysis.analysis.replaceAll('\\n', '\n')}
                 </div>
               </div>

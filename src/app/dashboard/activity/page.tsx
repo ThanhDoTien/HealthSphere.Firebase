@@ -326,7 +326,7 @@ export default function ActivityPage() {
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : aiAnalysis ? (
-              <div className="space-y-3 animate-in fade-in duration-500">
+              <div className="space-y-4 animate-in fade-in duration-500">
                 <div className={cn(
                   "flex items-center gap-2 px-2 py-1 rounded-full text-[10px] font-bold w-fit",
                   aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" : 
@@ -337,9 +337,9 @@ export default function ActivityPage() {
                   {aiAnalysis.status === 'good' ? t('activity.status.good') : 
                    aiAnalysis.status === 'warning' ? t('activity.status.warning') : t('activity.status.bad')}
                 </div>
-                <p className="text-sm leading-relaxed whitespace-pre-line font-medium text-foreground/90">
+                <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90 space-y-2">
                   {aiAnalysis.analysis.replaceAll('\\n', '\n')}
-                </p>
+                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full min-h-[100px] text-center text-muted-foreground space-y-1 py-4">
