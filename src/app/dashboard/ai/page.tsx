@@ -42,7 +42,6 @@ export default function AiChatPage() {
     setToday(new Date().toISOString().split('T')[0]);
   }, []);
 
-  // Truy vấn tin nhắn từ Firestore
   const chatQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -53,7 +52,6 @@ export default function AiChatPage() {
 
   const { data: messages } = useCollection(chatQuery);
 
-  // Các dữ liệu sức khỏe để cung cấp ngữ cảnh cho AI
   const mealsQuery = useMemoFirebase(() => {
     if (!user || !today) return null;
     return query(collection(firestore, 'users', user.uid, 'meals'), where('date', '==', today));
@@ -86,12 +84,17 @@ export default function AiChatPage() {
     return summary;
   }, [mealData, activityData, sleepData, userProfile]);
 
-  // Cuộn xuống khi có tin nhắn mới
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isTyping]);
+
+  const formatTime = (createdAt: any) => {
+    if (!createdAt) return '';
+    const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   const handleSend = async () => {
     if (!input.trim() || isTyping || !userProfile || !user) return;
@@ -103,14 +106,12 @@ export default function AiChatPage() {
     const chatRef = collection(firestore, 'users', user.uid, 'chats');
 
     try {
-      // 1. Lưu tin nhắn người dùng vào Firestore
       await addDoc(chatRef, {
         role: 'user',
         content: userMsg,
         createdAt: serverTimestamp(),
       });
 
-      // 2. Lấy phản hồi từ AI
       const botResponse = await healthChat({
         message: userMsg,
         history: messages?.map(m => ({ role: m.role as 'user' | 'model', content: m.content })) || [],
@@ -127,7 +128,6 @@ export default function AiChatPage() {
         language: locale,
       });
 
-      // 3. Lưu phản hồi của AI vào Firestore
       await addDoc(chatRef, {
         role: 'model',
         content: botResponse,
@@ -173,7 +173,7 @@ export default function AiChatPage() {
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
+        <CardContent className="flex-1 overflow-y-auto p-4 space-y-6" ref={scrollRef}>
           {(!messages || messages.length === 0) && !isTyping && (
             <div className="flex h-full flex-col items-center justify-center text-center opacity-50 space-y-4">
               <Bot className="h-16 w-16" />
@@ -190,18 +190,26 @@ export default function AiChatPage() {
               )}
             >
               <div className={cn(
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-sm",
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-sm mt-1",
                 msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
               )}>
                 {msg.role === 'user' ? <User className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
               </div>
               <div className={cn(
-                "max-w-[80%] rounded-2xl px-4 py-2 text-sm shadow-sm",
-                msg.role === 'user' 
-                  ? "bg-primary text-primary-foreground rounded-tr-none" 
-                  : "bg-muted/80 text-foreground rounded-tl-none border border-border/50"
+                "flex flex-col gap-1 max-w-[80%]",
+                msg.role === 'user' ? "items-end" : "items-start"
               )}>
-                <p className="whitespace-pre-line leading-relaxed">{msg.content}</p>
+                <div className={cn(
+                  "rounded-2xl px-4 py-2 text-sm shadow-sm",
+                  msg.role === 'user' 
+                    ? "bg-primary text-primary-foreground rounded-tr-none" 
+                    : "bg-muted/80 text-foreground rounded-tl-none border border-border/50"
+                )}>
+                  <p className="whitespace-pre-line leading-relaxed">{msg.content}</p>
+                </div>
+                <span className="text-[10px] text-muted-foreground px-1">
+                  {formatTime(msg.createdAt)}
+                </span>
               </div>
             </div>
           ))}
