@@ -91,7 +91,7 @@ export default function ActivityPage() {
   const activityChartConfig = useMemo(() => ({
     calories: {
       label: t('activity.chart.calories'),
-      color: '#f97316', // Orange
+      color: '#f59e0b', // Amber-500 - Bạn có thể đổi màu cột ở đây
     },
   }), [t]) satisfies ChartConfig;
 

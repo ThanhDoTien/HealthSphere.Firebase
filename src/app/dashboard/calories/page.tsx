@@ -94,7 +94,7 @@ export default function CaloriesPage() {
   const calorieChartConfig = useMemo(() => ({
     calories: {
       label: t('calories.chart.calories'),
-      color: '#f59e0b', // Amber-500
+      color: '#f59e0b', // <--- Đây là chỗ đổi màu cột Calories Intake (Amber-500)
     },
   }), [t]) satisfies ChartConfig;
 
