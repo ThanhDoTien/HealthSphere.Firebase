@@ -26,6 +26,7 @@ interface SignUpData {
   height: number;
   weight: number;
   gender: string;
+  weightGoal: string;
   goal: string;
   activityLevel: string;
 }
@@ -60,6 +61,7 @@ const createUserProfile = async (
     height: data.height,
     weight: data.weight,
     goal: data.goal,
+    weightGoal: data.weightGoal,
     createdAt: createdAt
   };
 
@@ -138,6 +140,7 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
       height: 0,
       weight: 0,
       gender: "other",
+      weightGoal: "maintain",
       goal: "Stay healthy",
       activityLevel: "moderate"
     };

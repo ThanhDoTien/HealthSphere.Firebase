@@ -1,3 +1,4 @@
+
 {
   "home.login": "Login",
   "home.signup": "Sign Up",
@@ -41,8 +42,13 @@
   "signup.ageLabel": "Age",
   "signup.heightLabel": "Height (cm)",
   "signup.weightLabel": "Weight (kg)",
-  "signup.goalLabel": "Health Goal",
-  "signup.goalPlaceholder": "e.g., Lose 5kg",
+  "signup.weightGoalLabel": "Weight Goal",
+  "signup.weightGoalSelect": "Select goal",
+  "signup.weightGoalLose": "Lose Weight",
+  "signup.weightGoalGain": "Gain Weight",
+  "signup.weightGoalMaintain": "Maintain Weight",
+  "signup.goalLabel": "Detailed Health Goal",
+  "signup.goalPlaceholder": "e.g., Lose 5kg in 2 months, Run 5km daily",
   "signup.activityLabel": "Activity Intensity",
   "signup.activitySelect": "Select intensity",
   "signup.activitySedentary": "Sedentary (No exercise)",

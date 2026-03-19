@@ -39,8 +39,9 @@ const SignUpFormSchema = (t: (key: string) => string) => z
     confirmPassword: z.string(),
     gender: z.string().min(1, { message: "Gender is required." }),
     age: z.coerce.number().min(1, { message: "Age is required." }),
-    height: z.coerce.number().min(1, { message: "Height is required." }),
-    weight: z.coerce.number().min(1, { message: "Weight is required." }),
+    height: z.coerce.number().min(50, { message: "Height is required." }),
+    weight: z.coerce.number().min(20, { message: "Weight is required." }),
+    weightGoal: z.string().min(1, { message: "Weight goal is required." }),
     goal: z.string().min(1, { message: "Health goal is required." }),
     activityLevel: z.string().min(1, { message: "Activity level is required." }),
   })
@@ -63,6 +64,11 @@ export default function SignUpPage() {
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(SignUpFormSchema(t)),
+    defaultValues: {
+      weightGoal: "maintain",
+      activityLevel: "moderate",
+      gender: "male",
+    }
   });
 
   useMustBeLoggedOut();
@@ -197,6 +203,29 @@ export default function SignUpPage() {
                   </p>
                 )}
               </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="weightGoal">{t('signup.weightGoalLabel')}</Label>
+              <Controller
+                control={control}
+                name="weightGoal"
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('signup.weightGoalSelect')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lose">{t('signup.weightGoalLose')}</SelectItem>
+                      <SelectItem value="maintain">{t('signup.weightGoalMaintain')}</SelectItem>
+                      <SelectItem value="gain">{t('signup.weightGoalGain')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.weightGoal && (
+                <p className="text-sm text-destructive">{errors.weightGoal.message}</p>
+              )}
             </div>
 
             <div className="grid gap-2">

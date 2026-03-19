@@ -1,3 +1,4 @@
+
 {
   "home.login": "Đăng nhập",
   "home.signup": "Đăng ký",
@@ -41,8 +42,13 @@
   "signup.ageLabel": "Tuổi",
   "signup.heightLabel": "Chiều cao (cm)",
   "signup.weightLabel": "Cân nặng (kg)",
-  "signup.goalLabel": "Mục tiêu sức khỏe",
-  "signup.goalPlaceholder": "ví dụ: Giảm 5kg",
+  "signup.weightGoalLabel": "Mục tiêu trọng lượng",
+  "signup.weightGoalSelect": "Chọn mục tiêu",
+  "signup.weightGoalLose": "Giảm cân",
+  "signup.weightGoalGain": "Tăng cân",
+  "signup.weightGoalMaintain": "Duy trì cân nặng",
+  "signup.goalLabel": "Chi tiết mục tiêu sức khỏe",
+  "signup.goalPlaceholder": "ví dụ: Giảm 5kg trong 2 tháng, Chạy bộ 5km mỗi ngày",
   "signup.activityLabel": "Cường độ luyện tập",
   "signup.activitySelect": "Chọn cường độ",
   "signup.activitySedentary": "Ít vận động (Không tập thể dục)",

@@ -28,6 +28,7 @@ const ProfileFormSchema = z.object({
   height: z.coerce.number().min(50, { message: "Chiều cao tối thiểu là 50cm." }).max(300),
   weight: z.coerce.number().min(20, { message: "Cân nặng tối thiểu là 20kg." }).max(500),
   gender: z.string().min(1, { message: "Gender is required." }),
+  weightGoal: z.string().min(1, { message: "Weight goal is required." }),
   goal: z.string().min(1, { message: "Health goal is required." }),
   activityLevel: z.string().min(1, { message: "Activity level is required." }),
 });
@@ -56,6 +57,7 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
       height: userProfile.height || 0,
       weight: userProfile.weight || 0,
       gender: userProfile.gender || "",
+      weightGoal: userProfile.weightGoal || "maintain",
       goal: userProfile.goal || "",
       activityLevel: userProfile.activityLevel || "moderate",
     },
@@ -134,6 +136,29 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
                 </p>
             )}
         </div>
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="weightGoal">{t('signup.weightGoalLabel')}</Label>
+        <Controller
+          control={control}
+          name="weightGoal"
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('signup.weightGoalSelect')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="lose">{t('signup.weightGoalLose')}</SelectItem>
+                <SelectItem value="maintain">{t('signup.weightGoalMaintain')}</SelectItem>
+                <SelectItem value="gain">{t('signup.weightGoalGain')}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.weightGoal && (
+          <p className="text-sm text-destructive">{errors.weightGoal.message}</p>
+        )}
       </div>
 
       <div className="grid gap-2">
