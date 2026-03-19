@@ -153,7 +153,7 @@ export default function CaloriesPage() {
   }, [activityData]);
 
   const stats = useMemo(() => {
-    if (!userProfile) return { tdee: 0, target: 0, weightGoal: 'maintain' };
+    if (!userProfile) return { tdee: 0, target: 0, weightGoal: 'maintain', totalActivityBurn: 0 };
     const currentWeight = latestWeightData?.[0]?.weight || userProfile.weight;
     const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
     const tdee = Math.round(calculateTDEE(bmr, userProfile.activityLevel));

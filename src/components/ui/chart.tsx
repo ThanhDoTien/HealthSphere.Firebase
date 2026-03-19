@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -123,13 +124,22 @@ const ChartTooltipContent = React.forwardRef<
       )}
     >
       {!hideLabel && (
-        <div className="font-medium">{payload[0].payload.date}</div>
+        <div className="font-medium">{payload[0].payload.date || payload[0].payload.name}</div>
       )}
       <div className="grid gap-1.5">
         {payload.map((item, index) => {
-          const key = `${item.dataKey}`
+          const key = `${item.dataKey || item.name}`
           const itemConfig = config[key]
           const color = item.color || itemConfig?.color
+
+          // Tự động thêm đơn vị và tỷ lệ phần trăm
+          const unit = key === 'calories' ? ' kcal' : 
+                       ['protein', 'carbs', 'fat', 'fiber'].includes(key) ? ' g' : 
+                       key === 'duration' ? ' h' : '';
+          
+          const percentage = item.payload.percent 
+            ? ` (${(item.payload.percent * 100).toFixed(1)}%)` 
+            : '';
 
           return (
             <div
@@ -144,9 +154,11 @@ const ChartTooltipContent = React.forwardRef<
                   }}
                 />
               )}
-              <div className="flex flex-1 justify-between">
+              <div className="flex flex-1 justify-between gap-4">
                 <p className="text-muted-foreground">{itemConfig?.label || item.name}</p>
-                <p className="font-mono font-bold">{item.value?.toString()}</p>
+                <p className="font-mono font-bold">
+                  {item.value?.toString()}{unit}{percentage}
+                </p>
               </div>
             </div>
           )
