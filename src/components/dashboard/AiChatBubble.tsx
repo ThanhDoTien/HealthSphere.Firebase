@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -20,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, where, orderBy, addDoc, serverTimestamp, getDocs, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, addDoc, serverTimestamp, getDocs, deleteDoc, limit } from 'firebase/firestore';
 import { healthChat } from '@/ai/flows/chat-flow';
 import { useTranslation } from '@/context/LanguageContext';
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
@@ -55,37 +54,55 @@ export default function AiChatBubble() {
 
   const { data: messages } = useCollection(chatQuery);
 
+  // Truy vấn lịch sử (tối ưu hóa 15 mục gần nhất cho bong bóng chat nhỏ)
   const mealsQuery = useMemoFirebase(() => {
-    if (!user || !todayStr || !isOpen) return null;
-    return query(collection(firestore, 'users', user.uid, 'meals'), where('date', '==', todayStr));
-  }, [firestore, user, todayStr, isOpen]);
+    if (!user || !isOpen) return null;
+    return query(collection(firestore, 'users', user.uid, 'meals'), orderBy('date', 'desc'), limit(15));
+  }, [firestore, user, isOpen]);
 
   const activitiesQuery = useMemoFirebase(() => {
-    if (!user || !todayStr || !isOpen) return null;
-    return query(collection(firestore, 'users', user.uid, 'activities'), where('date', '==', todayStr));
-  }, [firestore, user, todayStr, isOpen]);
+    if (!user || !isOpen) return null;
+    return query(collection(firestore, 'users', user.uid, 'activities'), orderBy('date', 'desc'), limit(15));
+  }, [firestore, user, isOpen]);
 
   const sleepQuery = useMemoFirebase(() => {
-    if (!user || !todayStr || !isOpen) return null;
-    return query(collection(firestore, 'users', user.uid, 'sleep'), where('date', '==', todayStr));
-  }, [firestore, user, todayStr, isOpen]);
+    if (!user || !isOpen) return null;
+    return query(collection(firestore, 'users', user.uid, 'sleep'), orderBy('date', 'desc'), limit(15));
+  }, [firestore, user, isOpen]);
 
-  const { data: mealData } = useCollection(mealsQuery);
-  const { data: activityData } = useCollection(activitiesQuery);
-  const { data: sleepData } = useCollection(sleepQuery);
+  const weightQuery = useMemoFirebase(() => {
+    if (!user || !isOpen) return null;
+    return query(collection(firestore, 'users', user.uid, 'weights'), orderBy('date', 'desc'), limit(15));
+  }, [firestore, user, isOpen]);
+
+  const { data: allMeals } = useCollection(mealsQuery);
+  const { data: allActivities } = useCollection(activitiesQuery);
+  const { data: allSleep } = useCollection(sleepQuery);
+  const { data: allWeights } = useCollection(weightQuery);
 
   const dailySummary = useMemo(() => {
     const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
-    if (mealData) summary.caloriesConsumed = mealData.reduce((sum: number, m: any) => sum + m.calories, 0);
-    if (userProfile) {
-      const bmr = calculateBMR(userProfile.weight, userProfile.height, userProfile.age, userProfile.gender);
-      const tdee = calculateTDEE(bmr, userProfile.activityLevel);
-      const activityBurn = activityData ? activityData.reduce((sum: number, a: any) => sum + a.caloriesBurned, 0) : 0;
-      summary.caloriesBurned = tdee + activityBurn;
+    if (allMeals) {
+      summary.caloriesConsumed = allMeals
+        .filter((m: any) => m.date === todayStr)
+        .reduce((sum: number, m: any) => sum + m.calories, 0);
     }
-    if (sleepData) summary.sleepHours = sleepData.reduce((sum: number, s: any) => sum + s.duration, 0);
+    if (userProfile) {
+      const currentWeight = allWeights?.[0]?.weight || userProfile.weight;
+      const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
+      const tdee = calculateTDEE(bmr, userProfile.activityLevel);
+      const activityBurn = allActivities 
+        ? allActivities.filter((a: any) => a.date === todayStr).reduce((sum: number, a: any) => sum + a.caloriesBurned, 0) 
+        : 0;
+      summary.caloriesBurned = Math.round(tdee + activityBurn);
+    }
+    if (allSleep) {
+      summary.sleepHours = allSleep
+        .filter((s: any) => s.date === todayStr)
+        .reduce((sum: number, s: any) => sum + s.duration, 0);
+    }
     return summary;
-  }, [mealData, activityData, sleepData, userProfile]);
+  }, [allMeals, allActivities, allSleep, allWeights, userProfile, todayStr]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -104,17 +121,11 @@ export default function AiChatBubble() {
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
-    
     if (isToday) return locale === 'vi' ? 'Hôm nay' : 'Today';
-    
     const yesterday = new Date();
     yesterday.setDate(now.getDate() - 1);
     if (date.toDateString() === yesterday.toDateString()) return locale === 'vi' ? 'Hôm qua' : 'Yesterday';
-
-    return date.toLocaleDateString(locale === 'vi' ? 'vi-VN' : 'en-US', {
-      day: 'numeric',
-      month: 'short'
-    });
+    return date.toLocaleDateString(locale === 'vi' ? 'vi-VN' : 'en-US', { day: 'numeric', month: 'short' });
   };
 
   const handleSend = async () => {
@@ -139,13 +150,17 @@ export default function AiChatBubble() {
         userProfile: {
           name: userProfile.name,
           goal: userProfile.goal,
-          weight: userProfile.weight,
+          weight: allWeights?.[0]?.weight || userProfile.weight,
           height: userProfile.height,
           age: userProfile.age,
           gender: userProfile.gender,
           activityLevel: userProfile.activityLevel,
         },
         dailySummary,
+        weightHistory: allWeights?.map(w => ({ date: w.date, weight: w.weight })),
+        mealHistory: allMeals?.map(m => ({ date: m.date, name: m.name, calories: m.calories, mealType: m.mealType })),
+        activityHistory: allActivities?.map(a => ({ date: a.date, name: a.name, duration: a.duration, caloriesBurned: a.caloriesBurned })),
+        sleepHistory: allSleep?.map(s => ({ date: s.date, duration: s.duration })),
         language: locale,
       });
 

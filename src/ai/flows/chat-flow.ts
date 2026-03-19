@@ -25,6 +25,11 @@ const ChatInputSchema = z.object({
     caloriesBurned: z.number(),
     sleepHours: z.number(),
   }).optional(),
+  // Thêm dữ liệu lịch sử
+  weightHistory: z.array(z.object({ date: z.string(), weight: z.number() })).optional(),
+  mealHistory: z.array(z.object({ date: z.string(), name: z.string(), calories: z.number(), mealType: z.string() })).optional(),
+  activityHistory: z.array(z.object({ date: z.string(), name: z.string(), duration: z.number(), caloriesBurned: z.number() })).optional(),
+  sleepHistory: z.array(z.object({ date: z.string(), duration: z.number() })).optional(),
   language: z.string().optional(),
 });
 
@@ -36,33 +41,50 @@ const healthChatPrompt = ai.definePrompt({
   input: { schema: ChatInputSchema },
 
   prompt: `
-Bạn là HealthSphere AI - chuyên gia tư vấn sức khỏe.
+Bạn là HealthSphere AI - chuyên gia tư vấn sức khỏe cá nhân cao cấp. Bạn có quyền truy cập vào toàn bộ nhật ký sức khỏe của người dùng để đưa ra nhận xét chính xác nhất.
 
-Thông tin người dùng:
+THÔNG TIN NGƯỜI DÙNG:
 {{#if userProfile}}
-Tên: {{userProfile.name}}
-Mục tiêu: {{userProfile.goal}}
-Cân nặng: {{userProfile.weight}} kg
-Chiều cao: {{userProfile.height}} cm
-Tuổi: {{userProfile.age}}
+- Tên: {{userProfile.name}}
+- Mục tiêu: {{userProfile.goal}}
+- Chỉ số: {{userProfile.weight}}kg, {{userProfile.height}}cm, {{userProfile.age}} tuổi
 {{/if}}
 
-Tiến độ hôm nay:
+TIẾN ĐỘ HÔM NAY:
 {{#if dailySummary}}
-Calo nạp: {{dailySummary.caloriesConsumed}}
-Calo đốt: {{dailySummary.caloriesBurned}}
-Ngủ: {{dailySummary.sleepHours}} giờ
+- Calo nạp: {{dailySummary.caloriesConsumed}} kcal
+- Calo đốt: {{dailySummary.caloriesBurned}} kcal
+- Ngủ: {{dailySummary.sleepHours}} giờ
 {{/if}}
 
-Lịch sử hội thoại:
+DỮ LIỆU LỊCH SỬ (Dùng để phân tích xu hướng):
+{{#if weightHistory}}
+- Xu hướng cân nặng: {{#each weightHistory}}{{date}}: {{weight}}kg | {{/each}}
+{{/if}}
+{{#if mealHistory}}
+- Các bữa ăn gần đây: {{#each mealHistory}}{{date}} ({{mealType}}): {{name}} - {{calories}}kcal | {{/each}}
+{{/if}}
+{{#if activityHistory}}
+- Các hoạt động gần đây: {{#each activityHistory}}{{date}}: {{name}} ({{duration}}p) - Đốt {{caloriesBurned}}kcal | {{/each}}
+{{/if}}
+{{#if sleepHistory}}
+- Lịch sử giấc ngủ: {{#each sleepHistory}}{{date}}: {{duration}}h | {{/each}}
+{{/if}}
+
+LỊCH SỬ HỘI THOẠI HIỆN TẠI:
 {{#each history}}
 {{this.role}}: {{this.content}}
 {{/each}}
 
-Tin nhắn người dùng:
-{{message}}
+YÊU CẦU:
+1. Dựa vào dữ liệu lịch sử và hôm nay để trả lời câu hỏi của người dùng.
+2. Nếu người dùng hỏi về tiến độ (ví dụ: "Tôi dạo này thế nào?"), hãy phân tích xu hướng từ dữ liệu lịch sử.
+3. Trả lời ngắn gọn, chân thành, giàu động lực. 
+4. Sử dụng tiếng {{#if language}}{{language}}{{else}}vi{{/if}}.
+5. LUÔN xuống dòng giữa các ý để dễ đọc.
 
-Trả lời ngắn gọn, dễ hiểu, xuống dòng giữa các ý.
+TIN NHẮN NGƯỜI DÙNG:
+"{{{message}}}"
 `,
 });
 

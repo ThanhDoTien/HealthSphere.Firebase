@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -14,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, where, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, addDoc, serverTimestamp, limit } from 'firebase/firestore';
 import { healthChat } from '@/ai/flows/chat-flow';
 import {
   Loader2,
@@ -42,6 +41,7 @@ export default function AiChatPage() {
     setTodayStr(new Date().toISOString().split('T')[0]);
   }, []);
 
+  // Lấy lịch sử chat
   const chatQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -52,37 +52,56 @@ export default function AiChatPage() {
 
   const { data: messages } = useCollection(chatQuery);
 
-  const mealsQuery = useMemoFirebase(() => {
-    if (!user || !todayStr) return null;
-    return query(collection(firestore, 'users', user.uid, 'meals'), where('date', '==', todayStr));
-  }, [firestore, user, todayStr]);
+  // Truy vấn TOÀN BỘ dữ liệu lịch sử (giới hạn 30 mục gần nhất cho mỗi loại để tối ưu token)
+  const fullMealsQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(firestore, 'users', user.uid, 'meals'), orderBy('date', 'desc'), limit(30));
+  }, [firestore, user]);
 
-  const activitiesQuery = useMemoFirebase(() => {
-    if (!user || !todayStr) return null;
-    return query(collection(firestore, 'users', user.uid, 'activities'), where('date', '==', todayStr));
-  }, [firestore, user, todayStr]);
+  const fullActivitiesQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(firestore, 'users', user.uid, 'activities'), orderBy('date', 'desc'), limit(30));
+  }, [firestore, user]);
 
-  const sleepQuery = useMemoFirebase(() => {
-    if (!user || !todayStr) return null;
-    return query(collection(firestore, 'users', user.uid, 'sleep'), where('date', '==', todayStr));
-  }, [firestore, user, todayStr]);
+  const fullSleepQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(firestore, 'users', user.uid, 'sleep'), orderBy('date', 'desc'), limit(30));
+  }, [firestore, user]);
 
-  const { data: mealData } = useCollection(mealsQuery);
-  const { data: activityData } = useCollection(activitiesQuery);
-  const { data: sleepData } = useCollection(sleepQuery);
+  const fullWeightQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(firestore, 'users', user.uid, 'weights'), orderBy('date', 'desc'), limit(30));
+  }, [firestore, user]);
 
+  const { data: allMeals } = useCollection(fullMealsQuery);
+  const { data: allActivities } = useCollection(fullActivitiesQuery);
+  const { data: allSleep } = useCollection(fullSleepQuery);
+  const { data: allWeights } = useCollection(fullWeightQuery);
+
+  // Tính toán tóm tắt hôm nay từ dữ liệu đã lấy
   const dailySummary = useMemo(() => {
     const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
-    if (mealData) summary.caloriesConsumed = mealData.reduce((sum: number, m: any) => sum + m.calories, 0);
-    if (userProfile) {
-      const bmr = calculateBMR(userProfile.weight, userProfile.height, userProfile.age, userProfile.gender);
-      const tdee = calculateTDEE(bmr, userProfile.activityLevel);
-      const activityBurn = activityData ? activityData.reduce((sum: number, a: any) => sum + a.caloriesBurned, 0) : 0;
-      summary.caloriesBurned = tdee + activityBurn;
+    if (allMeals) {
+      summary.caloriesConsumed = allMeals
+        .filter((m: any) => m.date === todayStr)
+        .reduce((sum: number, m: any) => sum + m.calories, 0);
     }
-    if (sleepData) summary.sleepHours = sleepData.reduce((sum: number, s: any) => sum + s.duration, 0);
+    if (userProfile) {
+      const currentWeight = allWeights?.[0]?.weight || userProfile.weight;
+      const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
+      const tdee = calculateTDEE(bmr, userProfile.activityLevel);
+      const activityBurn = allActivities 
+        ? allActivities.filter((a: any) => a.date === todayStr).reduce((sum: number, a: any) => sum + a.caloriesBurned, 0) 
+        : 0;
+      summary.caloriesBurned = Math.round(tdee + activityBurn);
+    }
+    if (allSleep) {
+      summary.sleepHours = allSleep
+        .filter((s: any) => s.date === todayStr)
+        .reduce((sum: number, s: any) => sum + s.duration, 0);
+    }
     return summary;
-  }, [mealData, activityData, sleepData, userProfile]);
+  }, [allMeals, allActivities, allSleep, allWeights, userProfile, todayStr]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -138,13 +157,18 @@ export default function AiChatPage() {
         userProfile: {
           name: userProfile.name,
           goal: userProfile.goal,
-          weight: userProfile.weight,
+          weight: allWeights?.[0]?.weight || userProfile.weight,
           height: userProfile.height,
           age: userProfile.age,
           gender: userProfile.gender,
           activityLevel: userProfile.activityLevel,
         },
         dailySummary,
+        // Truyền dữ liệu lịch sử vào Flow
+        weightHistory: allWeights?.map(w => ({ date: w.date, weight: w.weight })),
+        mealHistory: allMeals?.map(m => ({ date: m.date, name: m.name, calories: m.calories, mealType: m.mealType })),
+        activityHistory: allActivities?.map(a => ({ date: a.date, name: a.name, duration: a.duration, caloriesBurned: a.caloriesBurned })),
+        sleepHistory: allSleep?.map(s => ({ date: s.date, duration: s.duration })),
         language: locale,
       });
 
