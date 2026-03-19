@@ -94,7 +94,7 @@ export default function CaloriesPage() {
   const calorieChartConfig = useMemo(() => ({
     calories: {
       label: t('calories.chart.calories'),
-      color: '#f59e0b', // <--- Đây là chỗ đổi màu cột Calories Intake (Amber-500)
+      color: '#f59e0b', // Amber-500
     },
   }), [t]) satisfies ChartConfig;
 
@@ -253,6 +253,21 @@ export default function CaloriesPage() {
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-black text-primary">{dailyGoal}</span>
             <span className="text-lg font-medium text-muted-foreground">kcal / {t('common.day')}</span>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+             <div className="p-3 rounded-xl bg-blue-50/50 border border-blue-100 flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">{t('calories.goal.maintain')}</span>
+                <span className="text-lg font-bold text-blue-700">{dailyGoal} <span className="text-[10px] font-normal">kcal</span></span>
+             </div>
+             <div className="p-3 rounded-xl bg-green-50/50 border border-green-100 flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider">{t('calories.goal.lose')}</span>
+                <span className="text-lg font-bold text-green-700">{dailyGoal - 500} <span className="text-[10px] font-normal">kcal</span></span>
+             </div>
+             <div className="p-3 rounded-xl bg-orange-50/50 border border-orange-100 flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">{t('calories.goal.gain')}</span>
+                <span className="text-lg font-bold text-orange-700">{dailyGoal + 500} <span className="text-[10px] font-normal">kcal</span></span>
+             </div>
           </div>
         </CardContent>
       </Card>
