@@ -258,6 +258,12 @@ export default function ActivityPage() {
       });
   };
 
+  // Helper to format text with line breaks and strip HTML tags
+  const formatAiText = (text: string) => {
+    if (!text) return '';
+    return text.replace(/\\n/g, '\n').replace(/<br\s*\/?>/g, '\n');
+  };
+
   const isLoading = userLoading || activityLoading;
 
   return (
@@ -325,7 +331,7 @@ export default function ActivityPage() {
         </CardHeader>
         <CardContent>
           {isAnalyzing ? (
-            <div className="flex flex-col items-center justify-center min-h-[120px] gap-2 text-primary animate-pulse py-6">
+            <div className="flex flex-col items-center justify-center min-h-[120px] gap-2 text-primary animate-pulse py-10">
               <Loader2 className="h-8 w-8 animate-spin" />
               <p className="text-sm font-medium">HealthSphere AI đang đánh giá hiệu quả vận động...</p>
             </div>
@@ -342,11 +348,11 @@ export default function ActivityPage() {
                  aiAnalysis.status === 'warning' ? t('activity.status.warning') : t('activity.status.bad')}
               </div>
               <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
-                {aiAnalysis.analysis.replaceAll('\\n', '\n')}
+                {formatAiText(aiAnalysis.analysis)}
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center min-h-[120px] text-center text-muted-foreground space-y-2 py-6">
+            <div className="flex flex-col items-center justify-center min-h-[120px] text-center text-muted-foreground space-y-2 py-10">
               <BrainCircuit className="h-10 w-10 opacity-20" />
               <p className="text-sm italic">{t('activity.aiNoData')}</p>
             </div>

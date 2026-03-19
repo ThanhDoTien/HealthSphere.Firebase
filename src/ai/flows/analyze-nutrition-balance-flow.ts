@@ -25,7 +25,7 @@ export type AnalyzeNutritionOutput = z.infer<typeof AnalyzeNutritionOutputSchema
 
 const analyzeNutritionPrompt = ai.definePrompt({
   name: 'analyzeNutritionPrompt',
-  model: 'googleai/gemini-3-flash-preview',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: AnalyzeNutritionInputSchema },
   output: { schema: AnalyzeNutritionOutputSchema },
   prompt: `
@@ -44,7 +44,8 @@ Nhiệm vụ:
 2. Kiểm tra lượng chất xơ (Fiber). Mục tiêu lý tưởng là 25-30g mỗi ngày.
 3. So sánh với mục tiêu "{{goal}}" của người dùng để đưa ra lời khuyên thực tế.
 4. Trình bày nội dung phân tích (analysis) ngắn gọn, súc tích, chia thành các ý rõ ràng bằng tiếng {{language}}.
-   QUAN TRỌNG: Trình bày dưới dạng danh sách có đánh số (1, 2, 3...). HÃY SỬ DỤNG KÝ TỰ XUỐNG DÒNG (\n) SAU MỖI Ý ĐỂ VĂN BẢN KHÔNG BỊ DÍNH LIỀN THÀNH MỘT KHỐI.
+   QUAN TRỌNG: Trình bày dưới dạng danh sách có đánh số (1, 2, 3...). 
+   BẮT BUỘC: Sử dụng ký tự xuống dòng (\n) sau mỗi ý. TUYỆT ĐỐI KHÔNG sử dụng các thẻ HTML như <br/>.
 5. Xác định trạng thái chung (status):
    - 'good': Cân bằng tốt, đủ chất xơ, calo hợp lý.
    - 'warning': Có một vài chỉ số chưa ổn (ví dụ: quá nhiều fat, quá ít xơ).

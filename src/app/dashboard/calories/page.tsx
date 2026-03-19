@@ -264,6 +264,13 @@ export default function CaloriesPage() {
       });
   };
 
+  // Helper to format text with line breaks and strip HTML tags
+  const formatAiText = (text: string) => {
+    if (!text) return '';
+    // Replace literal \n and <br/> with actual newlines
+    return text.replace(/\\n/g, '\n').replace(/<br\s*\/?>/g, '\n');
+  };
+
   const isLoading = userLoading || mealLoading;
 
   return (
@@ -340,61 +347,62 @@ export default function CaloriesPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* AI Analysis Row (Full Width) */}
+      <Card className="border-primary/20 bg-primary/5 shadow-sm">
+        <CardHeader className="flex flex-row items-center gap-2 pb-2">
+          <BrainCircuit className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">{t('calories.aiAnalysisTitle')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isAnalyzing ? (
+            <div className="flex flex-col items-center justify-center min-h-[120px] gap-2 text-primary animate-pulse py-10">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <p className="text-sm font-medium">HealthSphere AI đang phân tích dinh dưỡng...</p>
+            </div>
+          ) : aiAnalysis ? (
+            <div className="space-y-4 animate-in fade-in duration-500">
+              <div className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold w-fit",
+                aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" : 
+                aiAnalysis.status === 'warning' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
+              )}>
+                {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> : 
+                 aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                {aiAnalysis.status === 'good' ? t('calories.status.good') : 
+                 aiAnalysis.status === 'warning' ? t('calories.status.warning') : t('calories.status.bad')}
+              </div>
+              <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
+                {formatAiText(aiAnalysis.analysis)}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center min-h-[120px] text-center text-muted-foreground space-y-2 py-10">
+              <BrainCircuit className="h-10 w-10 opacity-20" />
+              <p className="text-sm italic">{t('calories.aiNoData')}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 gap-6">
         <Card className="flex flex-col">
           <CardHeader>
             <CardTitle>{t('calories.chart.macrosTitle')}</CardTitle>
             <CardDescription>{t('dashboard.summary')}</CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[250px]">
+          <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
             {isLoading && !mealData ? (
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             ) : macroData.length > 0 ? (
               <PieChart
                 data={macroData}
                 config={macroChartConfig}
-                className="h-full w-full max-h-[250px]"
+                className="h-full w-full max-h-[300px]"
                 showLegend={true}
               />
             ) : (
               <div className="text-center text-muted-foreground text-sm py-10 italic">
                 {t('calories.noMeals')}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="flex flex-col border-primary/20 bg-primary/5">
-          <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <BrainCircuit className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">{t('calories.aiAnalysisTitle')}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 space-y-4">
-            {isAnalyzing ? (
-              <div className="flex flex-col items-center justify-center h-full gap-2 text-primary animate-pulse">
-                <Loader2 className="h-8 w-8 animate-spin" />
-                <p className="text-sm font-medium">HealthSphere AI đang phân tích...</p>
-              </div>
-            ) : aiAnalysis ? (
-              <div className="space-y-4 animate-in fade-in duration-500">
-                <div className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold w-fit",
-                  aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" : 
-                  aiAnalysis.status === 'warning' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
-                )}>
-                  {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> : 
-                   aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                  {aiAnalysis.status === 'good' ? t('calories.status.good') : 
-                   aiAnalysis.status === 'warning' ? t('calories.status.warning') : t('calories.status.bad')}
-                </div>
-                <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90 space-y-2">
-                  {aiAnalysis.analysis.replaceAll('\\n', '\n')}
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-2 py-10">
-                <BrainCircuit className="h-10 w-10 opacity-20" />
-                <p className="text-xs italic">{t('calories.aiNoData')}</p>
               </div>
             )}
           </CardContent>

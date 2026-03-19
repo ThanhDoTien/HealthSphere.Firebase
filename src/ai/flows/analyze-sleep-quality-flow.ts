@@ -22,7 +22,7 @@ export type AnalyzeSleepOutput = z.infer<typeof AnalyzeSleepOutputSchema>;
 
 const analyzeSleepPrompt = ai.definePrompt({
   name: 'analyzeSleepPrompt',
-  model: 'googleai/gemini-3-flash-preview',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: AnalyzeSleepInputSchema },
   output: { schema: AnalyzeSleepOutputSchema },
   prompt: `
@@ -37,7 +37,8 @@ Nhiệm vụ:
 1. Đánh giá thời gian ngủ so với khuyến nghị của tổ chức y tế thế giới cho độ tuổi {{age}}. (Thường là 7-9 giờ cho người trưởng thành).
 2. Phân tích ảnh hưởng của thời gian ngủ này tới việc thực hiện mục tiêu "{{goal}}".
 3. Đưa ra các mẹo ngắn gọn để cải thiện vệ sinh giấc ngủ bằng tiếng {{language}}.
-   QUAN TRỌNG: Trình bày dưới dạng danh sách có đánh số (1, 2, 3...). HÃY SỬ DỤNG KÝ TỰ XUỐNG DÒNG (\n) SAU MỖI Ý ĐỂ VĂN BẢN KHÔNG BỊ DÍNH LIỀN THÀNH MỘT KHỐI.
+   QUAN TRỌNG: Trình bày dưới dạng danh sách có đánh số (1, 2, 3...). 
+   BẮT BUỘC: Sử dụng ký tự xuống dòng (\n) sau mỗi ý. TUYỆT ĐỐI KHÔNG sử dụng các thẻ HTML như <br/>.
 4. Xác định trạng thái (status):
    - 'good': Ngủ đủ 7-9 giờ.
    - 'warning': Ngủ ít hơn 6 giờ hoặc nhiều hơn 10 giờ.
