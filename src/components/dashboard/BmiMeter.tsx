@@ -58,17 +58,19 @@ const getBmiStatus = (bmi: number) => {
 export default function BmiMeter({ height, weight }: BmiMeterProps) {
   const { t } = useTranslation();
 
-  const { bmi, status } = useMemo(() => {
+  const { bmi, status, targetWeight } = useMemo(() => {
     if (!height || !weight || height <= 0 || weight <= 0) {
-      return { bmi: 0, status: null };
+      return { bmi: 0, status: null, targetWeight: 0 };
     }
     const heightInMeters = height / 100;
     const bmiValue = weight / (heightInMeters * heightInMeters);
     const bmiStatus = getBmiStatus(bmiValue);
+    const idealWeight = Math.round(22 * heightInMeters * heightInMeters * 10) / 10;
 
     return {
       bmi: bmiValue,
       status: bmiStatus,
+      targetWeight: idealWeight,
     };
   }, [height, weight]);
 
@@ -168,6 +170,17 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
                 {t(status.adviceKey)}
               </p>
             </div>
+            {targetWeight > 0 && (
+              <div className="mt-4 pt-3 border-t w-full flex flex-col items-center gap-1 text-sm">
+                <div className="flex justify-center items-center gap-2">
+                  <span className="text-muted-foreground">Cân nặng lý tưởng (BMI=22):</span>
+                  <span className="font-bold text-primary text-base">{targetWeight} kg</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground italic text-center px-2">
+                  *Tham khảo theo chuẩn y tế. Không áp dụng cho vận động viên, người tập thể hình hoặc có nhu cầu đặc thù.
+                </span>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

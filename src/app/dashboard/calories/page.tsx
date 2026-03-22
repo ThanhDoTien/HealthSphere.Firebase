@@ -157,12 +157,12 @@ export default function CaloriesPage() {
     const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
     const tdee = Math.round(calculateTDEE(bmr, userProfile.activityLevel));
     const weightGoal = userProfile.weightGoal || 'maintain';
-    
+
     const baseTarget = tdee + totalActivityBurn;
     let target = baseTarget;
     if (weightGoal === 'lose') target = baseTarget - 500;
     if (weightGoal === 'gain') target = baseTarget + 500;
-    
+
     return { tdee, target, weightGoal, totalActivityBurn };
   }, [userProfile, latestWeightData, totalActivityBurn]);
 
@@ -227,12 +227,18 @@ export default function CaloriesPage() {
 
   const macroData = useMemo(() => {
     if (totals.calories === 0) return [];
-    return [
+    const rawData = [
       { name: 'protein', value: totals.protein, fill: '#3b82f6' },
       { name: 'carbs', value: totals.carbs, fill: '#f97316' },
       { name: 'fat', value: totals.fat, fill: '#eab308' },
       { name: 'fiber', value: totals.fiber, fill: '#22c55e' },
     ].filter(item => item.value > 0);
+
+    const totalMacros = rawData.reduce((acc, curr) => acc + curr.value, 0);
+    return rawData.map(item => ({
+      ...item,
+      percent: totalMacros > 0 ? item.value / totalMacros : 0
+    }));
   }, [totals]);
 
   const dailyMeals = useMemo(() => {
@@ -273,42 +279,79 @@ export default function CaloriesPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6">
-      <Card className="border-primary/20 bg-primary/5">
-        <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Target className="h-6 w-6" />
-          </div>
-          <div>
-            <CardTitle className="text-xl">{t('calories.recommendation.title')}</CardTitle>
-            <CardDescription className="text-sm font-medium mt-1">
-              {t('calories.recommendation.dynamic_desc', { 
-                tdee: stats.tdee, 
-                burn: stats.totalActivityBurn || 0,
-                goal: t(`calories.goal.${stats.weightGoal}`)
-              })}
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-black text-primary">{dailyTarget}</span>
-            <span className="text-lg font-medium text-muted-foreground">kcal / {t('common.day')}</span>
-          </div>
-          <div className="flex flex-wrap gap-4 text-xs font-medium text-muted-foreground bg-background/50 p-3 rounded-lg border">
-            <div className="flex items-center gap-1.5">
-               <BrainCircuit className="h-3.5 w-3.5" />
-               <span>TDEE: {stats.tdee} kcal</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-primary/20 bg-primary/5 flex flex-col">
+          <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Target className="h-6 w-6" />
             </div>
-            <div className="flex items-center gap-1.5 text-accent">
-               <Flame className="h-3.5 w-3.5" />
-               <span>+{stats.totalActivityBurn} kcal (Vận động)</span>
+            <div>
+              <CardTitle className="text-xl">{t('calories.recommendation.title')}</CardTitle>
+              <CardDescription className="text-sm font-medium mt-1">
+                {t('calories.recommendation.dynamic_desc', {
+                  tdee: stats.tdee,
+                  burn: stats.totalActivityBurn || 0,
+                  goal: t(`calories.goal.${stats.weightGoal}`)
+                })}
+              </CardDescription>
             </div>
-            <div className="flex items-center gap-1.5 text-primary">
-               <span>Mục tiêu: {stats.weightGoal === 'lose' ? '-500' : stats.weightGoal === 'gain' ? '+500' : '0'} kcal</span>
+          </CardHeader>
+          <CardContent className="space-y-4 flex-1 flex flex-col justify-center">
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-black text-primary">{dailyTarget}</span>
+              <span className="text-lg font-medium text-muted-foreground">kcal / {t('common.day')}</span>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="flex flex-wrap gap-4 text-xs font-medium text-muted-foreground bg-background/50 p-3 rounded-lg border">
+              <div className="flex items-center gap-1.5">
+                <BrainCircuit className="h-3.5 w-3.5" />
+                <span>TDEE: {stats.tdee} kcal</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-accent">
+                <Flame className="h-3.5 w-3.5" />
+                <span>+{stats.totalActivityBurn} kcal (Vận động)</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-primary">
+                <span>Mục tiêu: {stats.weightGoal === 'lose' ? '-500' : stats.weightGoal === 'gain' ? '+500' : '0'} kcal</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle>{t('calories.chart.macrosTitle')}</CardTitle>
+            <CardDescription>{t('dashboard.summary')}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[200px]">
+            {isLoading && !mealData ? (
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            ) : macroData.length > 0 ? (
+              <PieChart
+                data={macroData}
+                config={macroChartConfig}
+                className="h-full w-full max-h-[250px]"
+                showLegend={true}
+                labelLine={false}
+                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+                  if (percent < 0.05) return null; // Ẩn label nếu phần trăm quá nhỏ
+                  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                  const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
+                  const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+                  return (
+                    <text x={x} y={y} fill="#111827" textAnchor="middle" dominantBaseline="central" fontSize={13} fontWeight="bold">
+                      {`${Number((percent * 100).toFixed(1))}%`}
+                    </text>
+                  );
+                }}
+              />
+            ) : (
+              <div className="text-center text-muted-foreground text-sm py-10 italic">
+                {t('calories.noMeals')}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -345,31 +388,6 @@ export default function CaloriesPage() {
         </CardContent>
       </Card>
 
-      {/* Phân bổ dinh dưỡng được đẩy lên trước phân tích AI */}
-      <div className="grid grid-cols-1 gap-6">
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle>{t('calories.chart.macrosTitle')}</CardTitle>
-            <CardDescription>{t('dashboard.summary')}</CardDescription>
-          </CardHeader>
-          <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
-            {isLoading && !mealData ? (
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            ) : macroData.length > 0 ? (
-              <PieChart
-                data={macroData}
-                config={macroChartConfig}
-                className="h-full w-full max-h-[300px]"
-                showLegend={true}
-              />
-            ) : (
-              <div className="text-center text-muted-foreground text-sm py-10 italic">
-                {t('calories.noMeals')}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
       {/* AI Analysis Row (Full Width) */}
       <Card className="border-primary/20 bg-primary/5 shadow-sm">
@@ -387,13 +405,13 @@ export default function CaloriesPage() {
             <div className="space-y-4 animate-in fade-in duration-500">
               <div className={cn(
                 "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold w-fit",
-                aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" : 
-                aiAnalysis.status === 'warning' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
+                aiAnalysis.status === 'good' ? "bg-green-100 text-green-700" :
+                  aiAnalysis.status === 'warning' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
               )}>
-                {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> : 
-                 aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                {aiAnalysis.status === 'good' ? t('calories.status.good') : 
-                 aiAnalysis.status === 'warning' ? t('calories.status.warning') : t('calories.status.bad')}
+                {aiAnalysis.status === 'good' ? <CheckCircle2 className="h-3 w-3" /> :
+                  aiAnalysis.status === 'warning' ? <AlertTriangle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                {aiAnalysis.status === 'good' ? t('calories.status.good') :
+                  aiAnalysis.status === 'warning' ? t('calories.status.warning') : t('calories.status.bad')}
               </div>
               <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
                 {formatAiText(aiAnalysis.analysis)}
@@ -410,14 +428,14 @@ export default function CaloriesPage() {
 
       <Card>
         <CardHeader>
-           <CardTitle>{t('calories.logTitle')}</CardTitle>
+          <CardTitle>{t('calories.logTitle')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <LogMealWithAiDialog userId={user?.uid || ''} />
-             <div className="bg-muted/30 rounded-xl p-4 border border-dashed flex items-center justify-center text-xs text-muted-foreground text-center">
-                <p>Mẹo: Bạn có thể chụp ảnh món ăn để AI phân tích nhanh hơn.</p>
-             </div>
+            <LogMealWithAiDialog userId={user?.uid || ''} />
+            <div className="bg-muted/30 rounded-xl p-4 border border-dashed flex items-center justify-center text-xs text-muted-foreground text-center">
+              <p>Mẹo: Bạn có thể chụp ảnh món ăn để AI phân tích nhanh hơn.</p>
+            </div>
           </div>
           <div className="relative">
             <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
@@ -431,7 +449,7 @@ export default function CaloriesPage() {
               <div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
             ) : Object.keys(dailyMeals).length > 0 ? (
               <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
-                {Object.entries(dailyMeals).sort((a,b) => b[0].localeCompare(a[0])).map(([date, meals]) => (
+                {Object.entries(dailyMeals).sort((a, b) => b[0].localeCompare(a[0])).map(([date, meals]) => (
                   <div key={date}>
                     <h4 className="sticky top-0 mb-2 border-b bg-card py-2 font-semibold text-md">
                       {new Date(date + 'T00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}

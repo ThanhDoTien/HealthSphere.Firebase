@@ -137,7 +137,7 @@ const ChartTooltipContent = React.forwardRef<
                        key === 'duration' ? ' h' : '';
           
           const percentage = item.payload.percent 
-            ? ` (${(item.payload.percent * 100).toFixed(1)}%)` 
+            ? ` (${Number((item.payload.percent * 100).toFixed(1))}%)` 
             : '';
 
           return (

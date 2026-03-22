@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState, useEffect, useCallback } from 'react';
-import { Utensils, Dumbbell, Loader2, Bed, Scale, Lightbulb, RefreshCw, Sparkles, AlertCircle } from 'lucide-react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
+import { Utensils, Dumbbell, Loader2, Bed, Scale, Lightbulb, RefreshCw, Sparkles, AlertCircle, Target, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -59,11 +59,14 @@ export default function DashboardPage() {
   const { user, userProfile, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const [today, setToday] = useState('');
+  const [yesterday, setYesterday] = useState('');
   const { t, locale } = useTranslation();
 
   const [weightFilter, setWeightFilter] = useState('30');
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+
+  const hasAttemptedGeneration = useRef(false);
 
   useEffect(() => {
     const now = new Date();
@@ -71,6 +74,10 @@ export default function DashboardPage() {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     setToday(`${year}-${month}-${day}`);
+
+    const yest = new Date(now);
+    yest.setDate(yest.getDate() - 1);
+    setYesterday(`${yest.getFullYear()}-${String(yest.getMonth() + 1).padStart(2, '0')}-${String(yest.getDate()).padStart(2, '0')}`);
   }, []);
 
   const weightQuery = useMemoFirebase(() => {
@@ -103,12 +110,31 @@ export default function DashboardPage() {
     return doc(firestore, 'users', user.uid, 'todaysuggestions', today);
   }, [firestore, user, today]);
 
+  const yesterdayMealsQuery = useMemoFirebase(() => {
+    if (!user || !yesterday) return null;
+    return query(collection(firestore, 'users', user.uid, 'meals'), where('date', '==', yesterday));
+  }, [firestore, user, yesterday]);
+
+  const yesterdayActivitiesQuery = useMemoFirebase(() => {
+    if (!user || !yesterday) return null;
+    return query(collection(firestore, 'users', user.uid, 'activities'), where('date', '==', yesterday));
+  }, [firestore, user, yesterday]);
+
+  const yesterdaySleepQuery = useMemoFirebase(() => {
+    if (!user || !yesterday) return null;
+    return query(collection(firestore, 'users', user.uid, 'sleep'), where('date', '==', yesterday));
+  }, [firestore, user, yesterday]);
+
   const { data: weightData } = useCollection<WeightLog>(weightQuery);
   const { data: latestWeightData } = useCollection<WeightLog>(latestWeightQuery);
   const { data: mealData, isLoading: mealLoading } = useCollection(mealsQuery);
   const { data: activityData, isLoading: activityLoading } = useCollection(activitiesQuery);
   const { data: sleepData, isLoading: sleepLoading } = useCollection(sleepQuery);
   const { data: suggestionData, isLoading: suggestionLoading } = useDoc<SuggestionWithMetadata>(suggestionDocRef);
+
+  const { data: yesterdayMealData } = useCollection(yesterdayMealsQuery);
+  const { data: yesterdayActivityData } = useCollection(yesterdayActivitiesQuery);
+  const { data: yesterdaySleepData } = useCollection(yesterdaySleepQuery);
 
   const dailySummary = useMemo(() => {
     const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
@@ -125,6 +151,22 @@ export default function DashboardPage() {
     if (sleepData) summary.sleepHours = sleepData.reduce((sum, sleep: any) => sum + sleep.duration, 0);
     return summary;
   }, [mealData, activityData, sleepData, userProfile, latestWeightData]);
+
+  const yesterdaySummary = useMemo(() => {
+    const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
+    if (yesterdayMealData) summary.caloriesConsumed = yesterdayMealData.reduce((sum, meal: any) => sum + meal.calories, 0);
+
+    if (userProfile) {
+      const currentWeight = latestWeightData?.[0]?.weight || userProfile.weight;
+      const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
+      const tdee = calculateTDEE(bmr, userProfile.activityLevel);
+      const activityBurn = yesterdayActivityData ? yesterdayActivityData.reduce((sum, activity: any) => sum + activity.caloriesBurned, 0) : 0;
+      summary.caloriesBurned = tdee + activityBurn;
+    }
+
+    if (yesterdaySleepData) summary.sleepHours = yesterdaySleepData.reduce((sum, sleep: any) => sum + sleep.duration, 0);
+    return summary;
+  }, [yesterdayMealData, yesterdayActivityData, yesterdaySleepData, userProfile, latestWeightData]);
 
   const isStale = useMemo(() => {
     if (!suggestionData || !suggestionData.snapshotSummary || isGenerating) return false;
@@ -180,13 +222,35 @@ export default function DashboardPage() {
   }, [userProfile, user, today, suggestionDocRef, dailySummary, locale, t, latestWeightData]);
 
   useEffect(() => {
-    if (!suggestionLoading && !suggestionData && !isGenerating && today && userProfile) {
-      handleGenerateSuggestions();
+    if (!suggestionLoading && !isGenerating && today && userProfile && !aiError) {
+      if (!suggestionData || isStale) {
+        handleGenerateSuggestions();
+      }
     }
-  }, [suggestionLoading, suggestionData, isGenerating, today, userProfile, handleGenerateSuggestions]);
+  }, [suggestionLoading, suggestionData, isGenerating, today, userProfile, isStale, aiError, handleGenerateSuggestions]);
 
   const currentWeight = latestWeightData?.[0]?.weight || weightData?.[0]?.weight;
+  const targetWeight = userProfile ? Math.round(22 * Math.pow(userProfile.height / 100, 2) * 10) / 10 : 0;
+  const weightDiff = currentWeight && targetWeight ? currentWeight - targetWeight : 0;
+
   const isAllLoading = userLoading || mealLoading || activityLoading || sleepLoading || (suggestionLoading && !suggestionData);
+
+  const renderDiff = (current: number, yesterday: number, unit: string, invertLogic: boolean = false) => {
+    const diff = current - yesterday;
+    if (diff === 0) return <span className="text-muted-foreground flex items-center gap-1.5 text-xs mt-2 font-medium"><Minus className="h-3.5 w-3.5" /> Bằng hôm qua</span>;
+
+    const isIncrease = diff > 0;
+    const isGood = invertLogic ? !isIncrease : isIncrease;
+    const colorClass = isGood ? "text-green-500" : "text-destructive";
+    const Icon = isIncrease ? TrendingUp : TrendingDown;
+
+    return (
+      <span className={cn("flex items-center gap-1.5 text-xs mt-2 font-medium", colorClass)}>
+        <Icon className="h-3.5 w-3.5" />
+        {Math.abs(diff).toFixed(unit === 'h' ? 1 : 0)} {unit} so với hôm qua
+      </span>
+    );
+  };
 
   return (
     <div className="flex flex-col space-y-6 pb-10">
@@ -204,46 +268,69 @@ export default function DashboardPage() {
           </div>
           <div className="grid gap-4 md:col-span-2 grid-cols-2">
             <Link href="/dashboard/calories">
-              <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-primary/20 shadow-sm h-full">
-                <CardHeader className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <CardDescription className="text-[10px]">{t('dashboard.caloriesConsumed')}</CardDescription>
+              <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-primary/20 shadow-sm h-full flex flex-col">
+                <CardHeader className="p-4 flex-1 flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <CardDescription className="text-xs font-medium">{t('dashboard.caloriesConsumed')}</CardDescription>
                     <Utensils className="h-4 w-4 text-primary" />
                   </div>
-                  <CardTitle className="text-xl font-bold">{dailySummary.caloriesConsumed} <span className="text-xs font-normal text-muted-foreground">kcal</span></CardTitle>
+                  <div className="mt-auto">
+                    <CardTitle className="text-2xl font-black">{dailySummary.caloriesConsumed} <span className="text-sm font-medium text-muted-foreground">kcal</span></CardTitle>
+                    {yesterdayMealData && renderDiff(dailySummary.caloriesConsumed, yesterdaySummary.caloriesConsumed, 'kcal', true)}
+                  </div>
                 </CardHeader>
               </Card>
             </Link>
             <Link href="/dashboard/activity">
-              <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-accent/20 shadow-sm h-full">
-                <CardHeader className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <CardDescription className="text-[10px]">{t('dashboard.caloriesBurned')}</CardDescription>
+              <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-accent/20 shadow-sm h-full flex flex-col">
+                <CardHeader className="p-4 flex-1 flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <CardDescription className="text-xs font-medium">{t('dashboard.caloriesBurned')}</CardDescription>
                     <Dumbbell className="h-4 w-4 text-accent" />
                   </div>
-                  <CardTitle className="text-xl font-bold">{Math.round(dailySummary.caloriesBurned)} <span className="text-xs font-normal text-muted-foreground">kcal</span></CardTitle>
+                  <div className="mt-auto">
+                    <CardTitle className="text-2xl font-black">{Math.round(dailySummary.caloriesBurned)} <span className="text-sm font-medium text-muted-foreground">kcal</span></CardTitle>
+                    {yesterdayActivityData && renderDiff(Math.round(dailySummary.caloriesBurned), Math.round(yesterdaySummary.caloriesBurned), 'kcal')}
+                  </div>
                 </CardHeader>
               </Card>
             </Link>
             <Link href="/dashboard/sleep">
-              <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-blue-500/20 shadow-sm h-full">
-                <CardHeader className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <CardDescription className="text-[10px]">{t('dashboard.sleepHour')}</CardDescription>
+              <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-blue-500/20 shadow-sm h-full flex flex-col">
+                <CardHeader className="p-4 flex-1 flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <CardDescription className="text-xs font-medium">{t('dashboard.sleepHour')}</CardDescription>
                     <Bed className="h-4 w-4 text-blue-500" />
                   </div>
-                  <CardTitle className="text-xl font-bold">{dailySummary.sleepHours.toFixed(1)} <span className="text-xs font-normal text-muted-foreground">h</span></CardTitle>
+                  <div className="mt-auto">
+                    <CardTitle className="text-2xl font-black">{dailySummary.sleepHours.toFixed(1)} <span className="text-sm font-medium text-muted-foreground">h</span></CardTitle>
+                    {yesterdaySleepData && renderDiff(dailySummary.sleepHours, yesterdaySummary.sleepHours, 'h')}
+                  </div>
                 </CardHeader>
               </Card>
             </Link>
             <Link href="/dashboard/profile">
-              <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-gray-500/20 shadow-sm h-full">
-                <CardHeader className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <CardDescription className="text-[10px]">{t('dashboard.currentWeight')}</CardDescription>
+              <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-gray-500/20 shadow-sm h-full flex flex-col">
+                <CardHeader className="p-4 flex-1 flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <CardDescription className="text-xs font-medium">{t('dashboard.currentWeight')}</CardDescription>
                     <Scale className="h-4 w-4 text-gray-500" />
                   </div>
-                  <CardTitle className="text-xl font-bold">{currentWeight ? `${currentWeight} kg` : 'N/A'}</CardTitle>
+                  <div className="mt-auto">
+                    <CardTitle className="text-2xl font-black">{currentWeight ? `${currentWeight} kg` : 'N/A'}</CardTitle>
+                    {currentWeight && Math.abs(weightDiff) >= 0.1 && (
+                      <span className={cn("flex items-center gap-1.5 text-xs mt-2 font-medium", weightDiff > 0 ? "text-orange-500" : "text-blue-500")} title="So với cân nặng lý tưởng theo chuẩn BMI y tế">
+                        <Target className="h-3.5 w-3.5" />
+                        Cách mức lý tưởng {Math.abs(weightDiff).toFixed(1)} kg
+                      </span>
+                    )}
+                    {currentWeight && Math.abs(weightDiff) < 0.1 && (
+                      <span className="flex items-center gap-1.5 text-xs mt-2 font-medium text-green-500">
+                        <Target className="h-3.5 w-3.5" />
+                        Đạt chuẩn BMI lý tưởng!
+                      </span>
+                    )}
+                  </div>
                 </CardHeader>
               </Card>
             </Link>
@@ -275,17 +362,17 @@ export default function DashboardPage() {
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                         <h4 className="text-lg font-bold text-primary">{t('ai.tipTitle')}</h4>
-                         {suggestionData.updatedAt && (
-                            <span className="text-[10px] text-muted-foreground italic">
-                                • {t('ai.lastUpdated', { time: new Date(suggestionData.updatedAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) })}
-                            </span>
-                         )}
+                        <h4 className="text-lg font-bold text-primary">{t('ai.tipTitle')}</h4>
+                        {suggestionData.updatedAt && (
+                          <span className="text-[10px] text-muted-foreground italic">
+                            • {t('ai.lastUpdated', { time: new Date(suggestionData.updatedAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })}
+                          </span>
+                        )}
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={handleGenerateSuggestions} 
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleGenerateSuggestions}
                         disabled={isGenerating}
                         className={cn("h-8 w-8 p-0", isStale && "text-primary animate-bounce")}
                         title={t('ai.refreshNow')}
@@ -302,21 +389,21 @@ export default function DashboardPage() {
 
               {isStale && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg text-primary text-xs font-bold animate-in fade-in slide-in-from-top-2 border border-primary/20 shadow-sm">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>{t('ai.staleDataMessage')}</span>
-                    <button 
-                        onClick={handleGenerateSuggestions}
-                        className="ml-auto underline font-extrabold hover:text-primary/80 transition-colors"
-                    >
-                        {t('ai.refreshNow')}
-                    </button>
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{t('ai.staleDataMessage')}</span>
+                  <button
+                    onClick={handleGenerateSuggestions}
+                    className="ml-auto underline font-extrabold hover:text-primary/80 transition-colors"
+                  >
+                    {t('ai.refreshNow')}
+                  </button>
                 </div>
               )}
             </div>
           )}
 
           {isAllLoading && !suggestionData && !isGenerating && (
-             <Card className="border-primary/20 bg-primary/5 shadow-sm animate-pulse">
+            <Card className="border-primary/20 bg-primary/5 shadow-sm animate-pulse">
               <div className="p-4 flex items-center gap-4">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 <p className="text-base font-medium text-primary">{t('ai.loadingData')}</p>
@@ -385,12 +472,12 @@ export default function DashboardPage() {
                   {suggestionData.mealSuggestions?.map((meal, idx) => (
                     <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
                       <div className="relative h-64 w-full bg-muted">
-                        <Image 
-                          src={meal.imageUrl || `https://picsum.photos/seed/${meal.name}/600/400`} 
-                          alt={meal.name} 
-                          fill 
-                          className="object-cover" 
-                          unoptimized 
+                        <Image
+                          src={meal.imageUrl || `https://picsum.photos/seed/${meal.name}/600/400`}
+                          alt={meal.name}
+                          fill
+                          className="object-cover"
+                          unoptimized
                         />
                       </div>
                       <div className="p-5 flex-1 flex flex-col space-y-3">
@@ -416,12 +503,12 @@ export default function DashboardPage() {
                   {suggestionData.workoutSuggestion?.map((exercise, idx) => (
                     <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
                       <div className="relative h-64 w-full bg-muted">
-                        <Image 
-                          src={exercise.imageUrl || `https://picsum.photos/seed/${exercise.name}/600/400`} 
-                          alt={exercise.name} 
-                          fill 
-                          className="object-cover" 
-                          unoptimized 
+                        <Image
+                          src={exercise.imageUrl || `https://picsum.photos/seed/${exercise.name}/600/400`}
+                          alt={exercise.name}
+                          fill
+                          className="object-cover"
+                          unoptimized
                         />
                       </div>
                       <div className="p-5 flex-1 flex flex-col space-y-3">

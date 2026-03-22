@@ -25,7 +25,7 @@ const pieChartDefaultProps = {
   label: false,
   labelLine: false,
   isAnimationActive: true,
-  stroke: "hsl(var(--border))",
+  stroke: "none",
   style: {
     fontSize: 12,
   },
@@ -43,6 +43,8 @@ type PieChartProps = Omit<
   dataKey?: string
   innerRadius?: string | number
   outerRadius?: string | number
+  label?: any
+  labelLine?: any
 }
 
 const PieChart = React.forwardRef<
@@ -58,6 +60,10 @@ const PieChart = React.forwardRef<
       showTooltip = true,
       nameKey,
       dataKey,
+      innerRadius,
+      outerRadius,
+      label,
+      labelLine,
       ...props
     },
     ref
@@ -76,6 +82,10 @@ const PieChart = React.forwardRef<
             data={data}
             nameKey={nameKey || pieChartDefaultProps.nameKey}
             dataKey={dataKey || pieChartDefaultProps.dataKey}
+            innerRadius={innerRadius !== undefined ? innerRadius : pieChartDefaultProps.innerRadius}
+            outerRadius={outerRadius !== undefined ? outerRadius : pieChartDefaultProps.outerRadius}
+            label={label !== undefined ? label : pieChartDefaultProps.label}
+            labelLine={labelLine !== undefined ? labelLine : pieChartDefaultProps.labelLine}
           >
             {Object.entries(config).map(([key, config], i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
