@@ -47,7 +47,7 @@ const HealthSuggestionResponseSchema = z.object({
 });
 export type HealthSuggestionResponse = z.infer<typeof HealthSuggestionResponseSchema>;
 
-const BACKEND_URL = process.env.BACKEND_API_URL || 'https://healthsphere-8kji.onrender.com/ai';
+const BACKEND_URL = process.env.BACKEND_API_URL || 'https://healthspherebackend--studio-8164753205-5553c.asia-southeast1.hosted.app/ai';
 
 export async function getHealthSuggestions(
   input: HealthSuggestionRequest

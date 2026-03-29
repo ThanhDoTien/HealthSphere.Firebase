@@ -3,8 +3,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Apple, Flame, Sparkles, User, Bed, Globe, Menu, Search } from 'lucide-react';
+import { Home, Apple, Flame, Sparkles, User, Bed, Globe, Menu, Search, LogOut } from 'lucide-react';
 import { useTranslation } from '@/context/LanguageContext';
+import { useUser } from '@/firebase/auth/use-user';
+import { logout } from '@/firebase/auth/utils';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -27,6 +29,7 @@ const navItems = [
 export default function Header() {
   const pathname = usePathname();
   const { t, setLocale } = useTranslation();
+  const { user } = useUser();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -81,6 +84,12 @@ export default function Header() {
         </div>
 
         <div className="flex items-center justify-end space-x-2">
+          {user && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => logout()}>
+              <LogOut className="h-4 w-4" />
+              <span className="sr-only">{t('profile.logout')}</span>
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8">

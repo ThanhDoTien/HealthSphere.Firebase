@@ -1,6 +1,9 @@
 
 "use client";
 
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+
 import Link from "next/link";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -53,6 +56,7 @@ const SignUpFormSchema = (t: (key: string) => string) => z
 type SignUpFormValues = z.infer<ReturnType<typeof SignUpFormSchema>>;
 
 export default function SignUpPage() {
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const { t } = useTranslation();
@@ -61,6 +65,8 @@ export default function SignUpPage() {
     register,
     handleSubmit,
     control,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(SignUpFormSchema(t)),
@@ -71,6 +77,23 @@ export default function SignUpPage() {
     }
   });
 
+  const height = watch("height");
+  const weight = watch("weight");
+
+  useEffect(() => {
+    if (height && weight && height > 0) {
+      const heightInMeters = height / 100;
+      const bmi = weight / (heightInMeters * heightInMeters);
+      let suggestedGoal = "maintain";
+      if (bmi < 18.5) {
+        suggestedGoal = "gain";
+      } else if (bmi >= 25) {
+        suggestedGoal = "lose";
+      }
+      setValue("weightGoal", suggestedGoal, { shouldValidate: true });
+    }
+  }, [height, weight, setValue]);
+
   useMustBeLoggedOut();
 
   const onSubmit = async (data: SignUpFormValues) => {
@@ -80,6 +103,7 @@ export default function SignUpPage() {
         title: t('form.common.success'),
         description: t('signup.success'),
       });
+      setIsRedirecting(true);
       router.push("/dashboard");
     } catch (error: any) {
       toast({
@@ -92,6 +116,19 @@ export default function SignUpPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      {isRedirecting && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-md transition-all duration-500">
+          <div className="relative flex items-center justify-center">
+            <div className="absolute h-24 w-24 animate-ping rounded-full bg-primary/20"></div>
+            <div className="absolute h-20 w-20 animate-pulse rounded-full bg-primary/40"></div>
+            <Loader2 className="relative z-10 h-10 w-10 animate-spin text-primary drop-shadow-md" />
+          </div>
+          <p className="mt-8 animate-pulse bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-xl font-bold tracking-tight text-transparent">
+            {t('signup.success') || "Tạo tài khoản thành công!"}
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground animate-pulse delay-150">Đang thiết lập khu vực cá nhân của bạn</p>
+        </div>
+      )}
       <Card className="w-full max-w-lg">
         <CardHeader>
           <CardTitle className="text-2xl">{t('signup.title')}</CardTitle>
@@ -206,23 +243,37 @@ export default function SignUpPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="weightGoal">{t('signup.weightGoalLabel')}</Label>
-              <Controller
-                control={control}
-                name="weightGoal"
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('signup.weightGoalSelect')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="lose">{t('signup.weightGoalLose')}</SelectItem>
-                      <SelectItem value="maintain">{t('signup.weightGoalMaintain')}</SelectItem>
-                      <SelectItem value="gain">{t('signup.weightGoalGain')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <Label>{t('signup.weightGoalLabel')}</Label>
+              {height > 0 && weight > 0 ? (
+                <div className="rounded-md border bg-muted/50 p-4">
+                  <div className="flex flex-col space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Chỉ số BMI:</span>
+                      <span className={`text-sm font-bold ${(weight / ((height / 100) * (height / 100))) < 18.5 ? "text-blue-500" : (weight / ((height / 100) * (height / 100))) >= 25 ? "text-destructive" : "text-green-500"}`}>
+                        {(weight / ((height / 100) * (height / 100))).toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Đánh giá:</span>
+                      <span className={`text-sm font-bold ${(weight / ((height / 100) * (height / 100))) < 18.5 ? "text-blue-500" : (weight / ((height / 100) * (height / 100))) >= 25 ? "text-destructive" : "text-green-500"}`}>
+                        {(weight / ((height / 100) * (height / 100))) < 18.5 ? "Thiếu cân" : (weight / ((height / 100) * (height / 100))) >= 25 ? "Thừa cân" : "Bình thường"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between border-t pt-2">
+                      <span className="text-sm font-medium">Mục tiêu gợi ý:</span>
+                      <span className="text-sm font-bold text-primary">
+                        {(weight / ((height / 100) * (height / 100))) < 18.5 ? t('signup.weightGoalGain') : (weight / ((height / 100) * (height / 100))) >= 25 ? t('signup.weightGoalLose') : t('signup.weightGoalMaintain')}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Hidden input to keep react-hook-form connected */}
+                  <input type="hidden" {...register("weightGoal")} />
+                </div>
+              ) : (
+                <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+                  Vui lòng nhập Chiều cao và Cân nặng để xem gợi ý.
+                </div>
+              )}
               {errors.weightGoal && (
                 <p className="text-sm text-destructive">{errors.weightGoal.message}</p>
               )}
