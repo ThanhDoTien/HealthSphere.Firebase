@@ -1,6 +1,8 @@
 
 'use client';
 
+import { useEffect } from "react";
+
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -47,6 +49,8 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
     register,
     handleSubmit,
     control,
+    setValue,
+    watch,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(ProfileFormSchema),
@@ -62,6 +66,23 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
       activityLevel: userProfile.activityLevel || "moderate",
     },
   });
+
+  const height = watch("height");
+  const weight = watch("weight");
+
+  useEffect(() => {
+    if (height && weight && height > 0) {
+      const heightInMeters = height / 100;
+      const bmi = weight / (heightInMeters * heightInMeters);
+      let suggestedGoal = "maintain";
+      if (bmi < 18.5) {
+        suggestedGoal = "gain";
+      } else if (bmi >= 25) {
+        suggestedGoal = "lose";
+      }
+      setValue("weightGoal", suggestedGoal, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [height, weight, setValue]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
@@ -139,23 +160,37 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="weightGoal">{t('signup.weightGoalLabel')}</Label>
-        <Controller
-          control={control}
-          name="weightGoal"
-          render={({ field }) => (
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('signup.weightGoalSelect')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="lose">{t('signup.weightGoalLose')}</SelectItem>
-                <SelectItem value="maintain">{t('signup.weightGoalMaintain')}</SelectItem>
-                <SelectItem value="gain">{t('signup.weightGoalGain')}</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-        />
+        <Label>{t('signup.weightGoalLabel')}</Label>
+        {height > 0 && weight > 0 ? (
+          <div className="rounded-md border bg-muted/50 p-4">
+            <div className="flex flex-col space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Chỉ số BMI:</span>
+                <span className={`text-sm font-bold ${(weight / ((height / 100) * (height / 100))) < 18.5 ? "text-blue-500" : (weight / ((height / 100) * (height / 100))) >= 25 ? "text-destructive" : "text-green-500"}`}>
+                  {(weight / ((height / 100) * (height / 100))).toFixed(1)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Đánh giá:</span>
+                <span className={`text-sm font-bold ${(weight / ((height / 100) * (height / 100))) < 18.5 ? "text-blue-500" : (weight / ((height / 100) * (height / 100))) >= 25 ? "text-destructive" : "text-green-500"}`}>
+                  {(weight / ((height / 100) * (height / 100))) < 18.5 ? "Thiếu cân" : (weight / ((height / 100) * (height / 100))) >= 25 ? "Thừa cân" : "Bình thường"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between border-t pt-2">
+                <span className="text-sm font-medium">Mục tiêu gợi ý:</span>
+                <span className="text-sm font-bold text-primary">
+                  {(weight / ((height / 100) * (height / 100))) < 18.5 ? t('signup.weightGoalGain') : (weight / ((height / 100) * (height / 100))) >= 25 ? t('signup.weightGoalLose') : t('signup.weightGoalMaintain')}
+                </span>
+              </div>
+            </div>
+            {/* Hidden input to keep react-hook-form connected */}
+            <input type="hidden" {...register("weightGoal")} />
+          </div>
+        ) : (
+          <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+            Vui lòng nhập Chiều cao và Cân nặng để xem gợi ý.
+          </div>
+        )}
         {errors.weightGoal && (
           <p className="text-sm text-destructive">{errors.weightGoal.message}</p>
         )}

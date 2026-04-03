@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +34,7 @@ const LoginFormSchema = z.object({
 type LoginFormValues = z.infer<typeof LoginFormSchema>;
 
 export default function LoginPage() {
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const { t } = useTranslation();
@@ -52,6 +55,7 @@ export default function LoginPage() {
         title: "Success",
         description: t('login.success'),
       });
+      setIsRedirecting(true);
       router.push("/dashboard");
     } catch (error: any) {
       toast({
@@ -69,6 +73,7 @@ export default function LoginPage() {
         title: "Success",
         description: t('login.googleSuccess'),
       });
+      setIsRedirecting(true);
       router.push("/dashboard");
     } catch (error: any) {
       toast({
@@ -81,6 +86,19 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      {isRedirecting && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-md transition-all duration-500">
+          <div className="relative flex items-center justify-center">
+            <div className="absolute h-24 w-24 animate-ping rounded-full bg-primary/20"></div>
+            <div className="absolute h-20 w-20 animate-pulse rounded-full bg-primary/40"></div>
+            <Loader2 className="relative z-10 h-10 w-10 animate-spin text-primary drop-shadow-md" />
+          </div>
+          <p className="mt-8 animate-pulse bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-xl font-bold tracking-tight text-transparent">
+            {t('login.success') || "Đang chuẩn bị dữ liệu..."}
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground animate-pulse delay-150">Đang đồng bộ hồ sơ sức khỏe của bạn</p>
+        </div>
+      )}
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">{t('login.title')}</CardTitle>

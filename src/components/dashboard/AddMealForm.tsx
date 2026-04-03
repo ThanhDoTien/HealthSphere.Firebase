@@ -37,7 +37,7 @@ interface AddMealFormProps {
   userId: string;
 }
 
-const BACKEND_URL = "https://healthsphere-8kji.onrender.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "https://healthsphere-8kji.onrender.com";
 
 export default function AddMealForm({ userId }: AddMealFormProps) {
   const { toast } = useToast();

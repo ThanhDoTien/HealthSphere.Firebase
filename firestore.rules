@@ -29,7 +29,5 @@ service cloud.firestore {
         allow create: if isSignedIn();
       }
     }
-    
-    // Trigger redeploy for storage rule update sync
   }
 }
