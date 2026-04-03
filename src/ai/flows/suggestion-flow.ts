@@ -66,7 +66,7 @@ export async function getHealthSuggestions(
   3. Đề Xuất 2-3 bài tập phù hợp với mục tiêu và mức độ mệt mỏi hiện tại.
   4. Đối với 'recipe' , 'workoutSuggestion' và 'description', trình bày theo từng bước và sử dụng \\n sau mỗi bước.
   5. Ngôn ngữ phản hồi: ${input.language || 'vi'}.
-  6. Đối với 'imagePrompt': Viết bằng tiếng Anh, mô tả chi tiết món ăn/bài tập (4k high-quality).
+  6. Đối với 'imagePrompt': Viết bằng tiếng Anh, mô tả cực kỳ chi tiết về món ăn hoặc bài tập (Ví dụ: 'A close-up, high-resolution shot of...', 'Cinematic lighting, professional photography'). ĐỪNG bao gồm các từ khóa như 'Pollinations'.
 
   TRẢ VỀ KẾT QUẢ DƯỚI DẠNG MỘT ĐỐI TƯỢNG JSON DUY NHẤT. KHÔNG BAO GỒM CÁC KHỐI MÃ (CODE FENCES) HOẶC VĂN BẢN THỪA.
   {

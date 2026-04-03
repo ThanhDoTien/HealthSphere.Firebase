@@ -84,12 +84,6 @@ export default function Header() {
         </div>
 
         <div className="flex items-center justify-end space-x-2">
-          {user && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => logout()}>
-              <LogOut className="h-4 w-4" />
-              <span className="sr-only">{t('profile.logout')}</span>
-            </Button>
-          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -102,6 +96,12 @@ export default function Header() {
               <DropdownMenuItem onClick={() => setLocale('vi')}>Tiếng Việt</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          {user && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => logout()}>
+              <LogOut className="h-4 w-4" />
+              <span className="sr-only">{t('profile.logout')}</span>
+            </Button>
+          )}
         </div>
       </div>
     </header>

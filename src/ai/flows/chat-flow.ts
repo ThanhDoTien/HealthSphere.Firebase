@@ -37,7 +37,7 @@ export type ChatInput = z.infer<typeof ChatInputSchema>;
 
 const healthChatPrompt = ai.definePrompt({
   name: 'healthChatPrompt',
-  model: 'googleai/gemini-3-flash-preview',
+  model: 'googleai/gemini-3.1-flash-lite-preview',
   input: { schema: ChatInputSchema },
 
   prompt: `

@@ -23,6 +23,7 @@ import { type ChartConfig } from '@/components/ui/chart';
 import AddWeightForm from '@/components/dashboard/AddWeightForm';
 import { useTranslation } from '@/context/LanguageContext';
 import BmiMeter from '@/components/dashboard/BmiMeter';
+import SuggestImage from '@/components/dashboard/SuggestImage';
 import {
   Select,
   SelectContent,
@@ -471,15 +472,11 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {suggestionData.mealSuggestions?.map((meal, idx) => (
                     <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
-                      <div className="relative h-64 w-full bg-muted">
-                        <Image
-                          src={meal.imageUrl || `https://image.pollinations.ai/prompt/${encodeURIComponent(meal.name + ', realistic food photography, high resolution, professional lighting')}?width=600&height=400&nologo=true&model=gemini-3.1-flash-image-preview`}
-                          alt={meal.name}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
+                      <SuggestImage
+                        name={meal.name}
+                        prompt={meal.name + ', simple appetizing photo'}
+                        className="h-64 w-full"
+                      />
                       <div className="p-5 flex-1 flex flex-col space-y-3">
                         <div className="flex justify-between items-start">
                           <h5 className="font-bold text-xl leading-tight">{meal.name}</h5>
@@ -502,15 +499,11 @@ export default function DashboardPage() {
                 <div className="space-y-6">
                   {suggestionData.workoutSuggestion?.map((exercise, idx) => (
                     <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
-                      <div className="relative h-64 w-full bg-muted">
-                        <Image
-                          src={exercise.imageUrl || `https://image.pollinations.ai/prompt/${encodeURIComponent(exercise.name + ', fitness workout exercise photography, professional, active')}?width=600&height=400&nologo=true&model=gemini-3.1-flash-image-preview`}
-                          alt={exercise.name}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
+                      <SuggestImage
+                        name={exercise.name}
+                        prompt={exercise.name + ', simple fitness photo, gym context'}
+                        className="h-64 w-full"
+                      />
                       <div className="p-5 flex-1 flex flex-col space-y-3">
                         <h5 className="font-bold text-xl leading-tight">{exercise.name}</h5>
                         <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">

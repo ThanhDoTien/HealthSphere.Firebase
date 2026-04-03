@@ -8,7 +8,8 @@ import { initializeFirebase } from '@/firebase';
  */
 function hashString(str: string): string {
   let hash = 0;
-  const normalized = str.trim().toLowerCase();
+  // Chuẩn hóa cực kỳ nghiêm ngặt: xóa khoảng trắng thừa, viết thường
+  const normalized = str.replace(/\s+/g, ' ').trim().toLowerCase();
   for (let i = 0; i < normalized.length; i++) {
     const char = normalized.charCodeAt(i);
     hash = (hash << 5) - hash + char;
@@ -62,6 +63,27 @@ export async function uploadBase64WithCache(
 }
 
 /**
+ * Lấy URL ảnh AI từ bộ nhớ đệm chung (Shared Cache) dựa trên mã Hash của prompt.
+ * Điều này cho phép tái sử dụng ảnh giữa các người dùng khác nhau nếu có cùng prompt.
+ */
+export async function getAiCacheUrl(prompt: string, folder: 'meals' | 'exercises' = 'meals'): Promise<string | null> {
+  const { storage } = initializeFirebase();
+  const hash = hashString(prompt);
+  const cacheRef = ref(storage, `images/ai/cache/${hash}.png`);
+
+  try {
+    const url = await getDownloadURL(cacheRef);
+    console.log('💎 [Global Cache Hit]:', hash);
+    return url;
+  } catch (err: any) {
+    if (err.code !== 'storage/object-not-found') {
+      console.warn('⚠️ Cache check error:', err);
+    }
+    return null;
+  }
+}
+
+/**
  * Lấy URL ảnh Placeholder mặc định từ Storage
  */
 export async function getPlaceholderUrl(folder: 'meals' | 'workouts', fileName: string): Promise<string> {
@@ -71,6 +93,7 @@ export async function getPlaceholderUrl(folder: 'meals' | 'workouts', fileName: 
     return await getDownloadURL(placeholderRef);
   } catch (err) {
     console.error('Placeholder not found:', err);
-    return `https://image.pollinations.ai/prompt/${encodeURIComponent(fileName + ', high quality photography')}?width=800&height=600&nologo=true&model=gemini-3.1-flash-image-preview`; // Fallback cuối cùng
+    // Fallback sang Pollinations nhưng sử dụng model ổn định hơn hoặc không logo
+    return `https://image.pollinations.ai/prompt/${encodeURIComponent(fileName + ', professional food photography')}?width=800&height=600&nologo=true&seed=${hashString(fileName)}`; 
   }
 }
