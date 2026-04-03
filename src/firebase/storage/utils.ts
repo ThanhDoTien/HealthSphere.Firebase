@@ -71,6 +71,6 @@ export async function getPlaceholderUrl(folder: 'meals' | 'workouts', fileName: 
     return await getDownloadURL(placeholderRef);
   } catch (err) {
     console.error('Placeholder not found:', err);
-    return `https://picsum.photos/seed/${fileName}/800/600`; // Fallback cuối cùng
+    return `https://image.pollinations.ai/prompt/${encodeURIComponent(fileName + ', high quality photography')}?width=800&height=600&nologo=true&model=gemini-3.1-flash-image-preview`; // Fallback cuối cùng
   }
 }

@@ -41,8 +41,8 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "pollinations.ai",
-      }
+        hostname: "image.pollinations.ai",
+      },
     ],
   },
 };

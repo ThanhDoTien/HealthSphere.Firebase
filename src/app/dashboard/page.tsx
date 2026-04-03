@@ -473,7 +473,7 @@ export default function DashboardPage() {
                     <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
                       <div className="relative h-64 w-full bg-muted">
                         <Image
-                          src={meal.imageUrl || `https://picsum.photos/seed/${meal.name}/600/400`}
+                          src={meal.imageUrl || `https://image.pollinations.ai/prompt/${encodeURIComponent(meal.name + ', realistic food photography, high resolution, professional lighting')}?width=600&height=400&nologo=true&model=gemini-3.1-flash-image-preview`}
                           alt={meal.name}
                           fill
                           className="object-cover"
@@ -504,7 +504,7 @@ export default function DashboardPage() {
                     <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
                       <div className="relative h-64 w-full bg-muted">
                         <Image
-                          src={exercise.imageUrl || `https://picsum.photos/seed/${exercise.name}/600/400`}
+                          src={exercise.imageUrl || `https://image.pollinations.ai/prompt/${encodeURIComponent(exercise.name + ', fitness workout exercise photography, professional, active')}?width=600&height=400&nologo=true&model=gemini-3.1-flash-image-preview`}
                           alt={exercise.name}
                           fill
                           className="object-cover"

@@ -59,7 +59,7 @@ export default function EditActivityForm({ userId, activity, onSuccess }: EditAc
 
   const onSubmit = (data: FormValues) => {
     const activityDocRef = doc(firestore, `users/${userId}/activities/${activity.id}`);
-    
+
     const activityUpdateData = {
       ...data,
     };
@@ -107,7 +107,7 @@ export default function EditActivityForm({ userId, activity, onSuccess }: EditAc
           <Input id="duration" type="number" placeholder={t('form.add_activity.durationPlaceholder')} {...register('duration')} />
           {errors.duration && <p className="mt-1 text-sm text-destructive">{errors.duration.message}</p>}
         </div>
-         <div className="grid gap-1.5">
+        <div className="grid gap-1.5">
           <Label htmlFor="caloriesBurned">{t('form.add_activity.caloriesLabel')}</Label>
           <Input id="caloriesBurned" type="number" placeholder={t('form.add_activity.caloriesPlaceholder')} {...register('caloriesBurned')} />
           {errors.caloriesBurned && <p className="mt-1 text-sm text-destructive">{errors.caloriesBurned.message}</p>}
