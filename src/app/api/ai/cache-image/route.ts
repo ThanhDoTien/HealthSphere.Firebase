@@ -26,39 +26,62 @@ export async function POST(req: NextRequest) {
     const maxAttempts = 3;
 
     while (attempts < maxAttempts) {
-      console.log(`🎨 [Gemini 3.1] Attempt ${attempts + 1}/${maxAttempts} for: ${hash}`);
+      attempts++;
+      console.log(`🎨 [Gemini 3.1] Attempt ${attempts}/${maxAttempts} for: ${hash}`);
       
-      aiResponse = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: `${prompt}, simple realistic photo` }]
-          }],
-          generationConfig: {
-            responseModalities: ["IMAGE"]
-          }
-        }),
-        cache: 'no-store'
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // Giới hạn 60s cho mỗi lần gọi
 
-      if (aiResponse.status === 503) {
-        attempts++;
+      try {
+        aiResponse = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: `${prompt}, simple realistic photo` }]
+            }],
+            generationConfig: {
+              responseModalities: ["IMAGE"]
+            }
+          }),
+          cache: 'no-store',
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (aiResponse.status === 503) {
+          if (attempts < maxAttempts) {
+            console.warn(`⏳ [Gemini 3.1] Server busy (503). Retrying in 2s...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue;
+          }
+        }
+        
+        if (!aiResponse.ok) {
+          const errorData = await aiResponse.json().catch(() => ({}));
+          console.error(`❌ [Gemini 3.1 API Error] Attempt ${attempts}:`, JSON.stringify(errorData, null, 2));
+          if (attempts < maxAttempts) {
+            console.warn(`⏳ [Gemini 3.1] Request failed. Retrying...`);
+            continue;
+          }
+        }
+
+        break; // Thành công hoặc đã hết lượt thử
+      } catch (err: any) {
+        clearTimeout(timeoutId);
+        console.error(`⚠️ [Gemini 3.1 Network Error] Attempt ${attempts}:`, err.name === 'AbortError' ? 'Timeout 60s' : err.message);
+        
         if (attempts < maxAttempts) {
-          console.warn(`⏳ [Gemini 3.1] Server busy (503). Retrying in 2s...`);
           await new Promise(resolve => setTimeout(resolve, 2000));
           continue;
         }
+        return NextResponse.json({ error: 'AI Request Timeout. Please try again.' }, { status: 504 });
       }
-      break;
     }
 
     if (!aiResponse || !aiResponse.ok) {
-      const errorData = await aiResponse?.json().catch(() => ({}));
-      console.error('❌ [Gemini 3.1 API Error]:', JSON.stringify(errorData, null, 2));
       return NextResponse.json({ 
-        error: 'AI Model is currently overloaded. Please try again in 1 minute.',
-        details: errorData 
+        error: 'AI Model is currently overloaded or unresponsive. Please try again later.',
       }, { status: aiResponse?.status || 500 });
     }
 

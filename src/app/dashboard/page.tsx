@@ -496,7 +496,7 @@ export default function DashboardPage() {
                   <Dumbbell className="h-5 w-5" />
                   {t('ai.workoutTitle')}
                 </h4>
-                <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {suggestionData.workoutSuggestion?.map((exercise, idx) => (
                     <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
                       <SuggestImage
