@@ -17,18 +17,6 @@ Hệ thống được thiết kế theo mô hình **Client-Server** hiện đạ
     - Cơ chế Caching hình ảnh minh họa bằng giải thuật Hashing.
 3. **Tầng Dữ liệu (Data Layer):** Chịu trách nhiệm lưu trữ và truy xuất dữ liệu từ Firebase Firestore và Firebase Storage, đảm bảo tính toàn vẹn và bảo mật thông tin.
 
-## 3.2. Thiết kế Cơ sở dữ liệu
-
-Mặc dù hệ thống sử dụng cơ sở dữ liệu NoSQL (Firestore), cấu trúc dữ liệu vẫn tuân thủ các ràng buộc chặt chẽ để đảm bảo tính quan hệ giữa các thực thể.
-
-### 3.2.1. Sơ đồ thực thể quan hệ (ERD - Mapping)
-Sơ đồ mô tả mối quan hệ 1-N (một - nhiều) từ thực thể User đến các nhật ký sức khỏe:
-
-- **User (1) <---> (N) Meal_logs**
-- **User (1) <---> (N) Weight_logs**
-- **User (1) <---> (N) Activity_logs**
-
-### 3.2.2. Thiết kế bảng chi tiết
 
 #### Bảng 1: Users (Thông tin người dùng)
 | Tên thuộc tính | Kiểu dữ liệu | Ràng buộc | Mô tả |
