@@ -81,7 +81,7 @@ export default function AiChatBubble() {
   const { data: allWeights } = useCollection(weightQuery);
 
   const dailySummary = useMemo(() => {
-    const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
+    const summary = { caloriesConsumed: 0, caloriesBurned: 0, baseBurned: 0, exerciseBurned: 0, sleepHours: 0 };
     if (allMeals) {
       summary.caloriesConsumed = allMeals
         .filter((m: any) => m.date === todayStr)
@@ -94,7 +94,10 @@ export default function AiChatBubble() {
       const activityBurn = allActivities 
         ? allActivities.filter((a: any) => a.date === todayStr).reduce((sum: number, a: any) => sum + a.caloriesBurned, 0) 
         : 0;
-      summary.caloriesBurned = Math.round(tdee + activityBurn);
+      
+      summary.baseBurned = Math.round(tdee);
+      summary.exerciseBurned = Math.round(activityBurn);
+      summary.caloriesBurned = summary.baseBurned + summary.exerciseBurned;
     }
     if (allSleep) {
       summary.sleepHours = allSleep

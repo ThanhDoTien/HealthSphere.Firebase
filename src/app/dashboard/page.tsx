@@ -138,7 +138,7 @@ export default function DashboardPage() {
   const { data: yesterdaySleepData } = useCollection(yesterdaySleepQuery);
 
   const dailySummary = useMemo(() => {
-    const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
+    const summary = { caloriesConsumed: 0, caloriesBurned: 0, baseBurned: 0, exerciseBurned: 0, sleepHours: 0 };
     if (mealData) summary.caloriesConsumed = mealData.reduce((sum, meal: any) => sum + meal.calories, 0);
 
     if (userProfile) {
@@ -146,7 +146,10 @@ export default function DashboardPage() {
       const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
       const tdee = calculateTDEE(bmr, userProfile.activityLevel);
       const activityBurn = activityData ? activityData.reduce((sum, activity: any) => sum + activity.caloriesBurned, 0) : 0;
-      summary.caloriesBurned = tdee + activityBurn;
+      
+      summary.baseBurned = Math.round(tdee);
+      summary.exerciseBurned = Math.round(activityBurn);
+      summary.caloriesBurned = summary.baseBurned + summary.exerciseBurned;
     }
 
     if (sleepData) summary.sleepHours = sleepData.reduce((sum, sleep: any) => sum + sleep.duration, 0);
@@ -154,7 +157,7 @@ export default function DashboardPage() {
   }, [mealData, activityData, sleepData, userProfile, latestWeightData]);
 
   const yesterdaySummary = useMemo(() => {
-    const summary = { caloriesConsumed: 0, caloriesBurned: 0, sleepHours: 0 };
+    const summary = { caloriesConsumed: 0, caloriesBurned: 0, baseBurned: 0, exerciseBurned: 0, sleepHours: 0 };
     if (yesterdayMealData) summary.caloriesConsumed = yesterdayMealData.reduce((sum, meal: any) => sum + meal.calories, 0);
 
     if (userProfile) {
@@ -162,7 +165,10 @@ export default function DashboardPage() {
       const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
       const tdee = calculateTDEE(bmr, userProfile.activityLevel);
       const activityBurn = yesterdayActivityData ? yesterdayActivityData.reduce((sum, activity: any) => sum + activity.caloriesBurned, 0) : 0;
-      summary.caloriesBurned = tdee + activityBurn;
+      
+      summary.baseBurned = Math.round(tdee);
+      summary.exerciseBurned = Math.round(activityBurn);
+      summary.caloriesBurned = summary.baseBurned + summary.exerciseBurned;
     }
 
     if (yesterdaySleepData) summary.sleepHours = yesterdaySleepData.reduce((sum, sleep: any) => sum + sleep.duration, 0);
@@ -290,8 +296,16 @@ export default function DashboardPage() {
                     <Dumbbell className="h-4 w-4 text-accent" />
                   </div>
                   <div className="mt-auto">
-                    <CardTitle className="text-2xl font-black">{Math.round(dailySummary.caloriesBurned)} <span className="text-sm font-medium text-muted-foreground">kcal</span></CardTitle>
-                    {yesterdayActivityData && renderDiff(Math.round(dailySummary.caloriesBurned), Math.round(yesterdaySummary.caloriesBurned), 'kcal')}
+                    <CardTitle className="text-2xl font-black">{dailySummary.caloriesBurned} <span className="text-sm font-medium text-muted-foreground">kcal</span></CardTitle>
+                    <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-1">
+                      <span className="text-[10px] px-1.5 py-0.5 bg-accent/10 text-accent font-bold rounded-md border border-accent/20">
+                        {t('dashboard.baseBurn')}: {dailySummary.baseBurned}
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary font-bold rounded-md border border-primary/20">
+                        {t('dashboard.exerciseBurn')}: {dailySummary.exerciseBurned}
+                      </span>
+                    </div>
+                    {yesterdayActivityData && renderDiff(dailySummary.caloriesBurned, yesterdaySummary.caloriesBurned, 'kcal')}
                   </div>
                 </CardHeader>
               </Card>

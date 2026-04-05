@@ -88,6 +88,8 @@
   "dashboard.bmi.noData": "Please complete your profile (height and weight) to calculate your BMI.",
   "dashboard.caloriesConsumed": "Meal Log",
   "dashboard.caloriesBurned": "Workout Log",
+  "dashboard.baseBurn": "Base Burn",
+  "dashboard.exerciseBurn": "Exercise",
   "dashboard.sleepHour": "Sleep Hour",
   "dashboard.currentWeight": "Current Weight",
   "dashboard.weightTrackingTitle": "Weight Tracking",

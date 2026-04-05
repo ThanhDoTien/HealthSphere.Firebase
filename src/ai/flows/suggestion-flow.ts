@@ -17,6 +17,8 @@ const HealthSuggestionRequestSchema = z.object({
   dailySummary: z.object({
     caloriesConsumed: z.number(),
     caloriesBurned: z.number(),
+    baseBurned: z.number(),
+    exerciseBurned: z.number(),
     sleepHours: z.number(),
   }),
   recentActivities: z.array(z.string()),
@@ -56,23 +58,32 @@ export async function getHealthSuggestions(
   Dựa trên dữ liệu thực tế và tiến độ hiện tại của người dùng:
   - Mục tiêu: ${input.userProfile.goal}
   - Chỉ số cơ thể: ${input.userProfile.weight}kg, ${input.userProfile.height}cm, ${input.userProfile.age} tuổi, Giới tính: ${input.userProfile.gender}
-  - Mức độ hoạt động cơ bản: ${input.userProfile.activityLevel || 'moderate'}
-  - TIẾN ĐỘ THỰC TẾ HÔM NAY: Đã nạp ${input.dailySummary.caloriesConsumed} kcal, Đã đốt tổng cộng ${input.dailySummary.caloriesBurned} kcal (bao gồm vận động và trao đổi chất cơ bản), Đã ngủ ${input.dailySummary.sleepHours}h
+  - Mức độ hoạt động cơ bản (Mục tiêu): ${input.userProfile.activityLevel || 'moderate'}
+  
+  - TIẾN ĐỘ THỰC TẾ HÔM NAY:
+    + Đã nạp: ${input.dailySummary.caloriesConsumed} kcal
+    + Tổng tiêu thụ: ${input.dailySummary.caloriesBurned} kcal
+    + TRONG ĐÓ: Tiêu thụ nền (TDEE): ${input.dailySummary.baseBurned} kcal và Tiêu thụ qua vận động: ${input.dailySummary.exerciseBurned} kcal.
+    + Đã ngủ: ${input.dailySummary.sleepHours}h
   
   Nhiệm vụ của bạn:
-  1. Đưa ra 1 lời khuyên (generalTip) cụ thể dựa trên TIẾN ĐỘ THỰC TẾ HÔM NAY. Ví dụ: Nếu calo nạp quá nhiều so với đốt, hãy nhắc nhở điều chỉnh. Nếu vận động nhiều, hãy khích lệ phục hồi.
-  QUAN TRỌNG: Hãy sử dụng ký tự xuống dòng (\\n) để phân tách các ý trong 'generalTip', 'recipe' và 'description'. Văn bản không được dính liền thành một khối. Sau mỗi ý hoặc mỗi bước nấu ăn, HÃY XUỐNG DÒNG (\n).
-  2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) để cân bằng với lượng calo còn lại hoặc mục tiêu giảm/tăng cân. 
-  3. Đề Xuất 2-3 bài tập phù hợp với mục tiêu và mức độ mệt mỏi hiện tại.
+  1. Đưa ra 1 lời khuyên (generalTip) cụ thể dựa trên TIẾN ĐỘ THỰC TẾ. 
+     ĐẶC BIỆT: Phân tích sự cân bằng giữa Calo nạp vào và 2 loại Calo tiêu thụ. 
+     - Nếu 'Tiêu thụ qua vận động' (exerciseBurned) thấp so với mục tiêu, hãy nhắc nhở họ tập luyện thêm.
+     - Nếu 'Tiêu thụ qua vận động' cao nhưng 'Đã nạp' (caloriesConsumed) thấp, hãy nhắc họ ăn bổ sung để phục hồi.
+  QUAN TRỌNG: Hãy sử dụng ký tự xuống dòng (\\n) để phân tách các ý trong 'generalTip', 'recipe' và 'description'. Sau mỗi ý hoặc mỗi bước, HÃY XUỐNG DÒNG.
+  
+  2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) phù hợp.
+  3. Đề Xuất 2-3 bài tập phù hợp.
   4. Đối với 'recipe' , 'workoutSuggestion' và 'description', trình bày theo từng bước và sử dụng \\n sau mỗi bước.
   5. Ngôn ngữ phản hồi: ${input.language || 'vi'}.
-  6. Đối với 'imagePrompt': Viết bằng tiếng Anh, mô tả cực kỳ chi tiết về món ăn hoặc bài tập (Ví dụ: 'A close-up, high-resolution shot of...', 'Cinematic lighting, professional photography'). ĐỪNG bao gồm các từ khóa như 'Pollinations'.
+  6. Đối với 'imagePrompt': Viết bằng tiếng Anh, mô tả chi tiết.
 
-  TRẢ VỀ KẾT QUẢ DƯỚI DẠNG MỘT ĐỐI TƯỢNG JSON DUY NHẤT. KHÔNG BAO GỒM CÁC KHỐI MÃ (CODE FENCES) HOẶC VĂN BẢN THỪA.
+  TRẢ VỀ KẾT QUẢ DƯỚI DẠNG MỘT ĐỐI TƯỢNG JSON DUY NHẤT. KHÔNG BAO GỒM CÁC KHỐI MÃ (CODE FENCES).
   {
-    "generalTip": "Nội dung lời khuyên dựa trên tiến độ thực tế...\\nÝ tiếp theo...",
+    "generalTip": "Nội dung lời khuyên...\\nÝ tiếp theo...",
     "mealSuggestions": [{"name": "Tên món", "recipe": "Bước 1...\\nBước 2...", "calories": 350, "imagePrompt": "..."}],
-    "workoutSuggestion": [{"name": "Tên bài tập", "description": "Hướng dẫn:\\n- Bước 1...\\n- Bước 2...", "imagePrompt": "..."}]
+    "workoutSuggestion": [{"name": "Tên bài tập", "description": "Hướng dẫn...\\n- Bước...\\n- Bước...", "imagePrompt": "..."}]
   }`;
 
   try {

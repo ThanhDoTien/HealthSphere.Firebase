@@ -88,6 +88,8 @@
   "dashboard.bmi.noData": "Vui lòng hoàn thiện hồ sơ (chiều cao và cân nặng) để tính chỉ số BMI.",
   "dashboard.caloriesConsumed": "Nhật ký ăn uống",
   "dashboard.caloriesBurned": "Nhật ký tập luyện",
+  "dashboard.baseBurn": "Tiêu thụ nền",
+  "dashboard.exerciseBurn": "Vận động",
   "dashboard.sleepHour": "Giờ ngủ",
   "dashboard.currentWeight": "Cân nặng hiện tại",
   "dashboard.weightTrackingTitle": "Theo dõi cân nặng",

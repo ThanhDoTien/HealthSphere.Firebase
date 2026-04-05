@@ -23,6 +23,8 @@ const ChatInputSchema = z.object({
   dailySummary: z.object({
     caloriesConsumed: z.number(),
     caloriesBurned: z.number(),
+    baseBurned: z.number(),
+    exerciseBurned: z.number(),
     sleepHours: z.number(),
   }).optional(),
   // Thêm dữ liệu lịch sử
@@ -50,10 +52,11 @@ THÔNG TIN NGƯỜI DÙNG:
 - Chỉ số: {{userProfile.weight}}kg, {{userProfile.height}}cm, {{userProfile.age}} tuổi
 {{/if}}
 
-TIẾN ĐỘ HÔM NAY:
+TIẾN ĐỘ THỰC TẾ HÔM NAY:
 {{#if dailySummary}}
 - Calo nạp: {{dailySummary.caloriesConsumed}} kcal
-- Calo đốt: {{dailySummary.caloriesBurned}} kcal
+- Tổng tiêu thụ: {{dailySummary.caloriesBurned}} kcal
+- Trong đó: Tiêu thụ nền (TDEE): {{dailySummary.baseBurned}} kcal | Vận động: {{dailySummary.exerciseBurned}} kcal
 - Ngủ: {{dailySummary.sleepHours}} giờ
 {{/if}}
 
