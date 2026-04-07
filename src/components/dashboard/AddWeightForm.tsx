@@ -6,10 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
   collection,
-  addDoc,
   doc,
-  updateDoc,
   setDoc,
+  updateDoc,
 } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
@@ -56,7 +55,7 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
   });
 
   const onSubmit = async (data: FormValues) => {
-    const weightLogDocRef = doc(firestore, `users/${userId}/weights`, data.date);
+    const weightLogRef = collection(firestore, `users/${userId}/weights`);
     const weightLogData = {
       userId: userId,
       weight: data.weight,
@@ -64,8 +63,9 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
     };
 
     try {
-      // Dùng setDoc với merge: true để ghi đè nếu đã có bản ghi cho ngày này
-      await setDoc(weightLogDocRef, weightLogData, { merge: true });
+      // Sử dụng Ngày làm ID để tự động ghi đè nếu đã tồn tại (một ngày một bản ghi)
+      const weightLogRef = doc(firestore, `users/${userId}/weights`, data.date);
+      await setDoc(weightLogRef, weightLogData, { merge: true });
 
       // Tự động cập nhật vào Hồ sơ chính (Profile)
       const userRef = doc(firestore, 'users', userId);
@@ -80,8 +80,8 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
       errorEmitter.emit(
         'permission-error',
         new FirestorePermissionError({
-          path: weightLogDocRef.path,
-          operation: 'create',
+          path: `users/${userId}/weights/${data.date}`,
+          operation: 'write',
           requestResourceData: weightLogData,
         })
       );
