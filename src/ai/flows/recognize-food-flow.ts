@@ -55,7 +55,7 @@ export type RecognizeFoodResponse = z.infer<typeof RecognizeFoodResponseSchema>;
 
 // Initialize Google AI
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
 const prompt = `You are an expert nutritionist. Your task is to analyze the image of a meal provided by the user and identify all the food items present.
 

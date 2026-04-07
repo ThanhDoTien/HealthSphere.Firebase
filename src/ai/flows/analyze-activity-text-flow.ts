@@ -29,7 +29,7 @@ export type AnalyzeActivityOutput = z.infer<typeof AnalyzeActivityOutputSchema>;
 
 const analyzeActivityPrompt = ai.definePrompt({
   name: 'analyzeActivityPrompt',
-  model: 'googleai/gemini-3.1-flash-lite-preview',
+  model: 'googleai/gemini-3-flash-preview',
   input: { schema: AnalyzeActivityInputSchema },
   output: { schema: AnalyzeActivityOutputSchema },
   prompt: `

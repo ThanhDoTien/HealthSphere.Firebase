@@ -25,7 +25,7 @@ export type AnalyzeNutritionOutput = z.infer<typeof AnalyzeNutritionOutputSchema
 
 const analyzeNutritionPrompt = ai.definePrompt({
   name: 'analyzeNutritionPrompt',
-  model: 'googleai/gemini-3.1-flash-lite-preview',
+  model: 'googleai/gemini-3-flash-preview',
   input: { schema: AnalyzeNutritionInputSchema },
   output: { schema: AnalyzeNutritionOutputSchema },
   prompt: `

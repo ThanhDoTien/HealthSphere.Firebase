@@ -28,7 +28,7 @@ export type DiscoverArticlesOutput = z.infer<typeof DiscoverArticlesOutputSchema
 
 const discoverArticlesPrompt = ai.definePrompt({
   name: 'discoverArticlesPrompt',
-  model: 'googleai/gemini-3.1-flash-lite-preview',
+  model: 'googleai/gemini-3-flash-preview',
   input: { schema: DiscoverArticlesInputSchema },
   output: { schema: DiscoverArticlesOutputSchema },
   prompt: `

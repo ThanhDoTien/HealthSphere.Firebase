@@ -75,14 +75,15 @@ const createUserProfile = async (
     console.error("Cannot connect to backend sync:", err);
   }
 
-  // Khởi tạo nhật ký cân nặng đầu tiên
-  const weightLogRef = collection(firestore, `users/${userId}/weights`);
+  // Khởi tạo nhật ký cân nặng đầu tiên (Dùng Ngày làm ID để đồng bộ)
+  const today = new Date().toISOString().split('T')[0];
+  const weightLogDocRef = doc(firestore, `users/${userId}/weights/${today}`);
   const weightLogData = {
     userId: userId,
     weight: data.weight,
-    date: new Date().toISOString().split('T')[0],
+    date: today,
   };
-  await addDoc(weightLogRef, weightLogData);
+  await setDoc(weightLogDocRef, weightLogData);
 };
 
 export const updateUserProfile = async (
@@ -105,6 +106,17 @@ export const updateUserProfile = async (
     );
     throw error;
   });
+
+  // Đồng bộ sang Nhật ký cân nặng nếu có thay đổi cân nặng
+  if (data.weight !== undefined) {
+    const today = new Date().toISOString().split('T')[0];
+    const weightLogDocRef = doc(firestore, `users/${userId}/weights/${today}`);
+    await setDoc(weightLogDocRef, {
+      userId: userId,
+      weight: data.weight,
+      date: today
+    }, { merge: true });
+  }
 };
 
 export const signUp = async (data: SignUpData): Promise<UserCredential> => {

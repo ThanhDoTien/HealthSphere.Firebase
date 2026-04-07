@@ -9,6 +9,7 @@ import {
   addDoc,
   doc,
   updateDoc,
+  setDoc,
 } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
@@ -55,7 +56,7 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
   });
 
   const onSubmit = async (data: FormValues) => {
-    const weightLogRef = collection(firestore, `users/${userId}/weights`);
+    const weightLogDocRef = doc(firestore, `users/${userId}/weights`, data.date);
     const weightLogData = {
       userId: userId,
       weight: data.weight,
@@ -63,7 +64,8 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
     };
 
     try {
-      await addDoc(weightLogRef, weightLogData);
+      // Dùng setDoc với merge: true để ghi đè nếu đã có bản ghi cho ngày này
+      await setDoc(weightLogDocRef, weightLogData, { merge: true });
 
       // Tự động cập nhật vào Hồ sơ chính (Profile)
       const userRef = doc(firestore, 'users', userId);
@@ -78,7 +80,7 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
       errorEmitter.emit(
         'permission-error',
         new FirestorePermissionError({
-          path: weightLogRef.path,
+          path: weightLogDocRef.path,
           operation: 'create',
           requestResourceData: weightLogData,
         })
