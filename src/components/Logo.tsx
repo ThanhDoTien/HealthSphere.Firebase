@@ -1,22 +1,17 @@
 import { cn } from '@/lib/utils';
-import { type SVGProps } from 'react';
+import Image from 'next/image';
 
-export function Logo(props: SVGProps<SVGSVGElement>) {
+export function Logo({ className }: { className?: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <title>HealthSphere Logo</title>
-      <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" />
-      <path d="M12 8v8" />
-      <path d="M8 12h8" />
-    </svg>
+    <div className={cn("relative overflow-hidden rounded-full", className)}>
+      <Image
+        src="/logo.png"
+        alt="HealthSphere Logo"
+        width={40}
+        height={40}
+        className="object-cover"
+        priority
+      />
+    </div>
   );
 }

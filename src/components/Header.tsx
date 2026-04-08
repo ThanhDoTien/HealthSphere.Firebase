@@ -33,36 +33,8 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-between px-4">
-        <div className="flex items-center">
-          <Link href="/" className="mr-4 flex items-center space-x-2 sm:mr-6">
-            <Logo className="h-5 w-5 text-primary" />
-            <span className="hidden font-bold sm:inline-block text-sm">
-              HealthSphere
-            </span>
-          </Link>
-          <nav className="hidden items-center space-x-1 md:flex">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex items-center rounded-md px-2 py-1.5 transition-colors text-[10px] font-medium',
-                  pathname?.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')
-                    ? 'bg-muted font-semibold text-foreground'
-                    : 'text-foreground/70 hover:text-foreground'
-                )}
-              >
-                <item.icon className={cn(
-                  "mr-1 h-3 w-3",
-                  pathname?.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard') ? "text-primary" : "text-foreground/70"
-                )} />
-                {t(item.labelKey)}
-              </Link>
-            ))}
-          </nav>
-        </div>
-
+      <div className="container flex h-16 items-center justify-between px-4 relative">
+        {/* Mobile Menu - Moved to Left */}
         <div className="flex items-center md:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -82,6 +54,45 @@ export default function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {/* Logo & Brand - Left-aligned with conditional routing */}
+        <div className="flex items-center">
+          <Link 
+            href={user ? "/dashboard" : "/"} 
+            className="flex items-center space-x-2 absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0"
+          >
+            <Logo className="h-8 w-8" />
+            <span className="font-bold text-lg tracking-tight hidden sm:inline-block">
+              <span style={{ color: '#64B5F6' }}>Health</span>
+              <span style={{ color: '#4CAF50' }}>Sphere</span>
+            </span>
+          </Link>
+        </div>
+
+        {/* Desktop Navigation - Centered like Facebook */}
+        <div className="hidden md:flex flex-1 justify-center">
+          <nav className="flex items-center space-x-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'flex flex-col items-center justify-center rounded-lg px-6 py-1 transition-all duration-200 border-b-2 border-transparent hover:bg-muted',
+                  pathname?.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')
+                    ? 'border-primary text-primary'
+                    : 'text-foreground/70 hover:text-foreground'
+                )}
+              >
+                <item.icon className={cn(
+                  "h-6 w-6 mb-0.5",
+                  pathname?.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard') ? "text-primary" : "text-foreground/70"
+                )} />
+                <span className="text-[10px] uppercase font-bold tracking-widest">{t(item.labelKey)}</span>
+              </Link>
+            ))}
+          </nav>
+        </div>
+
 
         <div className="flex items-center justify-end space-x-2">
           <DropdownMenu>

@@ -9,10 +9,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useUser } from '@/firebase/auth/use-user';
-import { useFirestore } from '@/firebase/provider';
+import { useFirestore, useDoc } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy, doc, deleteDoc, limit, where } from 'firebase/firestore';
+import { collection, query, orderBy, doc, deleteDoc, limit, where, setDoc, serverTimestamp } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { PieChart } from '@/components/ui/pie-chart';
 import { type ChartConfig } from '@/components/ui/chart';
@@ -142,9 +142,22 @@ export default function CaloriesPage() {
     );
   }, [firestore, user]);
 
+  const suggestionDocRef = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return doc(firestore, 'users', user.uid, 'todaysuggestions', today);
+  }, [firestore, user, today]);
+
   const { data: mealData, isLoading: mealLoading } = useCollection<Meal>(mealQuery);
   const { data: activityData } = useCollection<Activity>(activityQuery);
   const { data: latestWeightData } = useCollection<WeightLog>(weightQuery);
+  const { data: suggestionData, isLoading: suggestionLoading } = useDoc<any>(suggestionDocRef);
+
+  // Rehydrate AI Analysis from Firestore if it exists
+  useEffect(() => {
+    if (suggestionData?.nutritionAnalysis) {
+      setAiAnalysis(suggestionData.nutritionAnalysis);
+    }
+  }, [suggestionData]);
 
   const totalActivityBurn = useMemo(() => {
     if (!activityData) return 0;
@@ -181,7 +194,17 @@ export default function CaloriesPage() {
   }, [mealData, today]);
 
   useEffect(() => {
+    if (suggestionLoading) return;
     if (totals.calories > 0 && userProfile) {
+      // Don't re-run if we already have up-to-date data in Firestore
+      if (suggestionData?.nutritionAnalysis && !suggestionLoading) {
+        // Simple staleness check - if totals match approximately, don't re-run
+        const snap = suggestionData.nutritionAnalysis.snapshot;
+        if (snap && Math.abs(snap.calories - totals.calories) < 20) {
+          return;
+        }
+      }
+
       const runAnalysis = async () => {
         setIsAnalyzing(true);
         try {
@@ -194,7 +217,19 @@ export default function CaloriesPage() {
             goal: userProfile.goal,
             language: locale,
           });
+          
           setAiAnalysis(result);
+
+          // Save to Firestore
+          if (suggestionDocRef) {
+            await setDoc(suggestionDocRef, {
+              nutritionAnalysis: {
+                ...result,
+                updatedAt: serverTimestamp(),
+                snapshot: { calories: totals.calories }
+              }
+            }, { merge: true });
+          }
         } catch (error) {
           console.error("AI Analysis Error:", error);
         } finally {
@@ -205,7 +240,7 @@ export default function CaloriesPage() {
     } else if (!mealLoading && totals.calories === 0) {
       setAiAnalysis(null);
     }
-  }, [totals, userProfile, locale, mealLoading]);
+  }, [totals, userProfile, locale, mealLoading, suggestionDocRef, suggestionData, suggestionLoading]);
 
   const chartData = useMemo(() => {
     if (!mealData) return [];

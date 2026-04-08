@@ -173,9 +173,10 @@ export default function AiMealChatLog({ userId }: AiMealChatLogProps) {
           </div>
         ))}
         {isAnalyzing && (
-          <div className="flex justify-start animate-pulse">
-            <div className="bg-muted rounded-2xl rounded-tl-none px-4 py-2 border">
+          <div className="flex justify-start animate-in fade-in duration-300">
+            <div className="bg-muted rounded-2xl rounded-tl-none px-4 py-2 border flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-xs text-muted-foreground font-medium">{t('ai.thinking')}</span>
             </div>
           </div>
         )}

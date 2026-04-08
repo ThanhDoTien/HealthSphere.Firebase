@@ -9,10 +9,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useUser } from '@/firebase/auth/use-user';
-import { useFirestore } from '@/firebase/provider';
+import { useFirestore, useDoc } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy, limit, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, limit, doc, deleteDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
 import { Loader2, Zap, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle, TrendingUp } from 'lucide-react';
@@ -112,11 +112,24 @@ export default function ActivityPage() {
     );
   }, [firestore, user]);
 
+  const suggestionDocRef = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return doc(firestore, 'users', user.uid, 'todaysuggestions', today);
+  }, [firestore, user, today]);
+
   const { data: activityData, isLoading: activityLoading } = useCollection<Activity>(
     activityQuery
   );
 
   const { data: latestWeightData } = useCollection<WeightLog>(weightQuery);
+  const { data: suggestionData, isLoading: suggestionLoading } = useDoc<any>(suggestionDocRef);
+
+  // Rehydrate AI Analysis from Firestore if it exists
+  useEffect(() => {
+    if (suggestionData?.activityAnalysis) {
+      setAiAnalysis(suggestionData.activityAnalysis);
+    }
+  }, [suggestionData]);
 
   const baseBurn = useMemo(() => {
     if (!userProfile) return { bmr: 0, tdee: 0 };
@@ -154,7 +167,17 @@ export default function ActivityPage() {
   const remainingToBurn = Math.max(0, movementGoal - totalBurnedToday);
 
   useEffect(() => {
+    if (suggestionLoading) return;
     if (todayActivities.length > 0 && userProfile && baseBurn.tdee > 0) {
+      // Don't re-run if we already have up-to-date data in Firestore
+      if (suggestionData?.activityAnalysis && !suggestionLoading) {
+        // Simple staleness check - if total burned matches approximately, don't re-run
+        const snap = suggestionData.activityAnalysis.snapshot;
+        if (snap && Math.abs(snap.totalBurned - totalBurnedToday) < 10) {
+          return;
+        }
+      }
+
       const runAnalysis = async () => {
         setIsAnalyzing(true);
         try {
@@ -165,7 +188,19 @@ export default function ActivityPage() {
             goal: userProfile.goal,
             language: locale,
           });
+          
           setAiAnalysis(result);
+
+          // Save to Firestore
+          if (suggestionDocRef) {
+            await setDoc(suggestionDocRef, {
+              activityAnalysis: {
+                ...result,
+                updatedAt: serverTimestamp(),
+                snapshot: { totalBurned: totalBurnedToday }
+              }
+            }, { merge: true });
+          }
         } catch (error) {
           console.error("AI Activity Analysis Error:", error);
         } finally {
@@ -176,7 +211,7 @@ export default function ActivityPage() {
     } else if (!activityLoading && todayActivities.length === 0) {
       setAiAnalysis(null);
     }
-  }, [totalBurnedToday, todayActivities, userProfile, baseBurn.tdee, locale, activityLoading]);
+  }, [totalBurnedToday, todayActivities, userProfile, baseBurn.tdee, locale, activityLoading, suggestionDocRef, suggestionData, suggestionLoading]);
 
   const chartData = useMemo(() => {
     if (!activityData) return [];
@@ -395,8 +430,12 @@ export default function ActivityPage() {
             </CardContent>
           </Card>
 
-          <div>
-            <h3 className="mb-4 text-lg font-medium">{t('activity.logTitle')}</h3>
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">{t('activity.logTitle')}</h3>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+              <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">{t('activity.manualSeparator')}</span></div>
+            </div>
             {user && <AiActivityChatLog userId={user.uid} />}
           </div>
 

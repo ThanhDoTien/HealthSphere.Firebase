@@ -9,10 +9,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useUser } from '@/firebase/auth/use-user';
-import { useFirestore } from '@/firebase/provider';
+import { useFirestore, useDoc } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
 import AddSleepForm from '@/components/dashboard/AddSleepForm';
@@ -64,9 +64,23 @@ export default function SleepPage() {
     );
   }, [firestore, user]);
 
+  const suggestionDocRef = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return doc(firestore, 'users', user.uid, 'todaysuggestions', today);
+  }, [firestore, user, today]);
+
   const { data: sleepData, isLoading: sleepLoading } = useCollection<Sleep>(
     sleepQuery
   );
+
+  const { data: suggestionData, isLoading: suggestionLoading } = useDoc<any>(suggestionDocRef);
+
+  // Rehydrate AI Analysis from Firestore if it exists
+  useEffect(() => {
+    if (suggestionData?.sleepAnalysis) {
+      setAiAnalysis(suggestionData.sleepAnalysis);
+    }
+  }, [suggestionData]);
 
   const todaySleep = useMemo(() => {
     if (!sleepData || !today) return 0;
@@ -76,7 +90,17 @@ export default function SleepPage() {
 
   // Sleep AI Analysis Effect
   useEffect(() => {
+    if (suggestionLoading) return;
     if (todaySleep > 0 && userProfile) {
+      // Don't re-run if we already have up-to-date data in Firestore
+      if (suggestionData?.sleepAnalysis && !suggestionLoading) {
+        // Simple staleness check - if duration matches exactly, don't re-run
+        const snap = suggestionData.sleepAnalysis.snapshot;
+        if (snap && snap.duration === todaySleep) {
+          return;
+        }
+      }
+
       const runAnalysis = async () => {
         setIsAnalyzing(true);
         try {
@@ -86,7 +110,19 @@ export default function SleepPage() {
             goal: userProfile.goal,
             language: locale,
           });
+          
           setAiAnalysis(result);
+
+          // Save to Firestore
+          if (suggestionDocRef) {
+            await setDoc(suggestionDocRef, {
+              sleepAnalysis: {
+                ...result,
+                updatedAt: serverTimestamp(),
+                snapshot: { duration: todaySleep }
+              }
+            }, { merge: true });
+          }
         } catch (error) {
           console.error("AI Sleep Analysis Error:", error);
         } finally {
@@ -97,7 +133,7 @@ export default function SleepPage() {
     } else if (!sleepLoading && todaySleep === 0) {
       setAiAnalysis(null);
     }
-  }, [todaySleep, userProfile, locale, sleepLoading]);
+  }, [todaySleep, userProfile, locale, sleepLoading, suggestionDocRef, suggestionData, suggestionLoading]);
 
   const chartData = useMemo(() => {
     if (!sleepData) return [];
