@@ -15,6 +15,7 @@ import { useUser } from '@/firebase/auth/use-user';
 import { useTranslation } from '@/context/LanguageContext';
 import { discoverArticles, type DiscoverArticlesOutput } from '@/ai/flows/discover-articles-flow';
 import { Loader2, Search, ExternalLink, RefreshCw, BookOpen, Globe } from 'lucide-react';
+import HealthShorts from '@/components/dashboard/HealthShorts';
 
 // SimpleBadge component
 function SimpleBadge({ children, className }: { children: React.ReactNode, className?: string }) {
@@ -72,6 +73,11 @@ export default function DiscoverPage() {
           {t('discover.refresh') || 'Làm mới tin tức'}
         </Button>
       </header>
+
+      {/* Suggested YouTube Shorts */}
+      <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <HealthShorts />
+      </section>
 
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4 bg-muted/20 rounded-3xl border-2 border-dashed">
