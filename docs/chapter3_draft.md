@@ -54,13 +54,23 @@ Hệ thống được thiết kế theo mô hình **Client-Server** hiện đạ
 | **activityName** | string | Not null | Tên bài tập |
 | **caloriesBurned** | number | Not null | Calo tiêu thụ |
 
+#### Bảng 5: Today_Suggestions (Gợi ý AI hàng ngày)
+| Tên thuộc tính | Kiểu dữ liệu | Ràng buộc | Mô tả |
+| :--- | :---: | :---: | :--- |
+| **userId** | string | **Khóa chính (Sub)** | Liên kết với Users(uid) |
+| **date** | string | **Khóa chính (Sub)** | Ngày tạo gợi ý |
+| **caloriesAnalysis** | map | - | Phân tích dinh dưỡng của AI (Status, Analysis) |
+| **activityAnalysis** | map | - | Phân tích vận động của AI (Status, Analysis) |
+| **sleepAnalysis** | map | - | Phân tích giấc ngủ của AI (Status, Analysis) |
+
 ## 3.3. Thiết kế giao diện (UI Design Concept)
 
 Hệ thống được thiết kế theo phong cách hiện đại (Modern UI) với các màn hình chính sau:
 
 - **Mockup màn hình đăng nhập:** Thiết kế tối giản với Form nhập liệu trung tâm, tích hợp thông báo lỗi thời gian thực và liên kết chuyển đổi giữa Đăng nhập/Đăng ký.
 - **Mockup trang Dashboard:** 
-    - Phía trên: Các thẻ chỉ số tổng quan (BMI Meter, Calo nạp, Calo tiêu thụ).
-    - Phía dưới: Biểu đồ theo dõi tiến độ cân nặng (Line Chart) và Nhật ký hoạt động gần đây.
+    - **Thanh điều hướng tập trung (Facebook-style Navbar):** Sử dụng Layout cao 16 đơn vị (h-16), căn giữa các mục chuyển đổi chính trên Desktop, kết hợp màu thương hiệu đặc trưng: Xanh biển (#64B5F6) cho "Health" và Xanh lá (#4CAF50) cho "Sphere".
+    - **Thẻ chỉ số tổng quan:** BMI Meter, Calo nạp, Calo tiêu thụ.
+    - **Trực quan hóa:** Biểu đồ theo dõi tiến độ cân nặng (Line Chart) và Nhật ký hoạt động gần đây.
 - **Mockup trang nhập dữ liệu:** Sử dụng các Dialog (hộp thoại) nổi để người dùng nhập nhanh cân nặng, bữa ăn mà không phải rời trang Dashboard.
 - **Mockup trang tư vấn AI:** Khu vực hiển thị kết quả phân tích từ AI với các thẻ "Suggest" chứa hình ảnh minh họa chân thực và mô tả chi tiết bài tập/món ăn.

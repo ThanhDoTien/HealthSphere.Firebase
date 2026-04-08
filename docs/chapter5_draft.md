@@ -17,6 +17,7 @@ Quy trình kiểm thử được thực hiện nghiêm ngặt để đảm bảo
 | 2 | **Test nhập dữ liệu** | Nhập thông tin bữa ăn, cân nặng và các hoạt động. | Dữ liệu xuất hiện ngay trên biểu đồ và nhật ký hàng ngày. | Thành công |
 | 3 | **Test tính calo** | Nhập 02 bữa ăn (ví dụ: 1200 kcal) và 01 hoạt động tập luyện. | Hệ thống cộng dồn chính xác Calo nạp vào và trừ Calo tiêu thụ. | Thành công |
 | 4 | **Test thuật toán tư vấn** | Thay đổi cân nặng để BMI chuyển từ "Bình thường" sang "Thừa cân". | AI tự động cập nhật gợi ý món ăn ít calo và bài tập Cardio. | Thành công |
+| 5 | **Test độ ổn định AI** | Tải lại trang (Refresh) hoặc chuyển trang liên tục. | Gợi ý AI được giữ nguyên, không bị gọi lại dư thừa hoặc mất dữ liệu. | Thành công |
 
 # KẾT LUẬN – HƯỚNG PHÁT TRIỂN
 
@@ -26,10 +27,10 @@ Quy trình kiểm thử được thực hiện nghiêm ngặt để đảm bảo
 
 ### 1.2. Đánh giá mức độ hoàn thành mục tiêu
 Dựa trên các mục tiêu đã đề ra ban đầu, đồ án đã hoàn thành các nhiệm vụ cốt lõi:
-- **Xây dựng hệ thống quản lý chỉ số:** Lưu trữ và biểu diễn trực quan hóa dữ liệu cân nặng, calo, hoạt động và giấc ngủ.
-- **Tư vấn AI thông minh:** Triển khai thành công các luồng xử lý AI để đưa lại những gợi ý dinh dưỡng và bài tập cá nhân hóa 100%.
-- **Tối ưu hóa kỹ thuật:** Giải quyết triệt để bài toán chi phí và hiệu suất thông qua cơ chế bộ nhớ đệm hình ảnh (Shared Image Caching).
-- **Trải nghiệm người dùng:** Đạt được độ hoàn thiện cao về giao diện (UI/UX), hỗ trợ đa ngôn ngữ và hoạt động ổn định trên môi trường thực tế.
+- **Xây dựng hệ thống quản lý chỉ số:** Lưu trữ và biểu diễn trực quan hóa dữ liệu cân nặng, calo, hoạt động và giấc ngủ với độ chính xác cao.
+- **Tư vấn AI thông minh & Bền vững:** Triển khai thành công các luồng xử lý AI (Gemini 3 Flash) để đưa lại những gợi ý cá nhân hóa và đảm bảo tính bền vững của dữ liệu thông qua cơ chế Persistence thông minh.
+- **Tối ưu hóa kỹ thuật:** Giải quyết triệt để bài toán chi phí và hiệu suất thông qua cơ chế bộ nhớ đệm hình ảnh và Loading Guards.
+- **Trải nghiệm người dùng:** Đạt được độ hoàn thiện cao về giao diện (Premium Facebook-style Navbar), hỗ trợ đa ngôn ngữ và hoạt động ổn định trên môi trường thực tế.
 
 ## 2. Hướng phát triển
 Để nâng tầm HealthSphere từ một đồ án khóa luận thành một sản phẩm thương mại thực tế, các hướng phát triển sau sẽ được ưu tiên:

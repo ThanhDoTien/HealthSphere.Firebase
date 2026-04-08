@@ -66,6 +66,7 @@ export default function DashboardPage() {
   const [weightFilter, setWeightFilter] = useState('30');
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [dailyTipKey, setDailyTipKey] = useState('');
 
   const hasAttemptedGeneration = useRef(false);
 
@@ -79,6 +80,10 @@ export default function DashboardPage() {
     const yest = new Date(now);
     yest.setDate(yest.getDate() - 1);
     setYesterday(`${yest.getFullYear()}-${String(yest.getMonth() + 1).padStart(2, '0')}-${String(yest.getDate()).padStart(2, '0')}`);
+
+    // Pick a random tip for the day
+    const tips = ['waterReminder', 'activityReminder', 'genericTip'];
+    setDailyTipKey(tips[Math.floor(Math.random() * tips.length)]);
   }, []);
 
   const weightQuery = useMemoFirebase(() => {
@@ -265,6 +270,22 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold tracking-tight">
           {userProfile?.name ? t('dashboard.welcome', { name: userProfile.name }) : t('dashboard.welcomeUser')}
         </h1>
+        
+        {/* Daily Dashboard Notification/Reminder */}
+        <div className="mt-2 mb-3">
+          {userProfile && (!userProfile.height || !userProfile.weight) ? (
+            <Link href="/dashboard/profile" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-100 text-orange-700 text-sm font-bold border border-orange-200 hover:bg-orange-200 transition-colors">
+              <AlertCircle className="h-4 w-4" />
+              {t('dashboard.notification.incompleteProfile')}
+            </Link>
+          ) : dailyTipKey ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-sm font-bold border border-blue-100 italic">
+              <Sparkles className="h-4 w-4 text-primary" />
+              {t(`dashboard.notification.${dailyTipKey}`)}
+            </div>
+          ) : null}
+        </div>
+
         <p className="text-muted-foreground text-lg">{t('dashboard.summary')}</p>
       </header>
 

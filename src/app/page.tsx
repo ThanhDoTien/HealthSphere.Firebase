@@ -161,7 +161,7 @@ export default function HomePage() {
        {/* Footer */}
       <footer className="py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-            {t('home.footer.copyright')}
+            {t('home.footer.copyright')} | Contact: <a href="mailto:healthsphere.vn@gmail.com" className="hover:text-primary transition-colors underline">healthsphere.vn@gmail.com</a>
         </div>
       </footer>
     </div>

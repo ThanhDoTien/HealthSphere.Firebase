@@ -61,8 +61,8 @@ export default function Header() {
             href={user ? "/dashboard" : "/"} 
             className="flex items-center space-x-2 absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0"
           >
-            <Logo className="h-8 w-8" />
-            <span className="font-bold text-lg tracking-tight hidden sm:inline-block">
+            <Logo className="h-10 w-10" />
+            <span className="font-bold text-xl tracking-tight hidden sm:inline-block">
               <span style={{ color: '#64B5F6' }}>Health</span>
               <span style={{ color: '#4CAF50' }}>Sphere</span>
             </span>
@@ -97,8 +97,8 @@ export default function Header() {
         <div className="flex items-center justify-end space-x-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Globe className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="h-10 w-10">
+                <Globe className="h-6 w-6 text-foreground/70" />
                 <span className="sr-only">{t('header.toggleLanguage')}</span>
               </Button>
             </DropdownMenuTrigger>
@@ -108,8 +108,8 @@ export default function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
           {user && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => logout()}>
-              <LogOut className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => logout()}>
+              <LogOut className="h-6 w-6" />
               <span className="sr-only">{t('profile.logout')}</span>
             </Button>
           )}

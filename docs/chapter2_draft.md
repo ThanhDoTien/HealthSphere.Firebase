@@ -25,17 +25,18 @@ Nơi lưu trữ và phân tích các chỉ số sinh học:
 - **Theo dõi cân nặng theo thời gian:** Trực quan hóa tiến trình sức khỏe thông qua biểu đồ thống kê.
 
 ### 2.2.3. Ghi nhận chế độ ăn và vận động
-Kiểm soát dòng năng lượng nạp vào và tiêu hao hàng ngày:
-- **Nhập bữa ăn:** Ghi lại danh sách thực phẩm tiêu thụ.
-- **Tính lượng calo:** Tự động quy đổi thực phẩm thành chỉ số năng lượng (kcal).
-- **Lưu lịch sử ăn uống:** Xem lại nhật ký dinh dưỡng của các ngày trước đó.
-- **Lưu lịch sử vận động:** Theo dõi các hoạt động thể chất và lượng calo đã đốt cháy.
+Kiểm soát dòng năng lượng nạp vào và tiêu hao hàng ngày với hỗ trợ đa phương thức:
+- **Nhập bữa ăn đa phương thức:** Ghi lại thực phẩm thông qua nhập liệu văn bản truyền thống hoặc sử dụng **nhận diện hình ảnh trực tiếp** từ camera/thư viện ảnh giúp đơn giản hóa việc tra cứu calo.
+- **Tính lượng calo tự động:** Sử dụng AI để quy đổi thực phẩm hoặc hình ảnh thành chỉ số năng lượng (kcal) và các thành phần dinh dưỡng (Protein, Carbs, Fat, Fiber).
+- **Lưu lịch sử ăn uống:** Xem lại nhật ký dinh dưỡng chi tiết theo thời gian thực.
+- **Lưu lịch sử vận động:** Theo dõi các hoạt động thể chất và lượng calo đã đốt cháy thông qua mô tả ngôn ngữ tự nhiên (NLP).
 
 ### 2.2.4. Hệ thống tư vấn sức khỏe thông minh
-Phân hệ cốt lõi sử dụng trí tuệ nhân tạo:
-- **Gợi ý chế độ ăn:** Đưa ra thực đơn 4 bữa/ngày dựa trên mục tiêu TDEE.
-- **Cảnh báo vượt mức calo:** Thông báo khi lượng năng lượng nạp vào vượt ngưỡng an toàn.
-- **Gợi ý cải thiện cân nặng:** Đưa ra lộ trình bài tập và chế độ ăn để đưa chỉ số BMI về trạng thái lý tưởng.
+Phân hệ cốt lõi sử dụng trí tuệ nhân tạo thế hệ mới:
+- **Gợi ý chế độ ăn cá nhân hóa:** Đưa ra thực đơn dựa trên mục tiêu TDEE và sở thích cá nhân.
+- **Bền vững hóa gợi ý (AI Persistence):** Hệ thống có khả năng lưu trữ và duy trì các phân tích AI trong suốt cả ngày, đảm bảo người dùng không bị mất dữ liệu khi tải lại trang hoặc chuyển đổi giữa các module khác nhau.
+- **Cảnh báo vượt mức calo:** Thông báo trực quan khi lượng năng lượng nạp vào tiệm cận hoặc vượt ngưỡng an toàn.
+- **Gợi ý tập luyện thông minh:** Đề xuất lộ trình dựa trên chỉ số BMI thực tế và mức tản nhiệt năng lượng hàng ngày.
 
 ### 2.2.5. Lưu lịch sử và thống kê
 Tổng hợp kết quả sau quá trình theo dõi:

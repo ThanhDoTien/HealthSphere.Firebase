@@ -5,8 +5,8 @@ Hệ thống HealthSphere được xây dựng dựa trên các công nghệ hi�
 - **Framework & Ngôn ngữ:** Next.js 14 (App Router) kết hợp TypeScript.
 - **Giao diện (UI/UX):** Tailwind CSS và bộ thư viện ShadCN UI mang lại giao diện cao cấp (Premium).
 - **Trí tuệ nhân tạo (AI):** 
-    - **Google Gemini 1.5 Flash:** Dùng cho phân tích dữ liệu và tư vấn văn bản.
-    - **Gemini 3.1 Flash Image (REST API):** Dùng để minh họa hình ảnh thực tế.
+    - **Google Gemini 3 Flash Preview:** Dùng cho phân tích dữ liệu, reasoning và tư vấn văn bản chuyên sâu.
+    - **Gemini 1.5 Flash (REST API):** Dùng để minh họa hình ảnh thực tế thông qua các luồng API tự động.
 - **Cơ sở hạ tầng Cloud (Firebase):** 
     - **Authentication:** Quản lý truy cập an toàn.
     - **Firestore:** Lưu trữ dữ liệu thời gian thực (Real-time).
@@ -78,3 +78,13 @@ Dựa trên các chỉ số **BMI**, **TDEE** và **Mục tiêu cá nhân** (Gi�
 1. **Phân tích khoảng cách năng lượng:** AI tính toán sự chênh lệch giữa Calo nạp vào thực tế và TDEE mục tiêu.
 2. **Gợi ý thực đơn (Meal Suggestions):** Lựa chọn món ăn đảm bảo phân bổ tỷ lệ: Carbs (50-60%), Protein (20-25%), Fats (20-25%).
 3. **Gợi ý tập luyện (Workout Suggestion):** Đề xuất các bài tập đốt cháy calo dựa trên chỉ số BMI hiện tại (ưu tiên Cardio cho BMI cao, ưu tiên Yoga/Streching cho BMI thấp hoặc trung bình).
+
+### 4.2.5. Cơ chế lưu trữ bền vững gợi ý AI (Persistence)
+Nhằm cải thiện trải nghiệm và tối ưu hóa tài nguyên, hệ thống triển khai cơ chế kiểm tra trạng thái trước khi gọi AI:
+- **Loading Guards:** Sử dụng trạng thái `suggestionLoading` để đồng bộ với Firestore. AI chỉ được kích hoạt nếu dữ liệu trong ngày hôm nay chưa tồn tại hoặc bị lỗi.
+- **Race-condition Prevention:** Đảm bảo các tiến trình không ghi đè dữ liệu lẫn nhau khi người dùng chuyển đổi trang nhanh hoặc tải lại trang liên tục.
+
+### 4.2.6. Xử lý đa ngôn ngữ và bản địa hóa (i18n)
+Hệ thống hỗ trợ hoàn toàn tiếng Việt (VI) và tiếng Anh (EN):
+- **Cấu trúc:** Sử dụng các tệp JSON tập trung để quản lý toàn bộ nhãn (Labels), thông báo và nội dung giao diện.
+- **Logic:** Context Provider (`LanguageContext`) quản lý trạng thái ngôn ngữ toàn cục, cho phép thay đổi tức thì mà không cần tải lại trình duyệt.

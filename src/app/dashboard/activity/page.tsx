@@ -15,7 +15,7 @@ import { useMemoFirebase } from '@/firebase/provider';
 import { collection, query, orderBy, limit, doc, deleteDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
-import { Loader2, Zap, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle, TrendingUp } from 'lucide-react';
+import { Loader2, Zap, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle, TrendingUp, Heart, Activity, Plus } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { useTranslation } from '@/context/LanguageContext';
 import {
@@ -56,6 +56,8 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import AiActivityChatLog from '@/components/dashboard/AiActivityChatLog';
 import { analyzeActivityBalance, type AnalyzeActivityBalanceOutput } from '@/ai/flows/analyze-activity-balance-flow';
 import { cn } from '@/lib/utils';
+import AddHeartRateForm from '@/components/dashboard/AddHeartRateForm';
+import AddBloodPressureForm from '@/components/dashboard/AddBloodPressureForm';
 
 type Activity = {
   name: string;
@@ -83,6 +85,8 @@ export default function ActivityPage() {
   const [today, setToday] = useState('');
   const [aiAnalysis, setAiAnalysis] = useState<AnalyzeActivityBalanceOutput | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isHRDialogOpen, setIsHRDialogOpen] = useState(false);
+  const [isBPDialogOpen, setIsBPDialogOpen] = useState(false);
 
   useEffect(() => {
     setToday(new Date().toISOString().split('T')[0]);
@@ -112,6 +116,24 @@ export default function ActivityPage() {
     );
   }, [firestore, user]);
 
+  const hrQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'heart_rates'),
+      orderBy('date', 'desc'),
+      limit(1)
+    );
+  }, [firestore, user]);
+
+  const bpQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'blood_pressures'),
+      orderBy('date', 'desc'),
+      limit(1)
+    );
+  }, [firestore, user]);
+
   const suggestionDocRef = useMemoFirebase(() => {
     if (!user || !today) return null;
     return doc(firestore, 'users', user.uid, 'todaysuggestions', today);
@@ -122,6 +144,8 @@ export default function ActivityPage() {
   );
 
   const { data: latestWeightData } = useCollection<WeightLog>(weightQuery);
+  const { data: hrData } = useCollection<any>(hrQuery);
+  const { data: bpData } = useCollection<any>(bpQuery);
   const { data: suggestionData, isLoading: suggestionLoading } = useDoc<any>(suggestionDocRef);
 
   // Rehydrate AI Analysis from Firestore if it exists
@@ -356,6 +380,72 @@ export default function ActivityPage() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="border-red-500/20 bg-red-500/5 h-full">
+           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 text-red-500">
+                <Heart className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">{t('activity.heartRate.title')}</CardTitle>
+                <CardDescription className="text-[10px]">{t('activity.heartRate.description')}</CardDescription>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full text-red-500 hover:bg-red-500/10 hover:text-red-600"
+              onClick={() => setIsHRDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+          <CardContent className="pt-2">
+             <div className="flex justify-between items-center pt-1">
+                <span className="text-sm font-bold text-red-500 uppercase">
+                  {hrData && hrData.length > 0 ? t('form.common.success') : "N/A"}
+                </span>
+                <span className="text-xl font-black text-red-500">
+                  {hrData && hrData.length > 0 ? hrData[0].bpm : "--"}{' '}
+                  <span className="text-xs font-normal text-foreground">{t('activity.unit.bpm')}</span>
+                </span>
+             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-indigo-500/20 bg-indigo-500/5 h-full">
+           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-500">
+                <Activity className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">{t('activity.bloodPressure.title')}</CardTitle>
+                <CardDescription className="text-[10px]">{t('activity.bloodPressure.description')}</CardDescription>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full text-indigo-500 hover:bg-indigo-500/10 hover:text-indigo-600"
+              onClick={() => setIsBPDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+          <CardContent className="pt-2">
+             <div className="flex justify-between items-center pt-1">
+                <span className="text-sm font-bold text-indigo-500 uppercase">
+                  {bpData && bpData.length > 0 ? t('form.common.success') : "N/A"}
+                </span>
+                <span className="text-xl font-black text-indigo-500">
+                  {bpData && bpData.length > 0 ? `${bpData[0].systolic}/${bpData[0].diastolic}` : "--/--"}{' '}
+                  <span className="text-xs font-normal text-foreground">{t('activity.unit.mmHg')}</span>
+                </span>
+             </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -556,6 +646,36 @@ export default function ActivityPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Heart Rate Dialog */}
+      <Dialog open={isHRDialogOpen} onOpenChange={setIsHRDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{t('form.add_heart_rate.title')}</DialogTitle>
+          </DialogHeader>
+          {user && (
+            <AddHeartRateForm
+              userId={user.uid}
+              onSuccess={() => setIsHRDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Blood Pressure Dialog */}
+      <Dialog open={isBPDialogOpen} onOpenChange={setIsBPDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{t('form.add_blood_pressure.title')}</DialogTitle>
+          </DialogHeader>
+          {user && (
+            <AddBloodPressureForm
+              userId={user.uid}
+              onSuccess={() => setIsBPDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
