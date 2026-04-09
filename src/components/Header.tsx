@@ -77,17 +77,23 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex flex-col items-center justify-center rounded-lg px-6 py-1 transition-all duration-200 border-b-2 border-transparent hover:bg-muted',
+                  'group flex flex-col items-center justify-center rounded-xl transition-all duration-300 h-14 min-w-[76px] px-2',
                   pathname?.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')
-                    ? 'border-primary text-primary'
-                    : 'text-foreground/70 hover:text-foreground'
+                    ? 'text-primary bg-primary/10 shadow-sm ring-1 ring-primary/20'
+                    : 'text-foreground/70 hover:text-foreground hover:bg-muted/50'
                 )}
               >
                 <item.icon className={cn(
-                  "h-6 w-6 mb-0.5",
+                  "h-[22px] w-[22px] transition-transform duration-300 group-hover:scale-110",
                   pathname?.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard') ? "text-primary" : "text-foreground/70"
                 )} />
-                <span className="text-[10px] uppercase font-bold tracking-widest">{t(item.labelKey)}</span>
+                <span className={cn(
+                  "text-[9px] uppercase font-bold tracking-widest transition-all duration-300 overflow-hidden whitespace-nowrap",
+                  "max-h-0 opacity-0 group-hover:max-h-6 group-hover:opacity-100 group-hover:mt-1",
+                  pathname?.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard') ? "max-h-6 opacity-100 mt-1" : ""
+                )}>
+                  {t(item.labelKey)}
+                </span>
               </Link>
             ))}
           </nav>
