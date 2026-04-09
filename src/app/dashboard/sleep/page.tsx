@@ -1,3 +1,10 @@
+// ==========================================
+// FILE: src/app/dashboard/sleep/page.tsx
+// MỤC ĐÍCH: Trang Theo dõi Giấc ngủ (Sleep Tracking)
+// TỔNG QUAN: Biểu đồ giấc ngủ theo ngày, form ghi nhận giấc ngủ,
+// và AI tự động đánh giá chất lượng giấc ngủ dựa trên tuổi và thời gian ngủ.
+// ==========================================
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';

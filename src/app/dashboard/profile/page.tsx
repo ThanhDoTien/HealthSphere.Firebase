@@ -1,3 +1,10 @@
+// ==========================================
+// FILE: src/app/dashboard/profile/page.tsx
+// MỤC ĐÍCH: Trang Hồ sơ Cá nhân (User Profile Page)
+// TỔNG QUAN: Cho phép người dùng xem và chỉnh sửa thông tin cá nhân
+// (tên, chiều cao, cân nặng, mục tiêu, mức độ vận động).
+// ==========================================
+
 'use client';
 
 import { Button } from "@/components/ui/button";

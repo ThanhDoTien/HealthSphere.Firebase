@@ -1,3 +1,10 @@
+// ==========================================
+// FILE: src/ai/flows/analyze-sleep-quality-flow.ts
+// MỤC ĐÍCH: Đánh giá Chất lượng Giấc ngủ (Sleep Quality Analysis)
+// TỔNG QUAN: Dựa trên số giờ ngủ và độ tuổi, AI đưa ra đánh giá so với
+// khuyến nghị WHO (7-9h cho người lớn), kèm mẹo cải thiện giấc ngủ.
+// ==========================================
+
 'use server';
 /**
  * @fileOverview AI flow to analyze sleep quality and duration.

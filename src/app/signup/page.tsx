@@ -1,5 +1,13 @@
+// ==========================================
+// FILE: src/app/signup/page.tsx
+// MỤC ĐÍCH: Trang Đăng ký Tài khoản (Sign Up Page)
+// TỔNG QUAN CHỨC NĂNG: Thu thập thông tin cá nhân (tên, email, mật khẩu, giới tính,
+// tuổi, chiều cao, cân nặng, mục tiêu sức khỏe) từ người dùng mới.
+// Tự động tính BMI và gợi ý mục tiêu cân nặng (tăng/giảm/giữ) dựa trên chỉ số.
+// Sau khi đăng ký thành công, tạo hồ sơ trên Firebase và chuyển hướng tới Dashboard.
+// ==========================================
 
-"use client";
+"use client"; // Client Component do cần quản lý trạng thái form
 
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -32,6 +40,8 @@ import { signUp } from "@/firebase/auth/utils";
 import useMustBeLoggedOut from "@/lib/hooks/use-must-be-logged-out";
 import { useTranslation } from "@/context/LanguageContext";
 
+// Schema xác thực dữ liệu form đăng ký
+// Nhận hàm t() để hỗ trợ thông báo lỗi đa ngôn ngữ
 const SignUpFormSchema = (t: (key: string) => string) => z
   .object({
     name: z.string().min(1, { message: "Full name is required." }),
@@ -48,6 +58,7 @@ const SignUpFormSchema = (t: (key: string) => string) => z
     goal: z.string().min(1, { message: "Health goal is required." }),
     activityLevel: z.string().min(1, { message: "Activity level is required." }),
   })
+  // Kiểm tra chéo: Mật khẩu nhập lại phải khớp với mật khẩu gốc
   .refine((data) => data.password === data.confirmPassword, {
     message: t('signup.error.passwordMismatch'),
     path: ["confirmPassword"],
@@ -56,11 +67,12 @@ const SignUpFormSchema = (t: (key: string) => string) => z
 type SignUpFormValues = z.infer<ReturnType<typeof SignUpFormSchema>>;
 
 export default function SignUpPage() {
+  // Trạng thái chuyển hướng sau đăng ký thành công
   const [isRedirecting, setIsRedirecting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const { t } = useTranslation();
-  
+
   const {
     register,
     handleSubmit,
@@ -77,9 +89,15 @@ export default function SignUpPage() {
     }
   });
 
+  // Theo dõi giá trị chiều cao và cân nặng theo thời gian thực
+  // để tự động tính BMI mỗi khi người dùng thay đổi
   const height = watch("height");
   const weight = watch("weight");
 
+  // Hook tự động tính BMI và gợi ý mục tiêu cân nặng
+  // BMI < 18.5 → Thiếu cân → Gợi ý "Tăng cân"
+  // BMI >= 25  → Thừa cân  → Gợi ý "Giảm cân"
+  // Còn lại   → Bình thường → Gợi ý "Duy trì"
   useEffect(() => {
     if (height && weight && height > 0) {
       const heightInMeters = height / 100;
@@ -90,14 +108,17 @@ export default function SignUpPage() {
       } else if (bmi >= 25) {
         suggestedGoal = "lose";
       }
+      // Tự động cập nhật trường weightGoal trên form
       setValue("weightGoal", suggestedGoal, { shouldValidate: true });
     }
   }, [height, weight, setValue]);
 
   useMustBeLoggedOut();
 
+  // Hàm xử lý khi người dùng nhấn "Đăng ký"
   const onSubmit = async (data: SignUpFormValues) => {
     try {
+      // Gọi hàm signUp() từ firebase/auth/utils.ts để tạo tài khoản + hồ sơ
       await signUp(data);
       toast({
         title: t('form.common.success'),

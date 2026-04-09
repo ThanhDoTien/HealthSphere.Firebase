@@ -1,3 +1,10 @@
+// ==========================================
+// FILE: src/ai/flows/analyze-nutrition-balance-flow.ts
+// MỤC ĐÍCH: Đánh giá Cân bằng Dinh dưỡng trong Ngày (Nutrition Balance Analysis)
+// TỔNG QUAN: Phân tích tỷ lệ Protein/Carbs/Fat/Fiber so với chuẩn khoa học,
+// kết hợp mục tiêu sức khỏe để đưa ra trạng thái (good/warning/bad) và lời khuyên.
+// ==========================================
+
 'use server';
 /**
  * @fileOverview AI flow to analyze daily nutrition balance.

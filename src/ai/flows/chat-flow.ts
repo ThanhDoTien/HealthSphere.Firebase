@@ -1,3 +1,11 @@
+// ==========================================
+// FILE: src/ai/flows/chat-flow.ts
+// MỤC ĐÍCH: Trò chuyện AI Sức khỏe (Health Chat with RAG Context)
+// TỔNG QUAN: Cho phép người dùng trò chuyện tự do với AI chuyên gia sức khỏe.
+// AI được nạp ngữ cảnh cá nhân (hồ sơ, lịch sử bữa ăn, hoạt động, giấc ngủ)
+// để đưa ra tư vấn cá nhân hóa thông qua kỹ thuật RAG.
+// ==========================================
+
 'use server';
 
 import { ai } from '@/ai/genkit';

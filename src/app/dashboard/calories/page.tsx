@@ -1,3 +1,11 @@
+// ==========================================
+// FILE: src/app/dashboard/calories/page.tsx
+// MỤC ĐÍCH: Trang Theo dõi Calo & Dinh dưỡng (Calorie & Nutrition Tracking)
+// TỔNG QUAN: Hiển thị mục tiêu calo động (TDEE + vận động +/- mục tiêu cân nặng),
+// biểu đồ tròn tỷ lệ Macro (Protein/Carbs/Fat/Fiber), biểu đồ cột calo theo ngày.
+// Hỗ trợ nhập bữa ăn qua AI (ảnh hoặc text). AI tự động phân tích dinh dưỡng.
+// ==========================================
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';

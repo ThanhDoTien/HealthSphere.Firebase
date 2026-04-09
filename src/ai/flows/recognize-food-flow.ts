@@ -1,3 +1,10 @@
+// ==========================================
+// FILE: src/ai/flows/recognize-food-flow.ts
+// MỤC ĐÍCH: Nhận diện Thực phẩm từ Hình ảnh (Food Recognition via Computer Vision)
+// TỔNG QUAN: Nhận ảnh chụp bữa ăn (Base64), gửi tới Google Gemini AI để nhận diện
+// từng món ăn trong ảnh và ước tính lượng calo tương ứng. Trả về danh sách món + tổng calo.
+// ==========================================
+
 'use server';
 /**
  * @fileOverview Identifies food items from an image and estimates their nutritional value using Google AI.

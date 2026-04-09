@@ -1,3 +1,11 @@
+// ==========================================
+// FILE: src/app/layout.tsx
+// MỤC ĐÍCH: Layout Gốc của Toàn bộ Ứng dụng (Root Layout)
+// TỔNG QUAN: Định nghĩa cấu trúc HTML chung (font, providers, toaster).
+// Mọi trang trong ứng dụng đều được bọc bởi layout này.
+// Thứ tự bọc: LanguageProvider → FirebaseProvider → ConditionalLayout → Page
+// ==========================================
+
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Open_Sans } from "next/font/google";
 import "./globals.css";

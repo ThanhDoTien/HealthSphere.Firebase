@@ -1,3 +1,10 @@
+// ==========================================
+// FILE: src/app/dashboard/discover/page.tsx
+// MỤC ĐÍCH: Trang Khám phá Kiến thức Sức khỏe (Health Knowledge Discovery)
+// TỔNG QUAN: AI tìm kiếm và đề xuất bài viết khoa học uy tín dựa trên mục tiêu
+// sức khỏe của người dùng. Bao gồm video YouTube Shorts về sức khỏe.
+// ==========================================
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';

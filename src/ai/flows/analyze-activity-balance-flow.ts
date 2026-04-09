@@ -1,3 +1,10 @@
+// ==========================================
+// FILE: src/ai/flows/analyze-activity-balance-flow.ts
+// MỤC ĐÍCH: Đánh giá Cân bằng Hoạt động Thể chất trong Ngày (Activity Balance Analysis)
+// TỔNG QUAN: So sánh tổng calo đốt cháy qua tập luyện với TDEE (năng lượng tiêu thụ nền),
+// kết hợp mục tiêu sức khỏe để đưa ra đánh giá trạng thái (good/warning/bad).
+// ==========================================
+
 'use server';
 /**
  * @fileOverview AI flow to analyze daily physical activity balance.

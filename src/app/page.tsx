@@ -1,3 +1,10 @@
+// ==========================================
+// FILE: src/app/page.tsx
+// MỤC ĐÍCH: Trang Chủ (Landing Page / Home Page)
+// TỔNG QUAN: Trang giới thiệu ứng dụng HealthSphere cho khách chưa đăng nhập.
+// Bao gồm Hero section, giới thiệu tính năng, và nút kêu gọi hành động (CTA).
+// ==========================================
+
 'use client';
 import Image from "next/image";
 import { Button } from "@/components/ui/button";

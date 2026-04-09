@@ -1,3 +1,10 @@
+// ==========================================
+// FILE: src/app/dashboard/forums/page.tsx
+// MỤC ĐÍCH: Trang Diễn đàn Cộng đồng (Community Forums)
+// TỔNG QUAN: Hiển thị danh sách bài viết từ cộng đồng người dùng HealthSphere.
+// Cho phép tạo bài viết mới. Bài viết được sắp xếp theo thời gian mới nhất.
+// ==========================================
+
 'use client';
 import { useMemo } from 'react';
 import Link from 'next/link';

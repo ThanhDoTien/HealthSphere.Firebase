@@ -1,3 +1,9 @@
+// ==========================================
+// FILE: src/ai/flows/analyze-activity-text-flow.ts
+// MỤC ĐÍCH: Phân tích Hoạt động Thể chất từ Văn bản (AI Activity Text Analysis)
+// TỔNG QUAN: Nhận mô tả hoạt động (VD: "Chạy bộ 30 phút"), gửi tới Gemini AI
+// để trích xuất tên hoạt động, thời gian, và ước tính calo đốt cháy.
+// ==========================================
 
 'use server';
 /**

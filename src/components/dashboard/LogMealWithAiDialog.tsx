@@ -307,7 +307,7 @@ export default function LogMealWithAiDialog({ userId }: LogMealWithAiDialogProps
                 <>
                  <div className="grid w-full items-center gap-1.5">
                     <Label htmlFor="mealType-ai" className="sr-only">{t('form.add_meal.typeLabel')}</Label>
-                    <Select value={mealType} onValueChange={(value) => setMealType(value as any)}>
+                    <Select value={mealType} onValueChange={(value: string) => setMealType(value as 'breakfast' | 'lunch' | 'dinner' | 'snack')}>
                         <SelectTrigger id="mealType-ai">
                             <SelectValue placeholder={t('form.add_meal.typePlaceholder')} />
                         </SelectTrigger>

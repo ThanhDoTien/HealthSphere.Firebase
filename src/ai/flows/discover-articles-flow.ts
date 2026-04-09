@@ -1,3 +1,10 @@
+// ==========================================
+// FILE: src/ai/flows/discover-articles-flow.ts
+// MỤC ĐÍCH: Gợi ý Bài viết Sức khỏe (AI Health Article Discovery)
+// TỔNG QUAN: Dựa trên mục tiêu sức khỏe của người dùng, AI tìm kiếm và đề xuất
+// 5 bài viết khoa học uy tín (WHO, Harvard Health, Vinmec...) kèm ảnh minh họa.
+// ==========================================
+
 'use server';
 /**
  * @fileOverview AI flow to discover and suggest health articles based on user goals.

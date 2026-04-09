@@ -52,7 +52,6 @@ Tài liệu này tổng hợp các chức năng chính của hệ thống Health
 *   **Gợi ý bài viết AI:** [discover-articles-flow.ts](file:///d%3A/Thanh/HealthSphere/final/finalproject/src/ai/flows/discover-articles-flow.ts)
 
 ## 9. Cộng đồng & Hồ sơ (Community & Profile)
-*   **Cộng đồng (Forums):** `src/app/dashboard/forums`
 *   **Trang hồ sơ:** [page.tsx](file:///d%3A/Thanh/HealthSphere/final/finalproject/src/app/dashboard/profile/page.tsx)
 *   **Chỉnh sửa hồ sơ:** [EditProfileForm.tsx](file:///d%3A/Thanh/HealthSphere/final/finalproject/src/components/dashboard/EditProfileForm.tsx)
 

@@ -1,3 +1,10 @@
+// ==========================================
+// FILE: src/app/dashboard/layout.tsx
+// MỤC ĐÍCH: Layout Dashboard (Bắt buộc Đăng nhập)
+// TỔNG QUAN: Bọc tất cả trang con trong /dashboard. Kiểm tra quyền truy cập
+// (useMustBeLoggedIn), hiển thị Header điều hướng và nút chat AI nổi.
+// ==========================================
+
 'use client';
 
 import Header from "@/components/Header";

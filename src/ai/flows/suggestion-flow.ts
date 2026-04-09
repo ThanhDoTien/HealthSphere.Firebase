@@ -1,3 +1,11 @@
+// ==========================================
+// FILE: src/ai/flows/suggestion-flow.ts
+// MỤC ĐÍCH: Hệ thống Tư vấn Sức khỏe Tổng hợp (Health Suggestion System)
+// TỔNG QUAN: Gửi toàn bộ dữ liệu sức khỏe trong ngày (calo nạp/đốt, giấc ngủ,
+// hoạt động) tới Backend AI bên ngoài để nhận lời khuyên tổng quan,
+// gợi ý 4 bữa ăn phù hợp và 2-3 bài tập thể dục cá nhân hóa.
+// ==========================================
+
 'use server';
 /**
  * @fileOverview Hệ thống tư vấn sức khỏe kết nối với Backend AI bên ngoài.

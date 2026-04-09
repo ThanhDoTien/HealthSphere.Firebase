@@ -1,3 +1,10 @@
+// ==========================================
+// FILE: src/ai/flows/analyze-meal-text-flow.ts
+// MỤC ĐÍCH: Phân tích Bữa ăn từ Văn bản (AI Meal Text Analysis)
+// TỔNG QUAN: Nhận mô tả bữa ăn bằng text (VD: "Tôi ăn phở bò"),
+// gửi tới Gemini AI qua Genkit để trích xuất tên món, calo, protein, carbs, fat, fiber.
+// Hỗ trợ hội thoại nhiều lượt để tinh chỉnh thông tin.
+// ==========================================
 
 'use server';
 /**

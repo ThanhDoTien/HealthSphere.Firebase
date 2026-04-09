@@ -1,3 +1,11 @@
+// ==========================================
+// FILE: src/app/dashboard/activity/page.tsx
+// MỤC ĐÍCH: Trang Theo dõi Hoạt động Thể chất (Activity Tracking)
+// TỔNG QUAN: Hiển thị BMR/TDEE (năng lượng tiêu thụ nền), mục tiêu vận động,
+// nhịp tim, huyết áp. Cho phép ghi nhận hoạt động qua AI chat. AI tự động
+// phân tích cường độ tập luyện và đưa ra đánh giá (good/warning/bad).
+// ==========================================
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';

@@ -1,3 +1,11 @@
+// ==========================================
+// FILE: src/app/dashboard/ai/page.tsx
+// MỤC ĐÍCH: Trang Trò chuyện AI Sức khỏe (AI Health Chatbot)
+// TỔNG QUAN: Giao diện chat toàn màn hình với AI chuyên gia sức khỏe.
+// AI được nạp toàn bộ dữ liệu cá nhân (bữa ăn, hoạt động, giấc ngủ, cân nặng)
+// để đưa ra tư vấn cá nhân hóa. Hỗ trợ xóa lịch sử trò chuyện.
+// ==========================================
+
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';

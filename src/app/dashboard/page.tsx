@@ -1,3 +1,11 @@
+// ==========================================
+// FILE: src/app/dashboard/page.tsx
+// MỤC ĐÍCH: Trang Tổng quan Dashboard (Main Dashboard)
+// TỔNG QUAN: Hiển thị bảng điều khiển chính với 4 thẻ thống kê (Calo nạp/đốt,
+// Giấc ngủ, Cân nặng), biểu đồ cân nặng theo thời gian, danh sách hoạt động
+// trong ngày, và lời khuyên AI tự động cập nhật dựa trên dữ liệu thực tế.
+// ==========================================
+
 'use client';
 
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
