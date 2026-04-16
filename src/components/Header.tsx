@@ -17,14 +17,21 @@ import {
   Bed, 
   Search, 
   MessageSquare, 
-  Scale 
+  Scale,
+  Menu
 } from 'lucide-react';
 import { useTranslation } from '@/context/LanguageContext';
 import { useUser } from '@/firebase/auth/use-user';
+import { Button } from '@/components/ui/button';
 import { Logo } from './Logo';
 import UserDropdown from './dashboard/UserDropdown';
 
-export default function Header() {
+interface HeaderProps {
+  onToggleAi?: () => void;
+  onToggleSidebar?: () => void;
+}
+
+export default function Header({ onToggleAi, onToggleSidebar }: HeaderProps) {
   const pathname = usePathname();
   const { t } = useTranslation();
   const { user } = useUser();
@@ -37,18 +44,27 @@ export default function Header() {
     { href: '/dashboard/sleep', icon: Bed, labelKey: 'bottomNav.sleep' },
     { href: '/dashboard/forums', icon: MessageSquare, labelKey: 'bottomNav.forums' },
     { href: '/dashboard/discover', icon: Search, labelKey: 'bottomNav.discover' },
-    { href: '/dashboard/ai', icon: Sparkles, labelKey: 'bottomNav.ai' },
   ];
 
   const isAuthPage = pathname?.includes('/signup') || pathname?.includes('/login');
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
-      <div className="flex h-20 items-center justify-between px-2">
+    <header className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm px-6">
+      <div className="h-20 flex items-center w-full">
         
-        {/* TRÁI: Logo */}
-        <div className="flex items-center gap-4">
-          <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-2 shrink-0">
+        {/* TRÁI: 16% slot for Logo */}
+        <div className="w-[16%] flex items-center justify-start gap-2 sm:gap-4 shrink-0">
+          {user && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleSidebar}
+              className="lg:hidden h-10 w-10 rounded-full hover:bg-accent"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+          )}
+          <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
             <Logo className="h-10 w-10 min-w-[40px]" />
             <span className="hidden sm:inline-block text-2xl font-black bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent">
               HealthSphere
@@ -56,43 +72,52 @@ export default function Header() {
           </Link>
         </div>
 
-        {/* GIỮA: Navigation */}
+        {/* GIỮA: 54% slot for Nav Icons */}
         {!isAuthPage && user && (
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex flex-col items-center justify-center h-full w-20 xl:w-24 gap-1 transition-all rounded-xl group relative overflow-hidden",
-                    isActive 
-                      ? "text-primary bg-primary/10" 
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                  )}
-                >
-                  <item.icon className={cn(
-                    "h-6 w-6 transition-transform group-hover:scale-110 mb-0.5",
-                    isActive ? "stroke-[2.5px]" : "stroke-[1.5px]"
-                  )} />
-                  <span className={cn(
-                    "text-[9px] xl:text-[10px] font-black uppercase tracking-widest",
-                    isActive ? "opacity-100" : "opacity-60 group-hover:opacity-100"
-                  )}>
-                    {t(item.labelKey)}
-                  </span>
-                  {isActive && (
-                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full shadow-[0_-2px_8px_rgba(var(--primary),0.3)]" />
-                  )}
-                </Link>
-              );
-            })}
+          <nav className="hidden lg:flex items-center w-[54%] px-10 xl:px-16">
+            <div className="flex items-center justify-between w-full">
+              {navItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex flex-col items-center justify-center h-20 w-12 xl:w-14 transition-all group relative overflow-hidden",
+                      isActive 
+                        ? "text-primary" 
+                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground hover:rounded-xl"
+                    )}
+                  >
+                    <item.icon className={cn(
+                      "h-6 w-6 transition-all duration-300 group-hover:scale-110",
+                      isActive ? "stroke-[2.5px] -translate-y-0.5" : "stroke-[1.5px]"
+                    )} />
+                    <span className="sr-only">{t(item.labelKey)}</span>
+                    {isActive && (
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full shadow-[0_-2px_8px_rgba(var(--primary),0.3)]" />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
           </nav>
         )}
 
-        {/* PHẢI: User Profile */}
-        <div className="flex items-center gap-4">
+        {/* PHẢI: 30% slot for Profile */}
+        <div className="flex-1 lg:w-[30%] flex items-center justify-end gap-2 sm:gap-4">
+          {user && !isAuthPage && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleAi}
+              className="lg:hidden relative h-10 w-10 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all group overflow-visible"
+              title="HealthSphere AI"
+            >
+              <Sparkles className="h-5 w-5 group-hover:scale-110 transition-transform" />
+              <div className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full border-2 border-background animate-pulse" />
+            </Button>
+          )}
           {!isAuthPage && user && <UserDropdown />}
         </div>
       </div>

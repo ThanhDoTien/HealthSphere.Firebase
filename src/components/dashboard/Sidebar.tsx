@@ -13,15 +13,22 @@ import {
   Home, 
   Apple, 
   Flame, 
-  Sparkles, 
+  Bot, 
   User, 
   Bed, 
   Search, 
-  ChevronLeft, 
-  ChevronRight, 
   Scale, 
-  MessageSquare 
+  MessageSquare,
+  HelpCircle
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useTranslation } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 
@@ -42,7 +49,7 @@ export default function Sidebar({ isCollapsed, toggleCollapsed }: SidebarProps) 
     { href: '/dashboard/sleep', labelKey: 'bottomNav.sleep', icon: Bed },
     { href: '/dashboard/forums', labelKey: 'bottomNav.forums', icon: MessageSquare },
     { href: '/dashboard/discover', labelKey: 'bottomNav.discover', icon: Search },
-    { href: '/dashboard/ai', labelKey: 'bottomNav.ai', icon: Sparkles },
+    { href: '/dashboard/ai', labelKey: 'bottomNav.ai', icon: Bot },
     { href: '/dashboard/profile', labelKey: 'bottomNav.profile', icon: User },
   ];
 
@@ -50,18 +57,10 @@ export default function Sidebar({ isCollapsed, toggleCollapsed }: SidebarProps) 
     <aside
       className={cn(
         "relative flex flex-col border-r bg-card/50 backdrop-blur-md transition-all duration-300 ease-in-out z-40 h-[calc(100vh-80px)]",
-        isCollapsed ? "w-20" : "w-64"
+        "lg:w-[16%] lg:shrink-0", // Fixed 16% on desktop
+        isCollapsed ? "w-20 lg:w-[16%]" : "w-64 lg:w-[16%]" 
       )}
     >
-      {/* Nút thu gọn/mở rộng */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={toggleCollapsed}
-        className="absolute -right-3 top-4 h-6 w-6 rounded-full border bg-background shadow-md hidden md:flex"
-      >
-        {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-      </Button>
 
       <div className="flex flex-col gap-1 p-3 overflow-y-auto overflow-x-hidden flex-1 no-scrollbar">
         {navItems.map((item) => {
@@ -94,14 +93,55 @@ export default function Sidebar({ isCollapsed, toggleCollapsed }: SidebarProps) 
         })}
       </div>
       
-      {/* Footer Sidebar */}
-      {!isCollapsed && (
-        <div className="p-4 border-t bg-accent/5">
-          <p className="text-[10px] text-muted-foreground text-center font-medium">
+      {/* Footer Sidebar & Help */}
+      <div className="mt-auto border-t bg-accent/5">
+        <Dialog>
+          <DialogTrigger asChild>
+            <button className={cn(
+              "flex items-center gap-3 w-full p-4 text-muted-foreground hover:bg-accent/50 hover:text-primary transition-all group",
+              isCollapsed ? "justify-center" : "px-4"
+            )}>
+              <HelpCircle className="h-6 w-6 shrink-0 transition-transform group-hover:scale-110" />
+              {!isCollapsed && <span className="text-sm font-bold uppercase tracking-wider">{t('sidebar.help')}</span>}
+            </button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                {t('help.title')}
+              </DialogTitle>
+              <DialogDescription>
+                {t('help.description')}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-primary/10 rounded-lg"><Scale className="h-5 w-5 text-primary" /></div>
+                <div><h4 className="text-sm font-bold capitalize">{t('bottomNav.weight')}</h4><p className="text-xs text-muted-foreground">{t('help.weight')}</p></div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-orange-100 rounded-lg"><Apple className="h-5 w-5 text-orange-600" /></div>
+                <div><h4 className="text-sm font-bold capitalize">{t('bottomNav.calories')}</h4><p className="text-xs text-muted-foreground">{t('help.calories')}</p></div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-purple-100 rounded-lg"><Bot className="h-5 w-5 text-purple-600" /></div>
+                <div><h4 className="text-sm font-bold capitalize">{t('bottomNav.ai')}</h4><p className="text-xs text-muted-foreground">{t('help.ai')}</p></div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-blue-100 rounded-lg"><Home className="h-5 w-5 text-blue-600" /></div>
+                <div><h4 className="text-sm font-bold capitalize">BMI Gauge</h4><p className="text-xs text-muted-foreground">{t('help.bmi')}</p></div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <div className="p-4 pt-2">
+          <p className="text-[10px] text-muted-foreground text-center font-medium opacity-60">
             {t('home.footer.copyright')}
           </p>
         </div>
-      )}
+      </div>
     </aside>
   );
 }

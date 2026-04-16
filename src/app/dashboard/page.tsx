@@ -1,28 +1,24 @@
 'use client';
 
-import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
-import { Utensils, Dumbbell, Loader2, Bed, Scale, Lightbulb, RefreshCw, Sparkles, AlertCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { Utensils, Dumbbell, Bed, Scale, TrendingUp, TrendingDown, Minus, AlertCircle, Sparkles, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  CardContent,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore, useDoc } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
-import { collection, query, orderBy, limit, where, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, limit, where, doc } from 'firebase/firestore';
 import { useTranslation } from '@/context/LanguageContext';
 import BmiMeter from '@/components/dashboard/BmiMeter';
-import SuggestImage from '@/components/dashboard/SuggestImage';
-import { getHealthSuggestions, type HealthSuggestionResponse } from '@/ai/flows/suggestion-flow';
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 
 type WeightLog = {
@@ -30,23 +26,12 @@ type WeightLog = {
   date: string;
 };
 
-interface SuggestionWithMetadata extends HealthSuggestionResponse {
-  updatedAt?: any;
-  snapshotSummary?: {
-    caloriesConsumed: number;
-    caloriesBurned: number;
-  };
-}
-
 export default function DashboardPage() {
-  const { user, userProfile, loading: userLoading } = useUser();
+  const { user, userProfile } = useUser();
   const firestore = useFirestore();
   const [today, setToday] = useState('');
   const [yesterday, setYesterday] = useState('');
-  const { t, locale } = useTranslation();
-
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
+  const { t } = useTranslation();
   const [dailyTipKey, setDailyTipKey] = useState('');
 
   useEffect(() => {
@@ -66,7 +51,7 @@ export default function DashboardPage() {
 
   const latestWeightQuery = useMemoFirebase(() => {
     if (!user) return null;
-    return query(collection(firestore, 'users', user.uid, 'weights'), orderBy('date', 'desc'), limit(1));
+    return query(collection(firestore, 'users', user.uid, 'weights'), orderBy('date', 'desc'), limit(2));
   }, [firestore, user]);
 
   const mealsQuery = useMemoFirebase(() => {
@@ -82,11 +67,6 @@ export default function DashboardPage() {
   const sleepQuery = useMemoFirebase(() => {
     if (!user || !today) return null;
     return query(collection(firestore, 'users', user.uid, 'sleep'), where('date', '==', today));
-  }, [firestore, user, today]);
-
-  const suggestionDocRef = useMemoFirebase(() => {
-    if (!user || !today) return null;
-    return doc(firestore, 'users', user.uid, 'todaysuggestions', today);
   }, [firestore, user, today]);
 
   const yesterdayMealsQuery = useMemoFirebase(() => {
@@ -105,14 +85,20 @@ export default function DashboardPage() {
   }, [firestore, user, yesterday]);
 
   const { data: latestWeightData } = useCollection<WeightLog>(latestWeightQuery);
-  const { data: mealData, isLoading: mealLoading } = useCollection(mealsQuery);
-  const { data: activityData, isLoading: activityLoading } = useCollection(activitiesQuery);
-  const { data: sleepData, isLoading: sleepLoading } = useCollection(sleepQuery);
-  const { data: suggestionData, isLoading: suggestionLoading } = useDoc<SuggestionWithMetadata>(suggestionDocRef);
+  const { data: mealData } = useCollection(mealsQuery);
+  const { data: activityData } = useCollection(activitiesQuery);
+  const { data: sleepData } = useCollection(sleepQuery);
 
   const { data: yesterdayMealData } = useCollection(yesterdayMealsQuery);
   const { data: yesterdayActivityData } = useCollection(yesterdayActivitiesQuery);
   const { data: yesterdaySleepData } = useCollection(yesterdaySleepQuery);
+
+  const suggestionDocRef = useMemoFirebase(() => {
+    if (!user || !today) return null;
+    return doc(firestore, 'users', user.uid, 'todaysuggestions', today);
+  }, [firestore, user, today]);
+
+  const { data: suggestionData } = useDoc<any>(suggestionDocRef);
 
   const dailySummary = useMemo(() => {
     const summary = { caloriesConsumed: 0, caloriesBurned: 0, baseBurned: 0, exerciseBurned: 0, sleepHours: 0 };
@@ -152,63 +138,10 @@ export default function DashboardPage() {
     return summary;
   }, [yesterdayMealData, yesterdayActivityData, yesterdaySleepData, userProfile, latestWeightData]);
 
-  const isStale = useMemo(() => {
-    if (!suggestionData || !suggestionData.snapshotSummary || isGenerating) return false;
-    const diffConsumed = Math.abs(dailySummary.caloriesConsumed - (suggestionData.snapshotSummary.caloriesConsumed || 0));
-    const diffBurned = Math.abs(dailySummary.caloriesBurned - (suggestionData.snapshotSummary.caloriesBurned || 0));
-    return diffConsumed > 50 || diffBurned > 50;
-  }, [dailySummary, suggestionData, isGenerating]);
-
-  const handleGenerateSuggestions = useCallback(async () => {
-    if (!userProfile || !user || !today || !suggestionDocRef) return;
-    setIsGenerating(true);
-    setAiError(null);
-    try {
-      const token = await user.getIdToken();
-      const suggestions = await getHealthSuggestions({
-        userProfile: {
-          goal: userProfile.goal,
-          weight: latestWeightData?.[0]?.weight || userProfile.weight,
-          height: userProfile.height,
-          age: userProfile.age,
-          gender: userProfile.gender,
-          activityLevel: userProfile.activityLevel,
-        },
-        dailySummary,
-        recentActivities: [],
-        language: locale,
-        token,
-      });
-
-      await setDoc(suggestionDocRef, {
-        ...suggestions,
-        updatedAt: serverTimestamp(),
-        snapshotSummary: {
-          caloriesConsumed: dailySummary.caloriesConsumed,
-          caloriesBurned: dailySummary.caloriesBurned,
-        }
-      });
-    } catch (err: any) {
-      console.error("AI Error:", err);
-      setAiError(err.message || t('ai.errorMessage'));
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [userProfile, user, today, suggestionDocRef, dailySummary, locale, t, latestWeightData]);
-
-  useEffect(() => {
-    if (!suggestionLoading && !isGenerating && today && userProfile && !aiError) {
-      if (!suggestionData || isStale) {
-        handleGenerateSuggestions();
-      }
-    }
-  }, [suggestionLoading, suggestionData, isGenerating, today, userProfile, isStale, aiError, handleGenerateSuggestions]);
-
   const currentWeight = latestWeightData?.[0]?.weight || userProfile?.weight;
-  const isAllLoading = userLoading || mealLoading || activityLoading || sleepLoading || (suggestionLoading && !suggestionData);
 
-  const renderDiff = (current: number, yesterday: number, unit: string, invertLogic: boolean = false) => {
-    const diff = current - yesterday;
+  const renderDiff = (current: number, yesterdayVal: number, unit: string, invertLogic: boolean = false) => {
+    const diff = current - yesterdayVal;
     if (diff === 0) return <span className="text-muted-foreground flex items-center gap-1.5 text-xs mt-2 font-medium"><Minus className="h-3.5 w-3.5" /> Bằng hôm qua</span>;
 
     const isIncrease = diff > 0;
@@ -246,9 +179,31 @@ export default function DashboardPage() {
         </div>
 
         <p className="text-muted-foreground text-lg">{t('dashboard.summary')}</p>
+
+        {suggestionData && suggestionData.generalTip && (
+          <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-700">
+            <Card className="border-primary/20 bg-primary/5 shadow-sm overflow-hidden group">
+              <CardContent className="p-0">
+                <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x border-primary/10">
+                  <div className="p-4 flex items-center gap-4 flex-1">
+                    <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Lightbulb className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-widest text-primary/70 mb-1">{t('ai.tipTitle')}</h4>
+                      <p className="text-sm font-medium leading-relaxed italic">
+                        &quot;{suggestionData.generalTip.replaceAll('\\n', '\n')}&quot;
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </header>
 
-      <main className="p-2 space-y-8 w-full">
+      <main className="p-2 w-full">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
           <div className="col-span-1">
             {userProfile && <BmiMeter height={userProfile.height} weight={currentWeight || userProfile.weight} />}
@@ -314,150 +269,21 @@ export default function DashboardPage() {
                   </div>
                   <div className="mt-auto">
                     <CardTitle className="text-2xl font-black">{currentWeight ? `${currentWeight} kg` : 'N/A'}</CardTitle>
+                    {latestWeightData && latestWeightData.length >= 2 && (
+                      <div className={cn(
+                        "flex items-center gap-1 text-[10px] font-bold mt-1.5",
+                        latestWeightData[0].weight > latestWeightData[1].weight ? "text-orange-500" : "text-green-500"
+                      )}>
+                        {latestWeightData[0].weight > latestWeightData[1].weight ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                        {Math.abs(latestWeightData[0].weight - latestWeightData[1].weight).toFixed(1)} kg {t('dashboard.weightComparison')}
+                      </div>
+                    )}
                     <p className="text-[10px] text-muted-foreground mt-2 font-medium">Bấm để quản lý cân nặng →</p>
                   </div>
                 </CardHeader>
               </Card>
             </Link>
           </div>
-        </div>
-
-        <div className="space-y-4">
-          {isGenerating && (
-            <Card className="border-primary/20 bg-primary/5 shadow-sm animate-pulse">
-              <div className="p-4 flex items-center gap-4">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <p className="text-base font-medium text-primary">
-                  {t('ai.loadingButton') || 'HealthSphere AI đang chuẩn bị lời khuyên...'}
-                </p>
-              </div>
-            </Card>
-          )}
-
-          {!isGenerating && suggestionData && (
-            <div className="space-y-3">
-              <Card className={cn(
-                "border-primary/20 bg-primary/5 shadow-sm transition-all duration-300",
-                isStale && "ring-2 ring-primary/40 ring-offset-2"
-              )}>
-                <div className="p-4 flex gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Lightbulb className="h-6 w-6" />
-                  </div>
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-lg font-bold text-primary">{t('ai.tipTitle')}</h4>
-                        {suggestionData.updatedAt && (
-                          <span className="text-[10px] text-muted-foreground italic">
-                            • {t('ai.lastUpdated', { time: new Date(suggestionData.updatedAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })}
-                          </span>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleGenerateSuggestions}
-                        disabled={isGenerating}
-                        className={cn("h-8 w-8 p-0", isStale && "text-primary animate-bounce")}
-                        title={t('ai.refreshNow')}
-                      >
-                        <RefreshCw className={cn("h-4 w-4", isGenerating && "animate-spin")} />
-                      </Button>
-                    </div>
-                    <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line font-medium">
-                      {suggestionData.generalTip.replaceAll('\\n', '\n')}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          )}
-
-          {isAllLoading && !suggestionData && !isGenerating && (
-            <Card className="border-primary/20 bg-primary/5 shadow-sm animate-pulse">
-              <div className="p-4 flex items-center gap-4">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <p className="text-base font-medium text-primary">{t('ai.loadingData')}</p>
-              </div>
-            </Card>
-          )}
-        </div>
-
-        <div className="space-y-8">
-          <div className="flex items-center gap-2 px-1">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold text-primary">{t('ai.title')}</h2>
-          </div>
-
-          {!isGenerating && suggestionData ? (
-            <div className="space-y-12">
-              <div className="space-y-6">
-                <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
-                  <Utensils className="h-5 w-5" />
-                  {t('ai.mealsTitle')}
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {suggestionData.mealSuggestions?.map((meal, idx) => (
-                    <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
-                      <SuggestImage
-                        name={meal.name}
-                        prompt={meal.name + ', simple appetizing photo'}
-                        className="h-64 w-full"
-                      />
-                      <div className="p-5 flex-1 flex flex-col space-y-3">
-                        <div className="flex justify-between items-start">
-                          <h5 className="font-bold text-xl leading-tight">{meal.name}</h5>
-                          <span className="text-base font-bold text-primary shrink-0 ml-2">~{meal.calories} kcal</span>
-                        </div>
-                        <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">
-                          {meal.recipe.replaceAll('\\n', '\n')}
-                        </p>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <h4 className="flex items-center gap-2 text-lg font-bold text-muted-foreground border-b pb-2">
-                  <Dumbbell className="h-5 w-5" />
-                  {t('ai.workoutTitle')}
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {suggestionData.workoutSuggestion?.map((exercise, idx) => (
-                    <Card key={idx} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
-                      <SuggestImage
-                        name={exercise.name}
-                        prompt={exercise.name + ', simple fitness photo, gym context'}
-                        className="h-64 w-full"
-                      />
-                      <div className="p-5 flex-1 flex flex-col space-y-3">
-                        <h5 className="font-bold text-xl leading-tight">{exercise.name}</h5>
-                        <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">
-                          {exercise.description.replaceAll('\\n', '\n')}
-                        </p>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (isGenerating || (suggestionLoading && !suggestionData)) ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-4 border rounded-xl bg-muted/10">
-              <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-base font-medium animate-pulse text-muted-foreground">
-                {isGenerating ? t('ai.loadingButton') : t('ai.loadingData')}
-              </p>
-            </div>
-          ) : null}
-
-          {aiError && (
-            <Alert variant="destructive">
-              <AlertTitle>{t('ai.errorTitle')}</AlertTitle>
-              <AlertDescription>{aiError}</AlertDescription>
-            </Alert>
-          )}
         </div>
       </main>
     </div>

@@ -39,6 +39,10 @@ const MealSuggestionSchema = z.object({
   name: z.string(),
   recipe: z.string(),
   calories: z.number(),
+  protein: z.number().optional(),
+  carbs: z.number().optional(),
+  fat: z.number().optional(),
+  fiber: z.number().optional(),
   imagePrompt: z.string(),
   imageUrl: z.string().optional(),
 });
@@ -81,16 +85,16 @@ export async function getHealthSuggestions(
      - Nếu 'Tiêu thụ qua vận động' cao nhưng 'Đã nạp' (caloriesConsumed) thấp, hãy nhắc họ ăn bổ sung để phục hồi.
   QUAN TRỌNG: Hãy sử dụng ký tự xuống dòng (\\n) để phân tách các ý trong 'generalTip', 'recipe' và 'description'. Sau mỗi ý hoặc mỗi bước, HÃY XUỐNG DÒNG.
   
-  2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) phù hợp.
+  2. Đề xuất đúng 4 bữa ăn (Sáng, Trưa, Tối, Bữa phụ) phù hợp. Ghi rõ chỉ số dinh dưỡng cho mỗi món (protein, carbs, fat, fiber - tính bằng gram).
   3. Đề Xuất 2-3 bài tập phù hợp.
   4. Đối với 'recipe' , 'workoutSuggestion' và 'description', trình bày theo từng bước và sử dụng \\n sau mỗi bước.
   5. Ngôn ngữ phản hồi: ${input.language || 'vi'}.
   6. Đối với 'imagePrompt': Viết bằng tiếng Anh, mô tả chi tiết.
-
+ 
   TRẢ VỀ KẾT QUẢ DƯỚI DẠNG MỘT ĐỐI TƯỢNG JSON DUY NHẤT. KHÔNG BAO GỒM CÁC KHỐI MÃ (CODE FENCES).
   {
     "generalTip": "Nội dung lời khuyên...\\nÝ tiếp theo...",
-    "mealSuggestions": [{"name": "Tên món", "recipe": "Bước 1...\\nBước 2...", "calories": 350, "imagePrompt": "..."}],
+    "mealSuggestions": [{"name": "Tên món", "recipe": "Bước 1...\\nBước 2...", "calories": 350, "protein": 25, "carbs": 40, "fat": 10, "fiber": 5, "imagePrompt": "..."}],
     "workoutSuggestion": [{"name": "Tên bài tập", "description": "Hướng dẫn...\\n- Bước...\\n- Bước...", "imagePrompt": "..."}]
   }`;
 

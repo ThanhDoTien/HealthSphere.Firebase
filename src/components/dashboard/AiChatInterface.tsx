@@ -172,7 +172,7 @@ export default function AiChatInterface({ className, isFullHeight = false }: AiC
       {/* Header nội bộ cho Interface */}
       <div className="flex items-center justify-between p-3 border-b bg-muted/30">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
+          <Bot className="h-4 w-4 text-primary" />
           <span className="text-xs font-bold uppercase tracking-wider">{t('ai.chatbot.title') || 'AI Assistant'}</span>
         </div>
         <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={clearChat} title="Xóa lịch sử">
@@ -201,7 +201,7 @@ export default function AiChatInterface({ className, isFullHeight = false }: AiC
               "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border shadow-sm mt-1",
               msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
             )}>
-              {msg.role === 'user' ? <User className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}
+              {msg.role === 'user' ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
             </div>
             <div className={cn(
               "flex flex-col gap-1 max-w-[85%]",
@@ -222,7 +222,7 @@ export default function AiChatInterface({ className, isFullHeight = false }: AiC
         {isTyping && (
           <div className="flex w-full items-start gap-2 animate-pulse">
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted border">
-              <Sparkles className="h-3 w-3 text-primary" />
+              <Bot className="h-3 w-3 text-primary" />
             </div>
             <div className="max-w-[80%] rounded-2xl rounded-tl-none bg-muted/50 border px-3 py-2 flex items-center h-8">
               <Loader2 className="h-3 w-3 animate-spin text-primary" />
