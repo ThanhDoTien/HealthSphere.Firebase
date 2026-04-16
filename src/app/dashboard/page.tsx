@@ -1,16 +1,7 @@
-// ==========================================
-// FILE: src/app/dashboard/page.tsx
-// MỤC ĐÍCH: Trang Tổng quan Dashboard (Main Dashboard)
-// TỔNG QUAN: Hiển thị bảng điều khiển chính với 4 thẻ thống kê (Calo nạp/đốt,
-// Giấc ngủ, Cân nặng), biểu đồ cân nặng theo thời gian, danh sách hoạt động
-// trong ngày, và lời khuyên AI tự động cập nhật dựa trên dữ liệu thực tế.
-// ==========================================
-
 'use client';
 
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
-import { Utensils, Dumbbell, Loader2, Bed, Scale, Lightbulb, RefreshCw, Sparkles, AlertCircle, Target, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import Image from 'next/image';
+import { Utensils, Dumbbell, Loader2, Bed, Scale, Lightbulb, RefreshCw, Sparkles, AlertCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import Link from 'next/link';
 
 import {
@@ -26,30 +17,13 @@ import { useFirestore, useDoc } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useMemoFirebase } from '@/firebase/provider';
 import { collection, query, orderBy, limit, where, doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { BarChart } from '@/components/ui/bar-chart';
-import { type ChartConfig } from '@/components/ui/chart';
-import AddWeightForm from '@/components/dashboard/AddWeightForm';
 import { useTranslation } from '@/context/LanguageContext';
 import BmiMeter from '@/components/dashboard/BmiMeter';
 import SuggestImage from '@/components/dashboard/SuggestImage';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { getHealthSuggestions, type HealthSuggestionResponse } from '@/ai/flows/suggestion-flow';
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
-
-const weightChartConfig = {
-  weight: {
-    label: 'Cân nặng (kg)',
-    color: 'hsl(var(--accent))',
-  },
-} satisfies ChartConfig;
 
 type WeightLog = {
   weight: number;
@@ -71,12 +45,9 @@ export default function DashboardPage() {
   const [yesterday, setYesterday] = useState('');
   const { t, locale } = useTranslation();
 
-  const [weightFilter, setWeightFilter] = useState('30');
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [dailyTipKey, setDailyTipKey] = useState('');
-
-  const hasAttemptedGeneration = useRef(false);
 
   useEffect(() => {
     const now = new Date();
@@ -89,15 +60,9 @@ export default function DashboardPage() {
     yest.setDate(yest.getDate() - 1);
     setYesterday(`${yest.getFullYear()}-${String(yest.getMonth() + 1).padStart(2, '0')}-${String(yest.getDate()).padStart(2, '0')}`);
 
-    // Pick a random tip for the day
     const tips = ['waterReminder', 'activityReminder', 'genericTip'];
     setDailyTipKey(tips[Math.floor(Math.random() * tips.length)]);
   }, []);
-
-  const weightQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(collection(firestore, 'users', user.uid, 'weights'), orderBy('date', 'desc'), limit(30));
-  }, [firestore, user]);
 
   const latestWeightQuery = useMemoFirebase(() => {
     if (!user) return null;
@@ -139,7 +104,6 @@ export default function DashboardPage() {
     return query(collection(firestore, 'users', user.uid, 'sleep'), where('date', '==', yesterday));
   }, [firestore, user, yesterday]);
 
-  const { data: weightData } = useCollection<WeightLog>(weightQuery);
   const { data: latestWeightData } = useCollection<WeightLog>(latestWeightQuery);
   const { data: mealData, isLoading: mealLoading } = useCollection(mealsQuery);
   const { data: activityData, isLoading: activityLoading } = useCollection(activitiesQuery);
@@ -195,15 +159,6 @@ export default function DashboardPage() {
     return diffConsumed > 50 || diffBurned > 50;
   }, [dailySummary, suggestionData, isGenerating]);
 
-  const chartData = useMemo(() => {
-    if (!weightData) return [];
-    const limitCount = parseInt(weightFilter);
-    return weightData.slice(0, limitCount).map((d) => ({
-      date: new Date(d.date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      weight: d.weight,
-    })).reverse();
-  }, [weightData, weightFilter]);
-
   const handleGenerateSuggestions = useCallback(async () => {
     if (!userProfile || !user || !today || !suggestionDocRef) return;
     setIsGenerating(true);
@@ -249,10 +204,7 @@ export default function DashboardPage() {
     }
   }, [suggestionLoading, suggestionData, isGenerating, today, userProfile, isStale, aiError, handleGenerateSuggestions]);
 
-  const currentWeight = latestWeightData?.[0]?.weight || weightData?.[0]?.weight;
-  const targetWeight = userProfile ? Math.round(22 * Math.pow(userProfile.height / 100, 2) * 10) / 10 : 0;
-  const weightDiff = currentWeight && targetWeight ? currentWeight - targetWeight : 0;
-
+  const currentWeight = latestWeightData?.[0]?.weight || userProfile?.weight;
   const isAllLoading = userLoading || mealLoading || activityLoading || sleepLoading || (suggestionLoading && !suggestionData);
 
   const renderDiff = (current: number, yesterday: number, unit: string, invertLogic: boolean = false) => {
@@ -273,13 +225,12 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex flex-col space-y-6 pb-10">
-      <header className="p-4 sm:p-6 text-center sm:text-left">
-        <h1 className="text-3xl font-bold tracking-tight">
+    <div className="flex flex-col space-y-6 pb-10 w-full">
+      <header className="px-4 py-6 text-left border-b bg-background/50">
+        <h1 className="text-3xl font-bold tracking-tight px-4">
           {userProfile?.name ? t('dashboard.welcome', { name: userProfile.name }) : t('dashboard.welcomeUser')}
         </h1>
         
-        {/* Daily Dashboard Notification/Reminder */}
         <div className="mt-2 mb-3">
           {userProfile && (!userProfile.height || !userProfile.weight) ? (
             <Link href="/dashboard/profile" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-100 text-orange-700 text-sm font-bold border border-orange-200 hover:bg-orange-200 transition-colors">
@@ -297,12 +248,13 @@ export default function DashboardPage() {
         <p className="text-muted-foreground text-lg">{t('dashboard.summary')}</p>
       </header>
 
-      <main className="px-4 sm:px-6 space-y-8">
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="md:col-span-2">
+      <main className="p-2 space-y-8 w-full">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+          <div className="col-span-1">
             {userProfile && <BmiMeter height={userProfile.height} weight={currentWeight || userProfile.weight} />}
           </div>
-          <div className="grid gap-4 md:col-span-2 grid-cols-2">
+          
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 col-span-1">
             <Link href="/dashboard/calories">
               <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-primary/20 shadow-sm h-full flex flex-col">
                 <CardHeader className="p-4 flex-1 flex flex-col">
@@ -353,7 +305,7 @@ export default function DashboardPage() {
                 </CardHeader>
               </Card>
             </Link>
-            <Link href="/dashboard/profile">
+            <Link href="/dashboard/weight">
               <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-gray-500/20 shadow-sm h-full flex flex-col">
                 <CardHeader className="p-4 flex-1 flex flex-col">
                   <div className="flex items-center justify-between mb-4">
@@ -362,18 +314,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="mt-auto">
                     <CardTitle className="text-2xl font-black">{currentWeight ? `${currentWeight} kg` : 'N/A'}</CardTitle>
-                    {currentWeight && Math.abs(weightDiff) >= 0.1 && (
-                      <span className={cn("flex items-center gap-1.5 text-xs mt-2 font-medium", weightDiff > 0 ? "text-orange-500" : "text-blue-500")} title="So với cân nặng lý tưởng theo chuẩn BMI y tế">
-                        <Target className="h-3.5 w-3.5" />
-                        Cách mức lý tưởng {Math.abs(weightDiff).toFixed(1)} kg
-                      </span>
-                    )}
-                    {currentWeight && Math.abs(weightDiff) < 0.1 && (
-                      <span className="flex items-center gap-1.5 text-xs mt-2 font-medium text-green-500">
-                        <Target className="h-3.5 w-3.5" />
-                        Đạt chuẩn BMI lý tưởng!
-                      </span>
-                    )}
+                    <p className="text-[10px] text-muted-foreground mt-2 font-medium">Bấm để quản lý cân nặng →</p>
                   </div>
                 </CardHeader>
               </Card>
@@ -430,19 +371,6 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </Card>
-
-              {isStale && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-lg text-primary text-xs font-bold animate-in fade-in slide-in-from-top-2 border border-primary/20 shadow-sm">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>{t('ai.staleDataMessage')}</span>
-                  <button
-                    onClick={handleGenerateSuggestions}
-                    className="ml-auto underline font-extrabold hover:text-primary/80 transition-colors"
-                  >
-                    {t('ai.refreshNow')}
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
@@ -455,49 +383,6 @@ export default function DashboardPage() {
             </Card>
           )}
         </div>
-
-        <Card className="shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle className="text-xl font-bold">{t('dashboard.weightTrackingTitle')}</CardTitle>
-              <CardDescription>{t('dashboard.weightTrackingDescription')}</CardDescription>
-            </div>
-            <Select value={weightFilter} onValueChange={setWeightFilter}>
-              <SelectTrigger className="w-[160px] h-9 text-xs">
-                <SelectValue placeholder="Chọn phạm vi" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">{t('dashboard.weightFilter.last7')}</SelectItem>
-                <SelectItem value="30">{t('dashboard.weightFilter.last30')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <BarChart data={chartData} config={weightChartConfig} yAxisWidth={40} className="h-64" showLegend={false} />
-            {user && <AddWeightForm userId={user.uid} />}
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold">{t('dashboard.todaysActivitiesTitle')}</CardTitle>
-            <CardDescription>{t('dashboard.todaysActivitiesDescription')}</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {activityData && activityData.length > 0 ? (
-              activityData.map((activity: any) => (
-                <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
-                  <span className="font-medium text-base">{activity.name}</span>
-                  <span className="font-bold text-base">{activity.caloriesBurned} kcal</span>
-                </div>
-              ))
-            ) : (
-              <div className="py-10 text-center text-muted-foreground border-2 border-dashed rounded-lg bg-muted/20 text-sm">
-                {t('dashboard.noActivities')}
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
         <div className="space-y-8">
           <div className="flex items-center gap-2 px-1">

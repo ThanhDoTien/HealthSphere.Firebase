@@ -10,16 +10,10 @@ import { cn } from '@/lib/utils';
  */
 export default function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isHomePage = pathname === '/';
 
   return (
-    <div className="min-h-screen bg-muted/40">
-      <div className={cn(
-        "mx-auto transition-all duration-300 min-h-screen flex flex-col",
-        !isHomePage
-          ? "w-full lg:max-w-[70%] bg-background shadow-[0_0_50px_rgba(0,0,0,0.1)] border-x"
-          : "w-full bg-background"
-      )}>
+    <div className="min-h-screen bg-background">
+      <div className="w-full flex flex-col min-h-screen">
         {children}
       </div>
     </div>

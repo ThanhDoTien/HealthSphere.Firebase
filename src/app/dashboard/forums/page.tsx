@@ -1,125 +1,48 @@
 // ==========================================
 // FILE: src/app/dashboard/forums/page.tsx
-// MỤC ĐÍCH: Trang Diễn đàn Cộng đồng (Community Forums)
-// TỔNG QUAN: Hiển thị danh sách bài viết từ cộng đồng người dùng HealthSphere.
-// Cho phép tạo bài viết mới. Bài viết được sắp xếp theo thời gian mới nhất.
+// MỤC ĐÍCH: Trang Diễn đàn (Coming Soon)
+// TỔNG QUAN: Hiển thị giao diện chờ cho tính năng cộng đồng.
 // ==========================================
 
 'use client';
-import { useMemo } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import {
-  collection,
-  query,
-  orderBy,
-} from 'firebase/firestore';
-import { Plus } from 'lucide-react';
 
-import { useCollection } from '@/firebase/firestore/use-collection';
-import { useUser } from '@/firebase/auth/use-user';
-import { useFirestore, useMemoFirebase } from '@/firebase';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Sparkles, MessageSquare, Timer } from 'lucide-react';
 import { useTranslation } from '@/context/LanguageContext';
-
-type ForumPost = {
-  title: string;
-  authorName: string;
-  authorAvatarUrl: string;
-  createdAt: string;
-  userId: string;
-};
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function ForumsPage() {
-  const { user } = useUser();
-  const firestore = useFirestore();
   const { t } = useTranslation();
 
-  const postsQuery = useMemoFirebase(() => {
-    return query(collection(firestore, 'forums'), orderBy('createdAt', 'desc'));
-  }, [firestore]);
-
-  const { data: posts, isLoading } = useCollection<ForumPost>(postsQuery);
-
-  const formatTimestamp = (isoString: string) => {
-    return new Date(isoString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
   return (
-    <div className="p-4 sm:p-6">
-      <Card>
-        <CardHeader className="flex-row items-center justify-between">
-          <div>
-            <CardTitle>{t('forums.title')}</CardTitle>
-            <CardDescription>
-              {t('forums.description')}
-            </CardDescription>
-          </div>
-          {user && (
-            <Button asChild>
-              <Link href="/dashboard/forums/new">
-                <Plus className="mr-2 h-4 w-4" />
-                {t('forums.newPost')}
-              </Link>
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex h-64 items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : !posts || posts.length === 0 ? (
-            <div className="py-16 text-center">
-              <p className="text-muted-foreground">{t('forums.noPosts')}</p>
-              <p className="text-sm text-muted-foreground">
-                {t('forums.beFirst')}
-              </p>
-            </div>
-          ) : (
-            <ul className="space-y-4">
-              {posts.map((post) => (
-                <li key={post.id}>
-                  <Link
-                    href={`/dashboard/forums/${post.id}`}
-                    className="block rounded-lg border bg-card p-4 transition-all hover:bg-muted/50"
-                  >
-                    <div className="flex items-start gap-4">
-                       <Image
-                        src={post.authorAvatarUrl}
-                        alt={post.authorName}
-                        width={40}
-                        height={40}
-                        className="rounded-full"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{post.title}</h3>
-                        <div className="text-sm text-muted-foreground">
-                          <p>
-                            {t('forums.authorBy', { author: post.authorName, date: formatTimestamp(post.createdAt) })}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+      <div className="relative mb-8">
+        <div className="absolute -inset-4 bg-primary/20 rounded-full blur-2xl animate-pulse" />
+        <div className="relative bg-background p-8 rounded-full border-2 border-primary/20 shadow-xl">
+          <MessageSquare className="h-16 w-16 text-primary" />
+        </div>
+        <div className="absolute -top-2 -right-2 bg-accent text-accent-foreground p-2 rounded-lg shadow-lg rotate-12 flex items-center gap-1 font-bold text-xs">
+          <Sparkles className="h-3 w-3" />
+          COMING SOON
+        </div>
+      </div>
+
+      <h1 className="text-4xl font-black tracking-tight mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+        HealthSphere Community
+      </h1>
+      <p className="text-xl text-muted-foreground max-w-lg mb-8 font-medium">
+        Chúng tôi đang xây dựng một không gian tuyệt vời để bạn kết nối, chia sẻ kinh nghiệm và cùng nhau sống khỏe!
+      </p>
+
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <Button size="lg" className="rounded-full px-8 shadow-lg hover:shadow-primary/20 transition-all font-bold" asChild>
+          <Link href="/dashboard"> Quay lại Trang chủ </Link>
+        </Button>
+        <div className="flex items-center gap-2 text-muted-foreground px-4 py-2 bg-muted/50 rounded-full text-sm font-semibold">
+          <Timer className="h-4 w-4" />
+          Dự kiến ra mắt trong Quý 3/2026
+        </div>
+      </div>
     </div>
   );
 }
