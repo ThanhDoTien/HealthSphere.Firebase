@@ -18,7 +18,8 @@ import {
   Search, 
   MessageSquare, 
   Scale,
-  Menu
+  Menu,
+  Bot
 } from 'lucide-react';
 import { useTranslation } from '@/context/LanguageContext';
 import { useUser } from '@/firebase/auth/use-user';
@@ -44,6 +45,7 @@ export default function Header({ onToggleAi, onToggleSidebar }: HeaderProps) {
     { href: '/dashboard/sleep', icon: Bed, labelKey: 'bottomNav.sleep' },
     { href: '/dashboard/forums', icon: MessageSquare, labelKey: 'bottomNav.forums' },
     { href: '/dashboard/discover', icon: Search, labelKey: 'bottomNav.discover' },
+    { href: '/dashboard/ai', icon: Bot, labelKey: 'sidebar.ai' },
   ];
 
   const isAuthPage = pathname?.includes('/signup') || pathname?.includes('/login');

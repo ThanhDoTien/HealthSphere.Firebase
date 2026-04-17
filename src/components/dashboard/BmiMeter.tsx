@@ -7,6 +7,7 @@ import { useTranslation } from '@/context/LanguageContext';
 interface BmiMeterProps {
   height: number; // in cm
   weight: number; // in kg
+  className?: string;
 }
 
 const BMI_CATEGORIES = {
@@ -55,7 +56,7 @@ const getBmiStatus = (bmi: number) => {
   return BMI_CATEGORIES.SEVERELY_OBESE;
 };
 
-export default function BmiMeter({ height, weight }: BmiMeterProps) {
+export default function BmiMeter({ height, weight, className }: BmiMeterProps) {
   const { t } = useTranslation();
 
   const { bmi, status, targetWeight } = useMemo(() => {
@@ -116,7 +117,7 @@ export default function BmiMeter({ height, weight }: BmiMeterProps) {
   };
 
   return (
-    <Card className="h-full">
+    <Card className={`h-full flex flex-col justify-center ${className || ''}`}>
       <CardHeader className="p-4 pb-2">
         <CardTitle className="text-base">{t('dashboard.bmi.title')}</CardTitle>
         <CardDescription className="text-xs">{t('dashboard.bmi.description')}</CardDescription>

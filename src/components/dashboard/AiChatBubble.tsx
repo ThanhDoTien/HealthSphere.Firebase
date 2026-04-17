@@ -17,7 +17,7 @@ export default function AiChatBubble() {
   const [isMinimized, setIsMinimized] = useState(false);
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-4 pointer-events-none">
+    <div className="fixed bottom-6 right-6 lg:right-[calc(30%+1.5rem)] z-[100] flex flex-col items-end gap-4 pointer-events-none transition-all duration-300">
       {/* Cửa sổ Chat */}
       {isOpen && !isMinimized && (
         <div className={cn(

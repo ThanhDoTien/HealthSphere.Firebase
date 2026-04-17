@@ -8,6 +8,8 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+
 import {
   Card,
   CardContent,
@@ -15,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore, useDoc } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
@@ -51,6 +54,7 @@ export default function SleepPage() {
   const [today, setToday] = useState('');
   const [aiAnalysis, setAiAnalysis] = useState<AnalyzeSleepOutput | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isLogOpen, setIsLogOpen] = useState(false);
 
   useEffect(() => {
     setToday(new Date().toISOString().split('T')[0]);
@@ -266,44 +270,57 @@ export default function SleepPage() {
           </div>
 
           <div className="space-y-6 border-t pt-6">
-            <h3 className="text-lg font-medium">{t('sleep.dailyLogTitle')}</h3>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : Object.keys(dailySleep).length > 0 ? (
-              <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
-                {Object.entries(dailySleep).sort((a,b) => b[0].localeCompare(a[0])).map(([date, sleeps]) => (
-                  <div key={date}>
-                    <h4 className="sticky top-0 mb-2 border-b bg-card py-2 font-semibold text-md">
-                      {new Date(date + 'T00:00').toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </h4>
-                    <ul className="space-y-2 pt-2">
-                      {sleeps.map((sleep) => (
-                        <li
-                          key={sleep.id}
-                          className="flex items-center justify-between rounded-lg bg-muted/50 p-3"
-                        >
-                          <div>
-                            <p className="font-medium">{t('sleep.logEntryName')}</p>
-                          </div>
-                          <p className="font-semibold">
-                            {sleep.duration} {t('sleep.unit.hours')}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
+            <div 
+               className="flex items-center justify-between cursor-pointer group"
+               onClick={() => setIsLogOpen(!isLogOpen)}
+            >
+               <h3 className="text-lg font-medium group-hover:text-primary transition-colors">{t('sleep.dailyLogTitle') || 'Nhật ký Giấc ngủ Hàng ngày'}</h3>
+               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
+                  {isLogOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+               </Button>
+            </div>
+            
+            {isLogOpen && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
-                ))}
+                ) : Object.keys(dailySleep).length > 0 ? (
+                  <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
+                    {Object.entries(dailySleep).sort((a,b) => b[0].localeCompare(a[0])).map(([date, sleeps]) => (
+                      <div key={date}>
+                        <h4 className="sticky top-0 mb-2 border-b bg-card py-2 font-semibold text-md">
+                          {new Date(date + 'T00:00').toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </h4>
+                        <ul className="space-y-2 pt-2">
+                          {sleeps.map((sleep) => (
+                            <li
+                              key={sleep.id}
+                              className="flex items-center justify-between rounded-lg bg-muted/50 p-3"
+                            >
+                              <div>
+                                <p className="font-medium">{t('sleep.logEntryName')}</p>
+                              </div>
+                              <p className="font-semibold">
+                                {sleep.duration} {t('sleep.unit.hours')}
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="py-8 text-center text-muted-foreground">
+                    {t('sleep.noSleep')}
+                  </p>
+                )}
               </div>
-            ) : (
-              <p className="py-8 text-center text-muted-foreground">
-                {t('sleep.noSleep')}
-              </p>
             )}
           </div>
         </CardContent>

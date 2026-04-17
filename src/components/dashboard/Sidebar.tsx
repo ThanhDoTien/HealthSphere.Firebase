@@ -56,12 +56,13 @@ export default function Sidebar({ isCollapsed, toggleCollapsed }: SidebarProps) 
   return (
     <aside
       className={cn(
-        "relative flex flex-col border-r bg-card/50 backdrop-blur-md transition-all duration-300 ease-in-out z-40 h-[calc(100vh-80px)]",
-        "lg:w-[16%] lg:shrink-0", // Fixed 16% on desktop
-        isCollapsed ? "w-20 lg:w-[16%]" : "w-64 lg:w-[16%]" 
+        "flex flex-col bg-card/50 backdrop-blur-md transition-all duration-300 ease-in-out z-40 h-[calc(100vh-80px)] overflow-hidden shrink-0",
+        "lg:w-[16%] lg:opacity-100 lg:border-r lg:relative lg:pointer-events-auto", // Desktop: Always 16%, visible
+        isCollapsed 
+          ? "w-0 opacity-0 border-none pointer-events-none" 
+          : "absolute left-0 w-64 opacity-100 border-r bg-background/95 shadow-2xl pointer-events-auto"
       )}
     >
-
       <div className="flex flex-col gap-1 p-3 overflow-y-auto overflow-x-hidden flex-1 no-scrollbar">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -69,6 +70,11 @@ export default function Sidebar({ isCollapsed, toggleCollapsed }: SidebarProps) 
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => {
+                if (!isCollapsed) {
+                  toggleCollapsed();
+                }
+              }}
               className={cn(
                 "flex items-center gap-3 rounded-xl p-3 transition-all duration-200 group",
                 isActive 
@@ -80,14 +86,13 @@ export default function Sidebar({ isCollapsed, toggleCollapsed }: SidebarProps) 
                 "h-6 w-6 shrink-0 transition-transform group-hover:scale-110",
                 isActive ? "text-primary stroke-[2.5px]" : "text-muted-foreground stroke-[1.5px]"
               )} />
-              {!isCollapsed && (
-                <span className={cn(
-                  "text-sm font-bold truncate transition-opacity duration-300",
-                  isActive ? "text-primary" : "text-foreground/80"
-                )}>
-                  {t(item.labelKey)}
-                </span>
-              )}
+              <span className={cn(
+                "text-sm font-bold truncate transition-opacity duration-300",
+                isCollapsed ? "hidden lg:block" : "block",
+                isActive ? "text-primary" : "text-foreground/80"
+              )}>
+                {t(item.labelKey)}
+              </span>
             </Link>
           );
         })}
@@ -102,7 +107,10 @@ export default function Sidebar({ isCollapsed, toggleCollapsed }: SidebarProps) 
               isCollapsed ? "justify-center" : "px-4"
             )}>
               <HelpCircle className="h-6 w-6 shrink-0 transition-transform group-hover:scale-110" />
-              {!isCollapsed && <span className="text-sm font-bold uppercase tracking-wider">{t('sidebar.help')}</span>}
+              <span className={cn(
+                "text-sm font-bold uppercase tracking-wider",
+                isCollapsed ? "hidden lg:block" : "block"
+              )}>{t('sidebar.help')}</span>
             </button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">

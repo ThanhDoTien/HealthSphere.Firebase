@@ -193,7 +193,7 @@ export default function RightAiSidebar({ isOpen, onClose }: RightAiSidebarProps)
       >
         <div className={cn(
           "flex flex-col h-full w-full transition-opacity duration-300",
-          (isOpen || typeof window !== 'undefined' && window.innerWidth >= 1024) ? "opacity-100" : "opacity-0"
+          isOpen ? "opacity-100" : "opacity-0 lg:opacity-100"
         )}>
           {/* Sidebar Header */}
           <div className="flex items-center justify-between p-6 border-b bg-primary/5">
@@ -324,7 +324,7 @@ export default function RightAiSidebar({ isOpen, onClose }: RightAiSidebarProps)
               <div className="relative h-64 sm:h-80 shrink-0">
                 <SuggestImage 
                   name={selectedItem.data.name} 
-                  prompt={selectedItem.data.name + (selectedItem.type === 'workout' ? ' fitness' : ' meal')} 
+                  prompt={selectedItem.type === 'workout' ? selectedItem.data.name + ' fitness exercise high quality' : selectedItem.data.name} 
                   className="h-full w-full object-cover" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />

@@ -19,7 +19,7 @@ export default function DashboardLayout({
   useMustBeLoggedIn();
   const { user, loading } = useUser();
   const { t } = useTranslation();
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isAiOpen, setIsAiOpen] = useState(false);
  
   if (loading) {
@@ -43,7 +43,7 @@ export default function DashboardLayout({
         />
         
         <main className={cn(
-          "relative overflow-y-auto h-[calc(100vh-80px)] bg-[#f0f2f5] dark:bg-[#18191a] transition-all flex flex-col no-scrollbar",
+          "relative overflow-y-auto h-[calc(100vh-80px)] bg-background transition-all flex flex-col no-scrollbar",
           "w-full lg:w-[54%]" // Middle section 54%
         )}>
           <div className="w-full py-6 px-10 xl:px-16 flex-1">

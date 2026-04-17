@@ -142,12 +142,7 @@ export default function WeightPage() {
   return (
     <div className="flex flex-col space-y-6 px-4 py-8 pb-10 w-full animate-in fade-in duration-500">
       <div className="grid gap-6">
-        {/* Hàng 1: BMI Gauge (Full-width) */}
-        <div className="w-full">
-           <BmiMeter height={userProfile?.height || 0} weight={currentWeight || 0} />
-        </div>
-
-        {/* Hàng 2: AI Analysis (Full-width) */}
+        {/* Hàng 1: Unified BMI & AI Analysis Card */}
         <div className="w-full">
           <Card className="shadow-xl border-primary/20 bg-gradient-to-br from-background to-primary/5 overflow-hidden flex flex-col relative group">
             <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -157,25 +152,33 @@ export default function WeightPage() {
             <CardHeader className="pb-2 border-b border-primary/10">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-xl font-black tracking-tight flex items-center gap-2 text-primary">
+                  <CardTitle className="text-xl font-bold tracking-tight flex items-center gap-2 text-primary">
                     <Activity className="h-5 w-5" />
-                    NHẬN XÉT CHI TIẾT TỪ AI
+                    Nhận xét chi tiết từ AI
                   </CardTitle>
-                  <CardDescription className="text-xs font-bold uppercase tracking-widest opacity-70">Personalized Health Intelligence</CardDescription>
+                  <CardDescription className="text-xs font-medium tracking-wide opacity-70">Personalized Health Intelligence</CardDescription>
                 </div>
-                <div className="px-3 py-1 bg-primary/10 rounded-full border border-primary/20 text-[10px] font-black text-primary animate-pulse">
-                  LIVE ANALYSIS
+                <div className="px-3 py-1 bg-primary/10 rounded-full border border-primary/20 text-[10px] font-bold text-primary animate-pulse">
+                  Live Analysis
                 </div>
               </div>
             </CardHeader>
             
-            <CardContent className="flex-1 p-6 space-y-6">
-              {/* PHẦN 1: GỢI Ý CÁ NHÂN HÓA */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-xs font-black text-muted-foreground uppercase tracking-tighter">
-                  <div className="h-1 w-8 bg-primary rounded-full" />
-                   Gợi ý cá nhân hóa (AI / system suggestion)
+            <CardContent className="p-0">
+              <div className="grid grid-cols-1 xl:grid-cols-5 divide-y xl:divide-y-0 xl:divide-x divide-primary/10">
+                {/* Dữ liệu BMI bên trái */}
+                <div className="xl:col-span-2 flex flex-col justify-center bg-card/50">
+                   <BmiMeter height={userProfile?.height || 0} weight={currentWeight || 0} className="border-none shadow-none bg-transparent" />
                 </div>
+
+                {/* AI Insights bên phải */}
+                <div className="xl:col-span-3 p-6 space-y-6 flex-1">
+                  {/* PHẦN 1: GỢI Ý CÁ NHÂN HÓA */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground tracking-tight">
+                      <div className="h-1 w-8 bg-primary rounded-full" />
+                       Gợi ý cá nhân hóa (AI / system suggestion)
+                    </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-3">
@@ -184,8 +187,8 @@ export default function WeightPage() {
                           <Flame className="h-4 w-4 text-orange-500" />
                        </div>
                        <div>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Lượng calo nên ăn/ngày (TDEE)</p>
-                          <p className="text-lg font-black">{tdee} <span className="text-xs font-medium opacity-60">kcal</span></p>
+                          <p className="text-xs font-medium text-muted-foreground tracking-wide">Lượng calo nên ăn (TDEE)</p>
+                          <p className="text-lg font-bold">{tdee} <span className="text-xs font-normal opacity-60">kcal</span></p>
                        </div>
                     </div>
 
@@ -194,8 +197,8 @@ export default function WeightPage() {
                           <Utensils className="h-4 w-4 text-primary" />
                        </div>
                        <div className="flex-1">
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">🍽️ Gợi ý hôm nay</p>
-                          <p className="text-xs font-bold line-clamp-1">{suggestionData?.mealSuggestions?.[0]?.name || "Đang phân tích thực đơn..."}</p>
+                          <p className="text-xs font-medium text-muted-foreground tracking-wide">🍽️ Gợi ý hôm nay</p>
+                          <p className="text-sm font-semibold line-clamp-2" title={suggestionData?.mealSuggestions?.[0]?.name}>{suggestionData?.mealSuggestions?.[0]?.name || "Đang phân tích thực đơn..."}</p>
                        </div>
                     </div>
                   </div>
@@ -206,8 +209,8 @@ export default function WeightPage() {
                           <TrendingUp className="h-4 w-4 text-accent" />
                        </div>
                        <div className="flex-1">
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">🏃 Hoạt động đề xuất</p>
-                          <p className="text-xs font-bold line-clamp-1">{suggestionData?.workoutSuggestion?.[0]?.name || "Tăng cường vận động nhẹ"}</p>
+                          <p className="text-xs font-medium text-muted-foreground tracking-wide">🏃 Hoạt động đề xuất</p>
+                          <p className="text-sm font-semibold line-clamp-2" title={suggestionData?.workoutSuggestion?.[0]?.name}>{suggestionData?.workoutSuggestion?.[0]?.name || "Tăng cường vận động nhẹ"}</p>
                        </div>
                     </div>
 
@@ -216,8 +219,8 @@ export default function WeightPage() {
                           <AlertTriangle className="h-4 w-4 text-red-500" />
                        </div>
                        <div className="flex-1">
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Cảnh báo / insight nhanh</p>
-                          <p className="text-xs font-bold text-red-600/80">{bmi > 25 ? "Hạn chế tinh bột vào buổi tối" : "Duy trì năng lượng ổn định"}</p>
+                          <p className="text-xs font-medium text-muted-foreground tracking-wide">Cảnh báo / insight</p>
+                          <p className="text-sm font-semibold text-red-600/80 leading-tight">{bmi > 25 ? "Hạn chế tinh bột vào buổi tối" : "Duy trì năng lượng ổn định"}</p>
                        </div>
                     </div>
                   </div>
@@ -226,7 +229,7 @@ export default function WeightPage() {
 
               {/* PHẦN 2: PHÂN TÍCH BIỂU ĐỒ */}
               <div className="pt-4 border-t border-primary/10 space-y-3">
-                 <div className="flex items-center gap-2 text-xs font-black text-muted-foreground uppercase tracking-tighter">
+                 <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground tracking-tight">
                   <div className="h-1 w-8 bg-accent rounded-full" />
                    Phân tích từ dữ liệu biểu đồ bên dưới
                 </div>
@@ -235,17 +238,17 @@ export default function WeightPage() {
                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Scale className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs font-bold">⚠️ Cân nặng trong 7 ngày gần đây</span>
+                        <span className="text-sm font-semibold">⚠️ Cân nặng trong 7 ngày gần đây</span>
                       </div>
                       {trendAnalysis && (
-                         <div className={cn("text-xs font-black flex items-center gap-1", trendAnalysis.statusColor)}>
+                         <div className={cn("text-sm font-bold flex items-center gap-1", trendAnalysis.statusColor)}>
                             <trendAnalysis.trendIcon className="h-4 w-4" />
                             {Math.abs(trendAnalysis.diff).toFixed(1)} kg
                          </div>
                       )}
                    </div>
                    
-                   <p className="text-sm font-medium leading-relaxed italic text-foreground/80">
+                   <p className="text-sm leading-relaxed text-foreground/80">
                       &quot;{trendAnalysis?.trendText || "Vui lòng cập nhật thêm dữ liệu cân nặng để AI có thể phân tích xu hướng chính xác hơn cho bạn."}&quot;
                    </p>
                    
@@ -255,13 +258,15 @@ export default function WeightPage() {
                           className={cn("h-full transition-all duration-1000", trendAnalysis ? (trendAnalysis.diff > 0 ? "bg-orange-500 w-full" : "bg-green-500 w-full") : "w-0")} 
                         />
                       </div>
-                      <span className="text-[10px] font-black opacity-60 uppercase">General Trend</span>
+                      <span className="text-xs font-medium opacity-60">General Trend</span>
                    </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
         {/* Hàng 2: Biểu đồ cột chiếm toàn bộ chiều ngang */}
         <Card className="shadow-md overflow-hidden">

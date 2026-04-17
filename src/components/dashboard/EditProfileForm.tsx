@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Camera, Loader2 } from "lucide-react";
 import { updateUserProfile } from "@/firebase/auth/utils";
+import { initializeFirebase } from "@/firebase";
+import { updateEmail, updateProfile } from "firebase/auth";
+import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
 import {
   Select,
   SelectContent,
@@ -45,6 +50,11 @@ interface EditProfileFormProps {
 export default function EditProfileForm({ userProfile, userId }: EditProfileFormProps) {
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { auth } = initializeFirebase();
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [photoURL, setPhotoURL] = useState<string>(auth.currentUser?.photoURL || "");
+
   const {
     register,
     handleSubmit,
@@ -86,10 +96,43 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
-      await updateUserProfile(userId, data);
+      const currentUser = auth.currentUser;
+      const tasks: Promise<any>[] = [updateUserProfile(userId, data)];
+
+      // Upload Avatar if changed
+      if (avatarPreview && avatarPreview.startsWith("data:image") && currentUser) {
+        setIsUploadingAvatar(true);
+        const storage = getStorage();
+        const storageRef = ref(storage, `users/${userId}/avatar.png`);
+        const uploadTask = uploadString(storageRef, avatarPreview, 'data_url')
+          .then(snapshot => getDownloadURL(snapshot.ref))
+          .then(url => {
+            setPhotoURL(url);
+            return updateProfile(currentUser, { photoURL: url });
+          })
+          .catch(err => {
+            console.error("Avatar Upload Failed", err);
+            throw new Error("Không thể tải lên ảnh đại diện.");
+          });
+        tasks.push(uploadTask);
+      }
+
+      // Update Email in Auth if changed
+      if (currentUser && currentUser.email !== data.email) {
+        tasks.push(updateEmail(currentUser, data.email).catch(err => {
+           console.error("Email Update Failed", err);
+           if (err.code === "auth/requires-recent-login") {
+              throw new Error("Để đổi email, vui lòng đăng xuất và đăng nhập lại trước khi thực hiện.");
+           }
+           throw new Error("Không thể cập nhật email. Vui lòng thử lại.");
+        }));
+      }
+
+      await Promise.all(tasks);
+
       toast({
         title: t('form.common.success'),
-        description: t('profile.updateSuccess'),
+        description: t('profile.updateSuccess') || "Đã cập nhật hồ sơ thành công.",
       });
     } catch (error: any) {
       toast({
@@ -97,11 +140,43 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
         title: t('form.common.error'),
         description: error.message || t('profile.updateError'),
       });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+         toast({ variant: "destructive", title: "Lỗi kích thước", description: "Vui lòng chọn ảnh nhỏ hơn 5MB." });
+         return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Avatar Section */}
+      <div className="flex flex-col items-center justify-center space-y-4 pb-6 border-b">
+         <div className="relative group">
+            <Avatar className="h-24 w-24 border-4 border-background shadow-xl">
+              <AvatarImage src={avatarPreview || photoURL} className="object-cover" />
+              <AvatarFallback className="text-xl font-bold">{userProfile.name?.charAt(0).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <Label htmlFor="avatar-upload" className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-lg cursor-pointer hover:bg-primary/90 transition-all flex items-center justify-center">
+               {isUploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+            </Label>
+            <Input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={isUploadingAvatar} />
+         </div>
+         <p className="text-xs text-muted-foreground">Nhấn vào icon máy ảnh để thay đổi Avatar</p>
+      </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="name">{t('signup.nameLabel')}</Label>
@@ -110,7 +185,8 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
         </div>
         <div className="grid gap-2">
           <Label htmlFor="email">{t('login.emailLabel')}</Label>
-          <Input id="email" type="email" {...register("email")} readOnly disabled />
+          <Input id="email" type="email" {...register("email")} />
+          {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
         </div>
       </div>
 
@@ -227,8 +303,10 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
         {errors.goal && <p className="text-sm text-destructive">{errors.goal.message}</p>}
       </div>
       
-      <Button type="submit" disabled={isSubmitting || !isDirty}>
-        {isSubmitting ? t('profile.savingButton') : t('profile.saveButton')}
+      <Button type="submit" disabled={isSubmitting || (!isDirty && !avatarPreview) || isUploadingAvatar} className="w-full sm:w-auto mt-4 px-8 font-bold">
+        {isSubmitting || isUploadingAvatar ? (
+           <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('profile.savingButton')}</>
+        ) : t('profile.saveButton')}
       </Button>
     </form>
   );

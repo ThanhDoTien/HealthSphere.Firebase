@@ -23,7 +23,7 @@ import { useMemoFirebase } from '@/firebase/provider';
 import { collection, query, orderBy, limit, doc, deleteDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { BarChart } from '@/components/ui/bar-chart';
 import { type ChartConfig } from '@/components/ui/chart';
-import { Loader2, Zap, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle, TrendingUp, Heart, Activity, Plus } from 'lucide-react';
+import { Loader2, Zap, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle, TrendingUp, Heart, Activity, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { useTranslation } from '@/context/LanguageContext';
 import {
@@ -95,6 +95,7 @@ export default function ActivityPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isHRDialogOpen, setIsHRDialogOpen] = useState(false);
   const [isBPDialogOpen, setIsBPDialogOpen] = useState(false);
+  const [isLogOpen, setIsLogOpen] = useState(false);
 
   useEffect(() => {
     setToday(new Date().toISOString().split('T')[0]);
@@ -538,78 +539,90 @@ export default function ActivityPage() {
           </div>
 
           <div className="space-y-6 border-t pt-6">
-            <h3 className="text-lg font-medium">{t('activity.dailyLogTitle')}</h3>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : Object.keys(dailyActivities).length > 0 ? (
-              <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
-                {Object.entries(dailyActivities).sort((a,b) => b[0].localeCompare(a[0])).map(([date, activities]) => (
-                  <div key={date}>
-                    <h4 className="sticky top-0 mb-2 border-b bg-card py-2 font-semibold text-md">
-                      {new Date(date + 'T00:00').toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </h4>
-                    <ul className="space-y-2 pt-2">
-                      {activities.map((activity) => (
-                        <li
-                          key={activity.id}
-                          className="flex items-center justify-between rounded-lg bg-muted/50 p-3"
-                        >
-                          <div>
-                            <p className="font-medium">{activity.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {activity.duration} {t('activity.unit.minutes')}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <p className="font-semibold">
-                              {activity.caloriesBurned} kcal
-                            </p>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <span className="sr-only">Open menu</span>
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setSelectedActivity(activity);
-                                    setIsEditDialogOpen(true);
-                                  }}
-                                >
-                                  <Pencil className="mr-2 h-4 w-4" />
-                                  {t('form.common.edit')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-destructive"
-                                  onClick={() => {
-                                    setSelectedActivity(activity);
-                                    setIsDeleteDialogOpen(true);
-                                  }}
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  {t('form.common.delete')}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+            <div 
+               className="flex items-center justify-between cursor-pointer group"
+               onClick={() => setIsLogOpen(!isLogOpen)}
+            >
+               <h3 className="text-lg font-medium group-hover:text-primary transition-colors">{t('activity.dailyLogTitle') || 'Nhật ký hoạt động hàng ngày'}</h3>
+               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
+                  {isLogOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+               </Button>
+            </div>
+            {isLogOpen && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
-                ))}
+                ) : Object.keys(dailyActivities).length > 0 ? (
+                  <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
+                    {Object.entries(dailyActivities).sort((a,b) => b[0].localeCompare(a[0])).map(([date, activities]) => (
+                      <div key={date}>
+                        <h4 className="sticky top-0 mb-2 border-b bg-card py-2 font-semibold text-md z-10">
+                          {new Date(date + 'T00:00').toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </h4>
+                        <ul className="space-y-2 pt-2">
+                          {activities.map((activity) => (
+                            <li
+                              key={activity.id}
+                              className="flex items-center justify-between rounded-lg bg-muted/50 p-3"
+                            >
+                              <div>
+                                <p className="font-medium">{activity.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {activity.duration} {t('activity.unit.minutes')}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <p className="font-semibold">
+                                  {activity.caloriesBurned} kcal
+                                </p>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                      <span className="sr-only">Open menu</span>
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setSelectedActivity(activity);
+                                        setIsEditDialogOpen(true);
+                                      }}
+                                    >
+                                      <Pencil className="mr-2 h-4 w-4" />
+                                      {t('form.common.edit')}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="text-destructive"
+                                      onClick={() => {
+                                        setSelectedActivity(activity);
+                                        setIsDeleteDialogOpen(true);
+                                      }}
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      {t('form.common.delete')}
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="py-8 text-center text-muted-foreground">
+                    {t('activity.noActivity')}
+                  </p>
+                )}
               </div>
-            ) : (
-              <p className="py-8 text-center text-muted-foreground">
-                {t('activity.noActivity')}
-              </p>
             )}
           </div>
         </CardContent>

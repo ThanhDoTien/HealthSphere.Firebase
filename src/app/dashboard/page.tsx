@@ -185,16 +185,14 @@ export default function DashboardPage() {
             <Card className="border-primary/20 bg-primary/5 shadow-sm overflow-hidden group">
               <CardContent className="p-0">
                 <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x border-primary/10">
-                  <div className="p-4 flex items-center gap-4 flex-1">
-                    <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <Lightbulb className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-black uppercase tracking-widest text-primary/70 mb-1">{t('ai.tipTitle')}</h4>
-                      <p className="text-sm font-medium leading-relaxed italic">
-                        &quot;{suggestionData.generalTip.replaceAll('\\n', '\n')}&quot;
-                      </p>
-                    </div>
+                  <div className="p-4 flex flex-col gap-2 flex-1">
+                    <h4 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary/70">
+                      <Lightbulb className="h-4 w-4 text-primary" />
+                      {t('ai.tipTitle')}
+                    </h4>
+                    <p className="text-sm font-medium leading-relaxed italic">
+                      &quot;{suggestionData.generalTip.replaceAll('\\n', '\n')}&quot;
+                    </p>
                   </div>
                 </div>
               </CardContent>

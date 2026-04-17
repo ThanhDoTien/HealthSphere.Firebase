@@ -24,7 +24,7 @@ import { collection, query, orderBy, doc, deleteDoc, limit, where, setDoc, serve
 import { BarChart } from '@/components/ui/bar-chart';
 import { PieChart } from '@/components/ui/pie-chart';
 import { type ChartConfig } from '@/components/ui/chart';
-import { Loader2, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle, Target, Flame } from 'lucide-react';
+import { Loader2, MoreHorizontal, Pencil, Trash2, BrainCircuit, CheckCircle2, AlertTriangle, AlertCircle, Target, Flame, ChevronDown, ChevronUp } from 'lucide-react';
 import { WithId } from '@/firebase/firestore/use-collection';
 import {
   DropdownMenu,
@@ -102,6 +102,7 @@ export default function CaloriesPage() {
   const [today, setToday] = useState('');
   const [aiAnalysis, setAiAnalysis] = useState<AnalyzeNutritionOutput | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isLogOpen, setIsLogOpen] = useState(false);
 
   useEffect(() => {
     setToday(new Date().toISOString().split('T')[0]);
@@ -487,52 +488,64 @@ export default function CaloriesPage() {
           {user && <AiMealChatLog userId={user.uid} />}
 
           <div className="space-y-6 border-t pt-6">
-            <h3 className="text-lg font-medium">{t('calories.dailyLogTitle')}</h3>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
-            ) : Object.keys(dailyMeals).length > 0 ? (
-              <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
-                {Object.entries(dailyMeals).sort((a, b) => b[0].localeCompare(a[0])).map(([date, meals]) => (
-                  <div key={date}>
-                    <h4 className="sticky top-0 mb-2 border-b bg-card py-2 font-semibold text-md">
-                      {new Date(date + 'T00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                    </h4>
-                    <ul className="space-y-3 pt-2">
-                      {meals.map((meal) => (
-                        <li key={meal.id} className="flex items-start justify-between rounded-xl bg-muted/50 p-4 border">
-                          <div className="space-y-1">
-                            <p className="font-bold">{meal.name}</p>
-                            <p className="text-xs capitalize text-muted-foreground">{t(`form.add_meal.type${meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1)}`)}</p>
-                            {(meal.protein || meal.carbs || meal.fat || meal.fiber) && (
-                              <div className="flex flex-wrap gap-2 pt-1">
-                                {meal.protein !== undefined && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">P: {meal.protein}g</span>}
-                                {meal.carbs !== undefined && <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">C: {meal.carbs}g</span>}
-                                {meal.fat !== undefined && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">F: {meal.fat}g</span>}
-                                {meal.fiber !== undefined && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Fib: {meal.fiber}g</span>}
+            <div 
+               className="flex items-center justify-between cursor-pointer group"
+               onClick={() => setIsLogOpen(!isLogOpen)}
+            >
+               <h3 className="text-lg font-medium group-hover:text-primary transition-colors">{t('calories.dailyLogTitle') || 'Nhật ký Bữa ăn Hàng ngày'}</h3>
+               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
+                  {isLogOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+               </Button>
+            </div>
+            {isLogOpen && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+                ) : Object.keys(dailyMeals).length > 0 ? (
+                  <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-2">
+                    {Object.entries(dailyMeals).sort((a, b) => b[0].localeCompare(a[0])).map(([date, meals]) => (
+                      <div key={date}>
+                        <h4 className="sticky top-0 mb-2 border-b bg-card py-2 font-semibold text-md z-10">
+                          {new Date(date + 'T00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                        </h4>
+                        <ul className="space-y-3 pt-2">
+                          {meals.map((meal) => (
+                            <li key={meal.id} className="flex items-start justify-between rounded-xl bg-muted/50 p-4 border">
+                              <div className="space-y-1">
+                                <p className="font-bold">{meal.name}</p>
+                                <p className="text-xs capitalize text-muted-foreground">{t(`form.add_meal.type${meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1)}`)}</p>
+                                {(meal.protein || meal.carbs || meal.fat || meal.fiber) && (
+                                  <div className="flex flex-wrap gap-2 pt-1">
+                                    {meal.protein !== undefined && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">P: {meal.protein}g</span>}
+                                    {meal.carbs !== undefined && <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">C: {meal.carbs}g</span>}
+                                    {meal.fat !== undefined && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">F: {meal.fat}g</span>}
+                                    {meal.fiber !== undefined && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Fib: {meal.fiber}g</span>}
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="text-right">
-                              <p className="font-bold text-primary">{meal.calories}</p>
-                              <p className="text-[10px] text-muted-foreground">kcal</p>
-                            </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => { setSelectedMeal(meal); setIsEditDialogOpen(true); }}><Pencil className="mr-2 h-4 w-4" />{t('form.common.edit')}</DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive" onClick={() => { setSelectedMeal(meal); setIsDeleteDialogOpen(true); }}><Trash2 className="mr-2 h-4 w-4" />{t('form.common.delete')}</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                              <div className="flex items-center gap-2">
+                                <div className="text-right">
+                                  <p className="font-bold text-primary">{meal.calories}</p>
+                                  <p className="text-[10px] text-muted-foreground">kcal</p>
+                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild><Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => { setSelectedMeal(meal); setIsEditDialogOpen(true); }}><Pencil className="mr-2 h-4 w-4" />{t('form.common.edit')}</DropdownMenuItem>
+                                    <DropdownMenuItem className="text-destructive" onClick={() => { setSelectedMeal(meal); setIsDeleteDialogOpen(true); }}><Trash2 className="mr-2 h-4 w-4" />{t('form.common.delete')}</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <p className="py-8 text-center text-muted-foreground">{t('calories.noMeals')}</p>
+                )}
               </div>
-            ) : (
-              <p className="py-8 text-center text-muted-foreground">{t('calories.noMeals')}</p>
             )}
           </div>
         </CardContent>
