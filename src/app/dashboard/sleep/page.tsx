@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/select';
 import { analyzeSleepQuality, type AnalyzeSleepOutput } from '@/ai/flows/analyze-sleep-quality-flow';
 import { cn } from '@/lib/utils';
+import { renderMarkdown } from '@/lib/render-markdown';
 
 type Sleep = {
   duration: number;
@@ -181,12 +182,6 @@ export default function SleepPage() {
     return groupedSleep;
   }, [sleepData]);
 
-  // Helper to format text with line breaks and strip HTML tags
-  const formatAiText = (text: string) => {
-    if (!text) return '';
-    return text.replace(/\\n/g, '\n').replace(/<br\s*\/?>/g, '\n');
-  };
-
   const isLoading = userLoading || sleepLoading;
 
   return (
@@ -249,8 +244,8 @@ export default function SleepPage() {
                 {aiAnalysis.status === 'good' ? (t('sleep.status.good') || 'Hồi phục tốt') : 
                  aiAnalysis.status === 'warning' ? (t('sleep.status.warning') || 'Thiếu ngủ nhẹ') : (t('sleep.status.bad') || 'Thiếu ngủ nghiêm trọng')}
               </div>
-              <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
-                {formatAiText(aiAnalysis.analysis)}
+              <div className="text-base leading-relaxed font-medium text-foreground/90">
+                {renderMarkdown(aiAnalysis.analysis)}
               </div>
             </div>
           ) : (

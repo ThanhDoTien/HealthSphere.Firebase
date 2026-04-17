@@ -64,6 +64,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import AiActivityChatLog from '@/components/dashboard/AiActivityChatLog';
 import { analyzeActivityBalance, type AnalyzeActivityBalanceOutput } from '@/ai/flows/analyze-activity-balance-flow';
 import { cn } from '@/lib/utils';
+import { renderMarkdown } from '@/lib/render-markdown';
 import AddHeartRateForm from '@/components/dashboard/AddHeartRateForm';
 import AddBloodPressureForm from '@/components/dashboard/AddBloodPressureForm';
 
@@ -326,12 +327,6 @@ export default function ActivityPage() {
       });
   };
 
-  // Helper to format text with line breaks and strip HTML tags
-  const formatAiText = (text: string) => {
-    if (!text) return '';
-    return text.replace(/\\n/g, '\n').replace(/<br\s*\/?>/g, '\n');
-  };
-
   const isLoading = userLoading || activityLoading;
 
   return (
@@ -516,8 +511,8 @@ export default function ActivityPage() {
                     {aiAnalysis.status === 'good' ? t('activity.status.good') : 
                     aiAnalysis.status === 'warning' ? t('activity.status.warning') : t('activity.status.bad')}
                   </div>
-                  <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
-                    {formatAiText(aiAnalysis.analysis)}
+                  <div className="text-base leading-relaxed font-medium text-foreground/90">
+                    {renderMarkdown(aiAnalysis.analysis)}
                   </div>
                 </div>
               ) : (

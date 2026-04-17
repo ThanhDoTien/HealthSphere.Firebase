@@ -76,6 +76,12 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading font-semibold tracking-tight;
   }
+  
+  /* Force Heading Font on large text or specifically bolded display elements to synchronize the entire site automatically */
+  .text-lg, .text-xl, .text-2xl, .text-3xl, .text-4xl, .text-5xl, .text-6xl, .text-7xl,
+  .font-black, .font-extrabold {
+    @apply font-heading tracking-tight;
+  }
 }
 
 @layer utilities {

@@ -66,6 +66,7 @@ import AiMealChatLog from '@/components/dashboard/AiMealChatLog';
 import { analyzeNutritionBalance, type AnalyzeNutritionOutput } from '@/ai/flows/analyze-nutrition-balance-flow';
 import { cn } from '@/lib/utils';
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
+import { renderMarkdown } from '@/lib/render-markdown';
 
 type Meal = {
   name: string;
@@ -314,11 +315,6 @@ export default function CaloriesPage() {
       });
   };
 
-  const formatAiText = (text: string) => {
-    if (!text) return '';
-    return text.replace(/\\n/g, '\n').replace(/<br\s*\/?>/g, '\n');
-  };
-
   const isLoading = userLoading || mealLoading;
 
   return (
@@ -457,8 +453,8 @@ export default function CaloriesPage() {
                 {aiAnalysis.status === 'good' ? t('calories.status.good') :
                   aiAnalysis.status === 'warning' ? t('calories.status.warning') : t('calories.status.bad')}
               </div>
-              <div className="text-base leading-relaxed whitespace-pre-line font-medium text-foreground/90">
-                {formatAiText(aiAnalysis.analysis)}
+              <div className="text-base leading-relaxed font-medium text-foreground/90">
+                {renderMarkdown(aiAnalysis.analysis)}
               </div>
             </div>
           ) : (

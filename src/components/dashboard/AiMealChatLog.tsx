@@ -14,6 +14,7 @@ import { useFirestore } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
+import { renderMarkdown } from '@/lib/render-markdown';
 import {
   Select,
   SelectContent,
@@ -141,9 +142,9 @@ export default function AiMealChatLog({ userId }: AiMealChatLogProps) {
                 ? "bg-primary text-primary-foreground rounded-tr-none" 
                 : "bg-muted text-foreground rounded-tl-none border border-border/50"
             )}>
-              <div className="flex items-center gap-2 mb-1">
-                {msg.role === 'model' && <Sparkles className="h-3 w-3 text-primary" />}
-                <p className="whitespace-pre-line leading-relaxed">{msg.content}</p>
+              <div className="flex items-start gap-2 mb-1">
+                {msg.role === 'model' && <Sparkles className="h-3 w-3 text-primary mt-0.5 shrink-0" />}
+                <div className="text-sm leading-relaxed">{renderMarkdown(msg.content)}</div>
               </div>
 
               {msg.analysis && (

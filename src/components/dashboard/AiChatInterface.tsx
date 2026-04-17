@@ -26,6 +26,7 @@ import { healthChat } from '@/ai/flows/chat-flow';
 import { useTranslation } from '@/context/LanguageContext';
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
 import { cn } from '@/lib/utils';
+import { renderMarkdown } from '@/lib/render-markdown';
 
 interface AiChatInterfaceProps {
   className?: string;
@@ -213,7 +214,7 @@ export default function AiChatInterface({ className, isFullHeight = false }: AiC
                   ? "bg-primary text-primary-foreground rounded-tr-none" 
                   : "bg-muted/80 text-foreground rounded-tl-none border border-border/30"
               )}>
-                <p className="whitespace-pre-line">{msg.content}</p>
+                <div className="text-xs leading-relaxed space-y-0.5">{renderMarkdown(msg.content)}</div>
               </div>
             </div>
           </div>
