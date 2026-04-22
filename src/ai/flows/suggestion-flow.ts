@@ -107,7 +107,7 @@ export async function getHealthSuggestions(
       },
       body: JSON.stringify({ prompt }),
       cache: 'no-store',
-      signal: AbortSignal.timeout(60000), 
+      signal: AbortSignal.timeout(60000),
     });
 
     if (!response.ok) {
