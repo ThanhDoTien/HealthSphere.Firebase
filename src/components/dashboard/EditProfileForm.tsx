@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Loader2 } from "lucide-react";
 import { updateUserProfile } from "@/firebase/auth/utils";
 import { initializeFirebase } from "@/firebase";
+import { useUser } from "@/firebase/auth/use-user";
 import { updateEmail, updateProfile } from "firebase/auth";
 import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
 import {
@@ -51,9 +52,16 @@ export default function EditProfileForm({ userProfile, userId }: EditProfileForm
   const { toast } = useToast();
   const { t } = useTranslation();
   const { auth } = initializeFirebase();
+  const { user } = useUser();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [photoURL, setPhotoURL] = useState<string>(auth.currentUser?.photoURL || "");
+  const [photoURL, setPhotoURL] = useState<string>("");
+
+  useEffect(() => {
+    if (user?.photoURL) {
+      setPhotoURL(user.photoURL);
+    }
+  }, [user?.photoURL]);
 
   const {
     register,

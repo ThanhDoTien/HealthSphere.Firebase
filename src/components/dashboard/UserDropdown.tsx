@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { User, LogOut, Globe, Check } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from 'next/link';
 
 export default function UserDropdown() {
@@ -36,9 +37,12 @@ export default function UserDropdown() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 overflow-hidden border-2 border-primary/20 hover:border-primary/50 transition-colors">
-          <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary font-bold">
-            {initials}
-          </div>
+          <Avatar className="h-full w-full">
+            <AvatarImage src={user.photoURL || undefined} className="object-cover" />
+            <AvatarFallback className="bg-primary/10 text-primary font-bold">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-64" align="end" forceMount>
