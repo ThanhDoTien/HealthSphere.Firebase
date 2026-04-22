@@ -22,7 +22,8 @@ import {
   HelpCircle,
   Activity,
   Calendar,
-  Settings
+  Settings,
+  TrendingUp
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUser } from '@/firebase/auth/use-user';
