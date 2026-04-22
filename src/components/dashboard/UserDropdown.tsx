@@ -31,7 +31,7 @@ export default function UserDropdown() {
   // Lấy chữ cái đầu của tên làm Avatar placeholder
   const initials = userProfile?.name 
     ? userProfile.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-    : user.email?.[0].toUpperCase() || 'U';
+    : user.email?.[0]?.toUpperCase() || 'U';
 
   return (
     <DropdownMenu>
