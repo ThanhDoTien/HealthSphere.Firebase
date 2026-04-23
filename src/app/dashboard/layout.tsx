@@ -44,7 +44,7 @@ export default function DashboardLayout({
         
         <main className={cn(
           "relative overflow-y-auto h-[calc(100vh-80px)] bg-background transition-all flex flex-col no-scrollbar",
-          "w-full lg:w-[54%]" // Middle section 54%
+          "w-full lg:w-[59%]" // Middle section 59%
         )}>
           <div className="w-full py-6 px-10 xl:px-16 flex-1">
             {children}

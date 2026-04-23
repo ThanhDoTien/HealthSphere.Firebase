@@ -187,8 +187,8 @@ export default function RightAiSidebar({ isOpen, onClose }: RightAiSidebarProps)
       <aside
         className={cn(
           "relative flex flex-col border-l bg-background/50 backdrop-blur-xl transition-all duration-500 ease-in-out z-40 h-[calc(100vh-80px)] overflow-hidden shrink-0",
-          "lg:w-[30%] lg:opacity-100", // Fixed 30% on desktop
-          isOpen ? "w-96 opacity-100" : "w-0 lg:w-[30%] opacity-0 lg:opacity-100 border-none lg:border-l"
+          "lg:w-[25%] lg:opacity-100", // Fixed 25% on desktop
+          isOpen ? "w-80 opacity-100" : "w-0 lg:w-[25%] opacity-0 lg:opacity-100 border-none lg:border-l"
         )}
       >
         <div className={cn(
@@ -196,24 +196,24 @@ export default function RightAiSidebar({ isOpen, onClose }: RightAiSidebarProps)
           isOpen ? "opacity-100" : "opacity-0 lg:opacity-100"
         )}>
           {/* Sidebar Header */}
-          <div className="flex items-center justify-between p-6 border-b bg-primary/5">
+          <div className="flex items-center justify-between py-3 px-5 border-b bg-primary/5">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-primary fill-primary/20" />
-              <h3 className="font-black text-lg tracking-tight uppercase">Gợi ý từ AI</h3>
+              <Sparkles className="h-5 w-5 text-primary fill-primary/20" />
+              <h3 className="font-black text-base tracking-tight uppercase">Gợi ý từ AI</h3>
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={handleGenerateSuggestions}
               disabled={isGenerating}
-              className={cn("h-10 w-10 rounded-full", isStale && "text-primary animate-pulse bg-primary/10")}
+              className={cn("h-8 w-8 rounded-full", isStale && "text-primary animate-pulse bg-primary/10")}
             >
-              <RefreshCw className={cn("h-5 w-5", isGenerating && "animate-spin")} />
+              <RefreshCw className={cn("h-4 w-4", isGenerating && "animate-spin")} />
             </Button>
           </div>
  
           {/* Sidebar Content */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-10 scrollbar-hide">
+          <div className="flex-1 overflow-y-auto p-5 space-y-8 scrollbar-hide">
             {/* Meals Section */}
             <div className="space-y-6">
               <div className="flex items-center justify-between px-1">
