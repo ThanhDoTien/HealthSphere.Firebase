@@ -6,7 +6,7 @@ Hệ thống được thiết lập và vận hành trên môi trường đám m
     - Phát triển: Windows 10/11.
     - Triển khai (Deployment): Linux (Ubuntu) - Môi trường máy ảo của Firebase App Hosting.
 - **Server:** Node.js Runtime phiên bản 20.x, hỗ trợ xử lý bất đồng bộ mạnh mẽ cho các yêu cầu AI.
-- **Hosting:** **Firebase App Hosting** - Giải pháp thế hệ mới của Google giúp tự động tối ưu hóa việc phân phối mã nguồn Next.js và quản lý quy trình CI/CD từ GitHub.
+- **Hosting:** **Firebase App Hosting** - Giải pháp thế hệ mới của Google giúp tự động tối ưu hóa việc phân phối mã nguồn Next.js. Hệ thống được kết nối với Backend ổn định tại địa chỉ Hosted chuyên biệt, quản lý qua biến môi trường `.env`.
 
 ## 5.2. Các ca kiểm thử (Test Cases)
 Quy trình kiểm thử được thực hiện nghiêm ngặt để đảm bảo chất lượng phần mềm:
@@ -16,7 +16,7 @@ Quy trình kiểm thử được thực hiện nghiêm ngặt để đảm bảo
 | 1 | **Test đăng nhập** | Nhập email/mật khẩu và kiểm tra phiên làm việc. | Chuyển hướng đúng vào Dashboard, bảo mật dữ liệu. | Thành công |
 | 2 | **Test nhập dữ liệu** | Nhập thông tin bữa ăn, cân nặng và các hoạt động. | Dữ liệu xuất hiện ngay trên biểu đồ và nhật ký hàng ngày. | Thành công |
 | 3 | **Test tính calo** | Nhập 02 bữa ăn (ví dụ: 1200 kcal) và 01 hoạt động tập luyện. | Hệ thống cộng dồn chính xác Calo nạp vào và trừ Calo tiêu thụ. | Thành công |
-| 4 | **Test thuật toán tư vấn** | Thay đổi cân nặng để BMI chuyển từ "Bình thường" sang "Thừa cân". | AI tự động cập nhật gợi ý món ăn ít calo và bài tập Cardio. | Thành công |
+| 4 | **Test thuật toán BMI** | Nhập chiều cao 170cm, cân nặng 80kg (Thừa cân). | Hệ thống tự động tính BMI và gợi ý mục tiêu "Giảm cân" ngay lập tức. | Thành công |
 | 5 | **Test độ ổn định AI** | Tải lại trang (Refresh) hoặc chuyển trang liên tục. | Gợi ý AI được giữ nguyên, không bị gọi lại dư thừa hoặc mất dữ liệu. | Thành công |
 
 # KẾT LUẬN – HƯỚNG PHÁT TRIỂN

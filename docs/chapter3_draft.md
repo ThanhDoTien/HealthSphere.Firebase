@@ -6,16 +6,16 @@ Hệ thống được thiết kế theo mô hình **Client-Server** hiện đạ
 
 ### 3.1.1. Mô hình Client – Server
 - **Client:** Xây dựng bằng React/Next.js 14, đóng vai trò tiếp nhận tương tác của người dùng, hiển thị dữ liệu và gửi yêu cầu (Requests) đến hệ thống.
-- **Server:** Sử dụng hạ tầng Firebase (Baas - Backend as a Service) và các Next.js API Routes để xử lý Logic nghiệp vụ, xác thực người dùng và tích hợp AI.
+- **Server:** Sử dụng hạ tầng Firebase (Baas - Backend as a Service) và các **Middleware API chuyên biệt** được triển khai trên môi trường Google Hosted ổn định cao để xử lý Logic nghiệp vụ, xác thực người dùng và đồng bộ dữ liệu.
 
 ### 3.1.2. Kiến trúc 3 tầng (3-layer Architecture)
 Để đảm bảo tính linh hoạt và dễ bảo trì, hệ thống được chia thành 3 tầng logic:
-1. **Tầng Trình diễn (Presentation Layer):** Bao gồm giao diện Dashboard, các Form nhập liệu và hệ thống Chat AI. Sử dụng Tailwind CSS để tối ưu hóa hiển thị trên mọi thiết bị.
+1. **Tầng Trình diễn (Presentation Layer):** Bao gồm giao diện Dashboard đa làn, các Form nhập liệu nổi (Dialog) và hệ thống Chat AI tích hợp. Sử dụng Tailwind CSS với các hiệu ứng `backdrop-blur` và `animate-in` để tạo cảm giác cao cấp.
 2. **Tầng Nghiệp vụ (Business Logic Layer):** Chứa các luồng (Flows) xử lý thông minh như: 
-    - Tính toán BMR/TDEE.
-    - AI Reasoning (Gemini) để đưa ra gợi ý sức khỏe.
-    - Cơ chế Caching hình ảnh minh họa bằng giải thuật Hashing.
-3. **Tầng Dữ liệu (Data Layer):** Chịu trách nhiệm lưu trữ và truy xuất dữ liệu từ Firebase Firestore và Firebase Storage, đảm bảo tính toàn vẹn và bảo mật thông tin.
+    - Tính toán BMR/TDEE theo chuẩn y khoa.
+    - AI Reasoning (Gemini) để đưa ra gợi ý sức khỏe thời gian thực.
+    - Thuật toán băm (Hashing) và Caching dữ liệu để tối ưu hiệu suất.
+3. **Tầng Dữ liệu (Data Layer):** Chịu trách nhiệm lưu trữ và truy xuất dữ liệu từ Firebase Firestore và Firebase Storage, sử dụng các Sub-collections để quản lý nhật ký chi tiết.
 
 
 #### Bảng 1: Users (Thông tin người dùng)
@@ -67,10 +67,15 @@ Hệ thống được thiết kế theo mô hình **Client-Server** hiện đạ
 
 Hệ thống được thiết kế theo phong cách hiện đại (Modern UI) với các màn hình chính sau:
 
-- **Mockup màn hình đăng nhập:** Thiết kế tối giản với Form nhập liệu trung tâm, tích hợp thông báo lỗi thời gian thực và liên kết chuyển đổi giữa Đăng nhập/Đăng ký.
-- **Mockup trang Dashboard:** 
-    - **Thanh điều hướng tập trung (Facebook-style Navbar):** Sử dụng Layout cao 16 đơn vị (h-16), căn giữa các mục chuyển đổi chính trên Desktop, kết hợp màu thương hiệu đặc trưng: Xanh biển (#64B5F6) cho "Health" và Xanh lá (#4CAF50) cho "Sphere".
-    - **Thẻ chỉ số tổng quan:** BMI Meter, Calo nạp, Calo tiêu thụ.
-    - **Trực quan hóa:** Biểu đồ theo dõi tiến độ cân nặng (Line Chart) và Nhật ký hoạt động gần đây.
-- **Mockup trang nhập dữ liệu:** Sử dụng các Dialog (hộp thoại) nổi để người dùng nhập nhanh cân nặng, bữa ăn mà không phải rời trang Dashboard.
-- **Mockup trang tư vấn AI:** Khu vực hiển thị kết quả phân tích từ AI với các thẻ "Suggest" chứa hình ảnh minh họa chân thực và mô tả chi tiết bài tập/món ăn.
+- **Thiết kế Header (Horizontal Icons Style):** 
+    - Bố cục dàn hàng ngang với chiều cao cố định **h-20**.
+    - Phân chia tỷ lệ vàng: **16%** cho Logo (Gradient text), **54%** cho hệ thống Icon điều hướng (kèm vạch chỉ thị Active bên dưới), và **30%** cho khu vực Profile/Avatar.
+    - Sử dụng hiệu ứng `backdrop-blur` và `shadow-sm` để tách biệt với nội dung bên dưới.
+- **Bố cục Dashboard đa làn (Multi-lane Layout):** 
+    - **Làn trái:** Sidebar điều hướng phụ.
+    - **Làn giữa (Main - 59%):** Khu vực hiển thị nội dung chính, Dashboard metrics.
+    - **Làn phải:** Side panel dành riêng cho Trợ lý AI, có thể đóng/mở linh hoạt.
+- **Các thành phần trực quan (Visual Components):**
+    - **BmiMeter (SVG Gauge):** Đồng hồ đo chỉ số BMI dạng bán nguyệt với 5 dải màu theo tiêu chuẩn WHO, kim chỉ thời gian thực và gợi ý cân nặng lý tưởng.
+    - **Metric Cards:** Các thẻ chỉ số (Calo, Cân nặng, Giấc ngủ) có tích hợp so sánh biến động so với ngày hôm trước (Trending indicators).
+    - **AI Tip Card:** Thẻ gợi ý nổi bật sử dụng màu thương hiệu, hiển thị các lời khuyên từ Lightbulb AI một cách trang trọng.

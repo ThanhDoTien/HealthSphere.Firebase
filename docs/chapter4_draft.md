@@ -7,16 +7,18 @@ Hệ thống HealthSphere được xây dựng dựa trên các công nghệ hi�
 - **Trí tuệ nhân tạo (AI):** 
     - **Google Gemini 3 Flash Preview:** Dùng cho phân tích dữ liệu, reasoning và tư vấn văn bản chuyên sâu.
     - **Gemini 1.5 Flash (REST API):** Dùng để minh họa hình ảnh thực tế thông qua các luồng API tự động.
-- **Cơ sở hạ tầng Cloud (Firebase):** 
+- **Cơ sở hạ tầng & Kết nối:** 
     - **Authentication:** Quản lý truy cập an toàn.
     - **Firestore:** Lưu trữ dữ liệu thời gian thực (Real-time).
-    - **Storage:** Lưu trữ bộ nhớ đệm hình ảnh (Shared Cache).
+    - **Middleware Backend API:** Hệ thống kết nối với cụm API máy chủ được bản địa hóa tại khu vực `asia-southeast1` trên nền tảng Hosted App, giúp giảm độ trễ và tăng tính ổn định tối đa.
+    - **Môi trường (Environment):** Sử dụng hệ thống tệp `.env` để quản lý bảo mật các tham số Backend URL và API Key.
 
 ## 4.2. Cài đặt các chức năng chính
 
 ### 4.2.1. Cài đặt đăng ký / đăng nhập
 Hệ thống triển khai xác thực người dùng thông qua **Firebase Authentication**. 
 - **Quy trình:** Người dùng cung cấp Email và Mật khẩu -> Firebase SDK thực hiện xác thực và trả về Token (JWT).
+- **Màn hình chờ (Loading Overlay):** Hệ thống tích hợp lớp phủ Loading toàn màn hình với hiệu ứng pulsing hiện đại, hiển thị lời chào cá nhân hóa trong lúc đồng bộ dữ liệu sau khi đăng nhập/đăng ký thành công.
 - **Bảo mật:** Sử dụng cơ chế `onAuthStateChanged` để bảo vệ các tuyến (Routes) Dashboard, tự động chuyển hướng khi người dùng chưa đăng nhập.
 
 ### 4.2.2. Xây dựng API (AI Route Handlers)
@@ -49,7 +51,16 @@ $$BMI = \frac{Trọng lượng (kg)}{Chiều cao (m) \times Chiều cao (m)}$$
     - **Thừa cân (Overweight):** 25.0 ≤ BMI < 30.0
     - **Béo phì (Obese):** BMI ≥ 30.0
 
-### 4.3.2. Công thức tính tỷ lệ trao đổi chất cơ bản (BMR)
+### 4.3.2. Thuật toán gợi ý mục tiêu sức khỏe tự động
+Đây là một cải tiến quan trọng giúp đơn giản hóa quá trình thiết lập hồ sơ:
+- **Nguyên lý:** Hệ thống lắng nghe sự thay đổi của các trường Chiều cao và Cân nặng trong thời gian thực.
+- **Logic gợi ý:** 
+    - Nếu **BMI < 18.5**: Hệ thống tự động đặt mục tiêu là **Tăng cân (Gain weight)**.
+    - Nếu **18.5 ≤ BMI < 25.0**: Hệ thống tự động đặt mục tiêu là **Duy trì (Maintain weight)**.
+    - Nếu **BMI ≥ 25.0**: Hệ thống tự động đặt mục tiêu là **Giảm cân (Lose weight)**.
+- **UI/UX:** Mục tiêu được hiển thị dưới dạng một thẻ thông báo kết quả BMI trực quan, giúp người dùng hiểu rõ cơ sở của các gợi ý mà hệ thống đưa ra.
+
+### 4.3.3. Công thức tính tỷ lệ trao đổi chất cơ bản (BMR)
 Hệ thống áp dụng công thức **Harris-Benedict cải tiến** (Roza and Shizgal, 1984) để tính năng lượng cơ bản cơ thể cần:
 - **Đối với Nam giới:**
 $$BMR = 88.362 + (13.397 \times W) + (4.799 \times H) - (5.677 \times A)$$
@@ -57,7 +68,7 @@ $$BMR = 88.362 + (13.397 \times W) + (4.799 \times H) - (5.677 \times A)$$
 $$BMR = 447.593 + (9.247 \times W) + (3.098 \times H) - (4.330 \times A)$$
 *(Trong đó: W: Trọng lượng (kg), H: Chiều cao (cm), A: Tuổi)*
 
-### 4.3.3. Tính tổng năng lượng tiêu hao hàng ngày (TDEE)
+### 4.3.4. Tính tổng năng lượng tiêu hao hàng ngày (TDEE)
 TDEE giúp xác định tổng calo cần thiết dựa trên cường độ vận động thực tế:
 - **Công thức:**
 $$TDEE = BMR \times PAL$$
@@ -73,7 +84,7 @@ $$TDEE = BMR \times PAL$$
 | **Active** | 1.725 | Vận động mạnh (Tập thể thao 6-7 ngày/tuần) |
 | **Extra** | 1.9 | Vận động cực mạnh (Lao động nặng, VĐV) |
 
-### 4.3.4. Thuật toán gợi ý thông minh (AI Reasoning)
+### 4.3.5. Thuật toán gợi ý thông minh (AI Reasoning)
 Dựa trên các chỉ số **BMI**, **TDEE** và **Mục tiêu cá nhân** (Giảm cân/Duy trì/Tăng cân), hệ thống thực hiện Logic:
 1. **Phân tích khoảng cách năng lượng:** AI tính toán sự chênh lệch giữa Calo nạp vào thực tế và TDEE mục tiêu.
 2. **Gợi ý thực đơn (Meal Suggestions):** Lựa chọn món ăn đảm bảo phân bổ tỷ lệ: Carbs (50-60%), Protein (20-25%), Fats (20-25%).

@@ -16,13 +16,13 @@ Hệ thống HealthSphere được thiết kế theo cấu trúc module hóa ch�
 Cung cấp môi trường an toàn và bảo mật cho người dùng:
 - **Đăng ký:** Tạo tài khoản mới gắn liền với định danh cá nhân.
 - **Đăng nhập:** Truy cập hệ thống và đồng bộ dữ liệu trên các thiết bị.
-- **Cập nhật thông tin cá nhân:** Thay đổi các chỉ số nền tảng (tuổi, giới tính, mục tiêu) để AI tối ưu hóa lộ trình.
+- **Cập nhật thông tin cá nhân:** Thay đổi các chỉ số nền tảng (tuổi, giới tính). Hệ thống tích hợp **thuật toán gợi ý mục tiêu thông minh** dựa trên BMI để giúp người dùng xác định lộ trình sức khỏe tối ưu.
+- **Màn hình tải dữ liệu thông minh (Smart Loading):** Trải nghiệm người dùng được nâng cấp với các màn hình trạng thái (Loading Overlay) sinh động khi thực hiện các tác vụ quan trọng như Đăng nhập, Đăng ký hoặc tính toán AI.
 
 ### 2.2.2. Quản lý thông tin sức khỏe
 Nơi lưu trữ và phân tích các chỉ số sinh học:
-- **Nhập chiều cao:** Cung cấp thông số cơ bản cho việc tính toán BMI.
-- **Nhập cân nặng:** Ghi nhận sự thay đổi trọng lượng định kỳ.
-- **Theo dõi cân nặng theo thời gian:** Trực quan hóa tiến trình sức khỏe thông qua biểu đồ thống kê.
+- **Tính toán BMI tự động:** Hệ thống tự động tính toán chỉ số khối cơ thể (BMI) ngay khi người dùng nhập chiều cao và cân nặng, đồng thời đưa ra đánh giá trực quan về tình trạng thể trạng.
+- **Theo dõi cân nặng theo thời gian:** Trực quan hóa tiến trình sức khỏe thông qua biểu đồ thống kê chuyên sâu.
 
 ### 2.2.3. Ghi nhận chế độ ăn và vận động
 Kiểm soát dòng năng lượng nạp vào và tiêu hao hàng ngày với hỗ trợ đa phương thức:

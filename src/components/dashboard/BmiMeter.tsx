@@ -3,6 +3,8 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useTranslation } from '@/context/LanguageContext';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 interface BmiMeterProps {
   height: number; // in cm
@@ -124,8 +126,11 @@ export default function BmiMeter({ height, weight, className }: BmiMeterProps) {
       </CardHeader>
       <CardContent className="p-4 pt-0">
         {!status ? (
-          <div className="text-center text-muted-foreground py-4 text-xs">
-            {t('dashboard.bmi.noData')}
+          <div className="text-center text-muted-foreground py-8 text-sm flex flex-col items-center gap-4">
+            <p className="px-4">{t('dashboard.bmi.noData')}</p>
+            <Button variant="outline" size="sm" asChild className="rounded-full font-bold border-primary text-primary hover:bg-primary/10">
+               <Link href="/dashboard/profile">{t('form.common.edit')} hồ sơ</Link>
+            </Button>
           </div>
         ) : (
           <div className="flex flex-col items-center">
@@ -174,11 +179,11 @@ export default function BmiMeter({ height, weight, className }: BmiMeterProps) {
             {targetWeight > 0 && (
               <div className="mt-4 pt-3 border-t w-full flex flex-col items-center gap-1 text-sm">
                 <div className="flex justify-center items-center gap-2">
-                  <span className="text-muted-foreground">Cân nặng lý tưởng (BMI=22):</span>
-                  <span className="font-bold text-primary text-base">{targetWeight} kg</span>
+                   <span className="text-xs text-muted-foreground">Cân nặng lý tưởng (BMI=22):</span>
+                   <span className="font-bold text-primary text-base">{targetWeight} kg</span>
                 </div>
                 <span className="text-[10px] text-muted-foreground italic text-center px-2">
-                  *Tham khảo theo chuẩn y tế. Không áp dụng cho vận động viên, người tập thể hình hoặc có nhu cầu đặc thù.
+                  *Tham khảo theo chuẩn y tế. Không áp dụng cho vận động viên, người tập thể hình.
                 </span>
               </div>
             )}
