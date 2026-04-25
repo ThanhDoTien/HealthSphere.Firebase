@@ -45,10 +45,21 @@ const ChatInputSchema = z.object({
 
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
+const ChatOutputSchema = z.object({
+  content: z.string().describe('The textual response from the AI.'),
+  extractedData: z.object({
+    type: z.enum(['meal', 'activity']).optional(),
+    data: z.any().optional(),
+  }).nullable().optional().describe('Structured data for logging if an action is detected.'),
+});
+
+export type ChatOutput = z.infer<typeof ChatOutputSchema>;
+
 const healthChatPrompt = ai.definePrompt({
   name: 'healthChatPrompt',
   model: 'googleai/gemini-3-flash-preview',
   input: { schema: ChatInputSchema },
+  output: { schema: ChatOutputSchema },
 
   prompt: `
 Bạn là HealthSphere AI - chuyên gia tư vấn sức khỏe cá nhân cao cấp. Bạn có quyền truy cập vào toàn bộ nhật ký sức khỏe của người dùng để đưa ra nhận xét chính xác nhất.
@@ -87,22 +98,24 @@ LỊCH SỬ HỘI THOẠI HIỆN TẠI:
 {{this.role}}: {{this.content}}
 {{/each}}
 
-YÊU CẦU:
-1. Dựa vào dữ liệu lịch sử và hôm nay để trả lời câu hỏi của người dùng.
-2. Nếu người dùng hỏi về tiến độ (ví dụ: "Tôi dạo này thế nào?"), hãy phân tích xu hướng từ dữ liệu lịch sử.
-3. Trả lời ngắn gọn, chân thành, giàu động lực. 
-4. Sử dụng tiếng {{#if language}}{{language}}{{else}}vi{{/if}}.
-5. LUÔN xuống dòng giữa các ý để dễ đọc.
+YÊU CẦU QUAN TRỌNG:
+1. LUÔN TRẢ VỀ JSON theo cấu trúc: { "content": "text", "extractedData": { "type": "meal" | "activity", "data": { ... } } | null }.
+2. Nếu người dùng bảo họ VỪA ĂN món gì đó (ví dụ: "Tôi vừa ăn bát phở"), hãy đặt type: "meal" và extractedData.data bao gồm: { name, calories, protein, carbs, fat, fiber }.
+3. Nếu người dùng bảo họ VỪA TẬP gì đó (ví dụ: "Tôi vừa chạy 5km trong 30p"), hãy đặt type: "activity" và extractedData.data bao gồm: { name, duration (minutes), caloriesBurned }.
+4. Nếu không có hành động cụ thể, đặt extractedData là null.
+5. Nội dung 'content' trả lời ngắn gọn, chân thành, giàu động lực bằng tiếng {{#if language}}{{language}}{{else}}vi{{/if}}.
+6. LUÔN xuống dòng giữa các ý trong 'content' để dễ đọc.
 
 TIN NHẮN NGƯỜI DÙNG:
 "{{{message}}}"
 `,
 });
 
-export async function healthChat(input: ChatInput): Promise<string> {
+export async function healthChat(input: ChatInput): Promise<ChatOutput> {
   try {
-    const { text } = await healthChatPrompt(input);
-    return text ?? 'AI hiện không phản hồi.';
+    const { output } = await healthChatPrompt(input);
+    if (!output) return { content: 'AI hiện không phản hồi.', extractedData: null };
+    return output;
   } catch (error) {
     console.error('Genkit Chat Error:', error);
     throw new Error('Could not connect to AI services.');

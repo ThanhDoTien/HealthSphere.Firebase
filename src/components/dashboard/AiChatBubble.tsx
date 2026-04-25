@@ -7,10 +7,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Bot, X, MessageCircle, Minus } from 'lucide-react';
+import { Bot, X, MessageCircle, Minus, Loader2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import AiChatInterface from './AiChatInterface';
+import { useToast } from '@/components/ui/toast';
 
 export default function AiChatBubble() {
   const [isOpen, setIsOpen] = useState(false);

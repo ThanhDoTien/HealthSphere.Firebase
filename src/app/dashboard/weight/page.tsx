@@ -53,7 +53,7 @@ export default function WeightPage() {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
   const { t } = useTranslation();
-  const [weightFilter, setWeightFilter] = useState('30');
+  const [weightFilter, setWeightFilter] = useState('7');
   const [today, setToday] = useState('');
 
   useEffect(() => {

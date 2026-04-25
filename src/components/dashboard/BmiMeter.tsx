@@ -171,7 +171,7 @@ export default function BmiMeter({ height, weight, className }: BmiMeterProps) {
               <div className={`text-sm font-semibold ${status.textColor}`}>
                 {t(status.labelKey)}
               </div>
-              <p className="text-xs leading-tight text-muted-foreground italic mt-1">
+              <p className="text-[10px] leading-tight text-muted-foreground italic mt-1 text-justify">
                 <span className="font-bold not-italic">Tips: </span>
                 {t(status.adviceKey)}
               </p>

@@ -54,8 +54,8 @@ export default function Header({ onToggleAi, onToggleSidebar }: HeaderProps) {
     <header className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm px-6">
       <div className="h-20 flex items-center w-full">
         
-        {/* TRÁI: 16% slot for Logo */}
-        <div className="w-[16%] flex items-center justify-start gap-2 sm:gap-4 shrink-0">
+        {/* TRÁI: 16% slot */}
+        <div className="w-[16%] flex items-center justify-start gap-2 sm:gap-4 shrink-0 h-full">
           {user && (
             <Button
               variant="ghost"
@@ -67,17 +67,17 @@ export default function Header({ onToggleAi, onToggleSidebar }: HeaderProps) {
             </Button>
           )}
           <Link href={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
-            <Logo className="h-10 w-10 min-w-[40px]" />
-            <span className="hidden sm:inline-block text-2xl font-black bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent">
+            <Logo className="h-9 w-9 min-w-[36px]" />
+            <span className="hidden sm:inline-block text-xl font-black bg-gradient-to-r from-primary to-green-600 bg-clip-text text-transparent tracking-tighter">
               HealthSphere
             </span>
           </Link>
         </div>
 
-        {/* GIỮA: 54% slot for Nav Icons */}
+        {/* GIỮA: 54% slot */}
         {!isAuthPage && user && (
-          <nav className="hidden lg:flex items-center w-[54%] px-10 xl:px-16">
-            <div className="flex items-center justify-between w-full">
+          <nav className="hidden lg:flex items-center w-[54%] px-10 xl:px-16 h-full">
+            <div className="flex items-center justify-between w-full max-w-2xl mx-auto">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
@@ -85,14 +85,14 @@ export default function Header({ onToggleAi, onToggleSidebar }: HeaderProps) {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex flex-col items-center justify-center h-20 w-12 xl:w-14 transition-all group relative overflow-hidden",
+                      "flex flex-col items-center justify-center h-20 w-12 transition-all group relative",
                       isActive 
-                        ? "text-primary" 
-                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground hover:rounded-xl"
+                        ? "text-primary bg-primary/5" 
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     <item.icon className={cn(
-                      "h-6 w-6 transition-all duration-300 group-hover:scale-110",
+                      "h-5 w-5 transition-all duration-300 group-hover:scale-110",
                       isActive ? "stroke-[2.5px] -translate-y-0.5" : "stroke-[1.5px]"
                     )} />
                     <span className="sr-only">{t(item.labelKey)}</span>
@@ -106,8 +106,8 @@ export default function Header({ onToggleAi, onToggleSidebar }: HeaderProps) {
           </nav>
         )}
 
-        {/* PHẢI: 30% slot for Profile */}
-        <div className="flex-1 lg:w-[30%] flex items-center justify-end gap-2 sm:gap-4">
+        {/* PHẢI: 30% slot */}
+        <div className="flex-1 lg:w-[30%] flex items-center justify-end gap-4 shrink-0 h-full pr-6">
           {user && !isAuthPage && (
             <Button
               variant="ghost"

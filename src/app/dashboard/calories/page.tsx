@@ -99,7 +99,7 @@ export default function CaloriesPage() {
   const { toast } = useToast();
   const { t, locale } = useTranslation();
 
-  const [calorieFilter, setCalorieFilter] = useState('30');
+  const [calorieFilter, setCalorieFilter] = useState('7');
   const [today, setToday] = useState('');
   const [aiAnalysis, setAiAnalysis] = useState<AnalyzeNutritionOutput | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);

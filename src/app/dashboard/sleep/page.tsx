@@ -51,7 +51,7 @@ export default function SleepPage() {
   const firestore = useFirestore();
   const { t, locale } = useTranslation();
 
-  const [sleepFilter, setSleepFilter] = useState('30');
+  const [sleepFilter, setSleepFilter] = useState('7');
   const [today, setToday] = useState('');
   const [aiAnalysis, setAiAnalysis] = useState<AnalyzeSleepOutput | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);

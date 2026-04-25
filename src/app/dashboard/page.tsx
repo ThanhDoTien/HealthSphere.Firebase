@@ -171,7 +171,7 @@ export default function DashboardPage() {
               {t('dashboard.notification.incompleteProfile')}
             </Link>
           ) : dailyTipKey ? (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-sm font-bold border border-blue-100 italic">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/80 text-blue-700 text-[11px] font-bold border border-blue-100 italic whitespace-nowrap overflow-hidden">
               <Sparkles className="h-4 w-4 text-primary" />
               {t(`dashboard.notification.${dailyTipKey}`)}
             </div>
@@ -192,7 +192,7 @@ export default function DashboardPage() {
               <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-primary/20 shadow-sm h-full flex flex-col">
                 <CardHeader className="p-4 flex-1 flex flex-col">
                   <div className="flex items-center justify-between mb-4">
-                    <CardDescription className="text-xs font-medium">{t('dashboard.caloriesConsumed')}</CardDescription>
+                    <CardDescription className="text-xs font-bold text-foreground/80">{t('dashboard.caloriesConsumed')}</CardDescription>
                     <Utensils className="h-4 w-4 text-primary" />
                   </div>
                   <div className="mt-auto">
@@ -206,7 +206,7 @@ export default function DashboardPage() {
               <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-accent/20 shadow-sm h-full flex flex-col">
                 <CardHeader className="p-4 flex-1 flex flex-col">
                   <div className="flex items-center justify-between mb-4">
-                    <CardDescription className="text-xs font-medium">{t('dashboard.caloriesBurned')}</CardDescription>
+                    <CardDescription className="text-xs font-bold text-foreground/80">{t('dashboard.caloriesBurned')}</CardDescription>
                     <Dumbbell className="h-4 w-4 text-accent" />
                   </div>
                   <div className="mt-auto">
@@ -228,7 +228,7 @@ export default function DashboardPage() {
               <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-blue-500/20 shadow-sm h-full flex flex-col">
                 <CardHeader className="p-4 flex-1 flex flex-col">
                   <div className="flex items-center justify-between mb-4">
-                    <CardDescription className="text-xs font-medium">{t('dashboard.sleepHour')}</CardDescription>
+                    <CardDescription className="text-xs font-bold text-foreground/80">{t('dashboard.sleepHour')}</CardDescription>
                     <Bed className="h-4 w-4 text-blue-500" />
                   </div>
                   <div className="mt-auto">
@@ -242,7 +242,7 @@ export default function DashboardPage() {
               <Card className="hover:bg-accent/5 transition-colors cursor-pointer border-gray-500/20 shadow-sm h-full flex flex-col">
                 <CardHeader className="p-4 flex-1 flex flex-col">
                   <div className="flex items-center justify-between mb-4">
-                    <CardDescription className="text-xs font-medium">{t('dashboard.currentWeight')}</CardDescription>
+                    <CardDescription className="text-xs font-bold text-foreground/80">{t('dashboard.currentWeight')}</CardDescription>
                     <Scale className="h-4 w-4 text-gray-500" />
                   </div>
                   <div className="mt-auto">
@@ -274,7 +274,7 @@ export default function DashboardPage() {
                       <Lightbulb className="h-4 w-4 text-primary" />
                       {t('ai.tipTitle')}
                     </h4>
-                    <p className="text-base font-medium leading-relaxed italic text-foreground/90">
+                    <p className="text-base font-medium leading-relaxed italic text-foreground/90 text-justify">
                       &quot;{suggestionData.generalTip.replaceAll('\\n', '\n')}&quot;
                     </p>
                   </div>

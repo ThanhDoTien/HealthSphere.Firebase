@@ -87,7 +87,7 @@ export default function ActivityPage() {
   const { t, locale } = useTranslation();
   const { toast } = useToast();
 
-  const [activityFilter, setActivityFilter] = useState('30');
+  const [activityFilter, setActivityFilter] = useState('7');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<WithId<Activity> | null>(null);

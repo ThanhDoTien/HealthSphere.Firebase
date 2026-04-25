@@ -186,7 +186,7 @@ export default function RightAiSidebar({ isOpen, onClose }: RightAiSidebarProps)
     <>
       <aside
         className={cn(
-          "relative flex flex-col border-l bg-background/50 backdrop-blur-xl transition-all duration-500 ease-in-out z-40 h-[calc(100vh-80px)] overflow-hidden shrink-0",
+          "relative flex flex-col border-l bg-slate-50/50 backdrop-blur-2xl transition-all duration-500 ease-in-out z-40 h-[calc(100vh-80px)] overflow-hidden shrink-0 shadow-[inset_10px_0_30px_-15px_rgba(0,0,0,0.05)]",
           "lg:w-[30%] lg:opacity-100",
           isOpen ? "w-80 opacity-100" : "w-0 lg:w-[30%] opacity-0 lg:opacity-100 border-none lg:border-l"
         )}

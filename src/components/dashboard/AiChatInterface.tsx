@@ -14,19 +14,40 @@ import {
   Loader2, 
   User, 
   Bot,
-  Trash2
+  Trash2,
+  Utensils,
+  Dumbbell,
+  CheckCircle2,
+  RotateCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useUser } from '@/firebase/auth/use-user';
 import { useFirestore, useMemoFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, orderBy, addDoc, serverTimestamp, getDocs, deleteDoc, limit } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc, serverTimestamp, getDocs, deleteDoc, limit, updateDoc, doc } from 'firebase/firestore';
 import { healthChat } from '@/ai/flows/chat-flow';
 import { useTranslation } from '@/context/LanguageContext';
 import { calculateBMR, calculateTDEE } from '@/lib/health-utils';
 import { cn } from '@/lib/utils';
 import { renderMarkdown } from '@/lib/render-markdown';
+import { ChatOutput } from '@/ai/flows/chat-flow';
+
+interface Message {
+  role: 'user' | 'model';
+  content: string;
+  id?: string;
+  extractedData?: ChatOutput['extractedData'];
+  isLogged?: boolean;
+}
 
 interface AiChatInterfaceProps {
   className?: string;
@@ -37,10 +58,14 @@ export default function AiChatInterface({ className, isFullHeight = false }: AiC
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
   const { t, locale } = useTranslation();
+  const { toast } = useToast();
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const [todayStr, setTodayStr] = useState('');
+  const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch');
+  const [isLogging, setIsLogging] = useState(false);
 
   useEffect(() => {
     setTodayStr(new Date().toISOString().split('T')[0]);
@@ -113,7 +138,7 @@ export default function AiChatInterface({ className, isFullHeight = false }: AiC
   const handleSend = async () => {
     if (!input.trim() || isTyping || !userProfile || !user) return;
 
-    const userMsg = input.trim();
+    const userText = input.trim();
     setInput('');
     setIsTyping(true);
 
@@ -122,12 +147,12 @@ export default function AiChatInterface({ className, isFullHeight = false }: AiC
     try {
       await addDoc(chatRef, {
         role: 'user',
-        content: userMsg,
+        content: userText,
         createdAt: serverTimestamp(),
       });
 
       const botResponse = await healthChat({
-        message: userMsg,
+        message: userText,
         history: messages?.map(m => ({ role: m.role as 'user' | 'model', content: m.content })) || [],
         userProfile: {
           name: userProfile.name,
@@ -148,7 +173,8 @@ export default function AiChatInterface({ className, isFullHeight = false }: AiC
 
       await addDoc(chatRef, {
         role: 'model',
-        content: botResponse,
+        content: botResponse.content,
+        extractedData: botResponse.extractedData,
         createdAt: serverTimestamp(),
       });
     } catch (error) {
@@ -164,6 +190,48 @@ export default function AiChatInterface({ className, isFullHeight = false }: AiC
     const snapshot = await getDocs(chatRef);
     const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
     await Promise.all(deletePromises);
+  };
+
+  const handleConfirmAction = async (msgId: string, extracted: NonNullable<ChatOutput['extractedData']>) => {
+    if (!user || !userProfile || isLogging) return;
+    setIsLogging(true);
+
+    try {
+      if (extracted.type === 'meal') {
+        const mealLogRef = collection(firestore, `users/${user.uid}/meals`);
+        await addDoc(mealLogRef, {
+          userId: user.uid,
+          name: `AI: ${extracted.data.name}`,
+          calories: extracted.data.calories,
+          protein: extracted.data.protein,
+          carbs: extracted.data.carbs,
+          fat: extracted.data.fat,
+          fiber: extracted.data.fiber,
+          mealType,
+          date: todayStr,
+        });
+        toast({ title: t('form.common.success'), description: t('form.add_meal.success', { name: extracted.data.name }) });
+      } else if (extracted.type === 'activity') {
+        const activityLogRef = collection(firestore, `users/${user.uid}/activities`);
+        await addDoc(activityLogRef, {
+          userId: user.uid,
+          name: `AI: ${extracted.data.name}`,
+          duration: extracted.data.duration,
+          caloriesBurned: extracted.data.caloriesBurned,
+          date: todayStr,
+        });
+        toast({ title: t('form.common.success'), description: t('form.add_activity.success', { name: extracted.data.name }) });
+      }
+
+      // Cập nhật trạng thái đã lưu vào chính tin nhắn đó trong Firestore
+      const chatMsgRef = doc(firestore, `users/${user.uid}/chats`, msgId);
+      await updateDoc(chatMsgRef, { isLogged: true });
+      
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: t('form.common.error'), description: error.message });
+    } finally {
+      setIsLogging(false);
+    }
   };
 
   if (!user) return null;
@@ -216,6 +284,70 @@ export default function AiChatInterface({ className, isFullHeight = false }: AiC
               )}>
                 <div className="text-xs leading-relaxed space-y-0.5">{renderMarkdown(msg.content)}</div>
               </div>
+
+              {msg.role === 'model' && msg.extractedData && (
+                <div className="mt-3 p-3 bg-card rounded-2xl border border-primary/20 shadow-sm space-y-3 animate-in zoom-in-95 duration-300">
+                  <div className="flex items-center gap-2 font-bold text-primary text-[11px] uppercase tracking-wider">
+                    {msg.extractedData.type === 'meal' ? <Utensils className="h-3 w-3" /> : <Dumbbell className="h-3 w-3" />}
+                    <span>{msg.extractedData.data.name}</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {msg.extractedData.type === 'meal' ? (
+                      <>
+                        <div className="rounded-xl bg-muted/50 p-1.5 text-center border border-border/50">
+                          <p className="text-[8px] text-muted-foreground uppercase">Calo</p>
+                          <p className="text-[10px] font-bold">{msg.extractedData.data.calories}</p>
+                        </div>
+                        <div className="rounded-xl bg-muted/50 p-1.5 text-center border border-border/50">
+                          <p className="text-[8px] text-muted-foreground uppercase">Pro</p>
+                          <p className="text-[10px] font-bold">{msg.extractedData.data.protein}g</p>
+                        </div>
+                        <div className="rounded-xl bg-muted/50 p-1.5 text-center border border-border/50">
+                          <p className="text-[8px] text-muted-foreground uppercase">Carb</p>
+                          <p className="text-[10px] font-bold">{msg.extractedData.data.carbs}g</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="rounded-xl bg-muted/50 p-1.5 text-center border border-border/50 col-span-2">
+                          <p className="text-[8px] text-muted-foreground uppercase">Thời lượng</p>
+                          <p className="text-[10px] font-bold">{msg.extractedData.data.duration} phút</p>
+                        </div>
+                        <div className="rounded-xl bg-muted/50 p-1.5 text-center border border-border/50">
+                          <p className="text-[8px] text-muted-foreground uppercase">Đốt cháy</p>
+                          <p className="text-[10px] font-bold">{msg.extractedData.data.caloriesBurned}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2 pt-1 border-t border-border/30">
+                    {msg.extractedData.type === 'meal' && (
+                      <Select value={mealType} onValueChange={(v: any) => setMealType(v)}>
+                        <SelectTrigger className="h-7 text-[10px] bg-background">
+                          <SelectValue placeholder="Chọn bữa..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="breakfast">Sáng</SelectItem>
+                          <SelectItem value="lunch">Trưa</SelectItem>
+                          <SelectItem value="dinner">Tối</SelectItem>
+                          <SelectItem value="snack">Phụ</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                    <Button 
+                      size="sm" 
+                      className={cn("h-7 text-[10px] font-bold w-full", msg.isLogged && "bg-muted text-muted-foreground hover:bg-muted")}
+                      disabled={isLogging || msg.isLogged}
+                      onClick={() => handleConfirmAction(msg.id!, msg.extractedData!)}
+                    >
+                      {isLogging ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}
+                      {msg.isLogged ? 'Đã lưu vào nhật ký' : (msg.extractedData.type === 'meal' ? 'Lưu bữa ăn' : 'Lưu hoạt động')}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}
