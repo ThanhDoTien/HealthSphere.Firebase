@@ -1,3 +1,10 @@
+// ==========================================
+// FILE: src/components/dashboard/AiMealChatLog.tsx
+// MỤC ĐÍCH: Giao diện Chat AI phân tích Bữa ăn
+// TỔNG QUAN: Cho phép người dùng nhắn tin mô tả bữa ăn, gọi Server Action để 
+// phân tích (Gemini AI) và hiển thị kết quả dinh dưỡng (Calo, Protein...).
+// Người dùng có thể xác nhận để lưu bữa ăn vào Firestore.
+// ==========================================
 
 'use client';
 
@@ -54,6 +61,10 @@ export default function AiMealChatLog({ userId }: AiMealChatLogProps) {
     }
   }, [messages, isAnalyzing]);
 
+  /**
+   * Xử lý gửi tin nhắn của người dùng lên AI.
+   * Gửi toàn bộ lịch sử tin nhắn (history) để AI hiểu ngữ cảnh (ví dụ: "thêm thịt").
+   */
   const handleSend = async () => {
     if (!input.trim() || isAnalyzing) return;
 
@@ -86,6 +97,10 @@ export default function AiMealChatLog({ userId }: AiMealChatLogProps) {
     }
   };
 
+  /**
+   * Xác nhận lưu kết quả phân tích của AI vào cơ sở dữ liệu Firestore.
+   * Tạo bản ghi mới trong sub-collection 'meals' của người dùng hiện tại.
+   */
   const handleConfirm = async () => {
     if (!latestAnalysis || !userId) return;
 

@@ -16,7 +16,12 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 
-// Helper to convert data URI to a format Google AI can understand
+/**
+ * Chuyển đổi chuỗi dữ liệu URI (Data URI) của hình ảnh thành định dạng GenerativePart 
+ * mà Google Gemini AI API có thể đọc hiểu.
+ * @param uri Chuỗi Base64 Data URI của hình ảnh.
+ * @returns Đối tượng chứa inlineData (mimeType và dữ liệu base64 thô).
+ */
 function dataUriToGenerativePart(uri: string) {
   const [header, data] = uri.split(',');
   const mimeTypeMatch = header.match(/:(.*?);/);
@@ -74,6 +79,16 @@ If the image does not appear to contain any food, please return a JSON object wi
 
 Generate the response as a single, valid JSON object. Do not include any text, markdown formatting, or code fences before or after the JSON object. The JSON object must have the following structure: { identifiedFoods: [{ name: string, calories: number }], totalCalories: number }.`;
 
+/**
+ * Nhận diện món ăn từ ảnh và trả về danh sách calo.
+ * Luồng hoạt động:
+ * 1. Nhận Data URI của ảnh, chuyển đổi định dạng.
+ * 2. Gọi Google Gemini AI (Mô hình Vision) với prompt chỉ định trả về JSON.
+ * 3. Parse và Validate kết quả JSON trả về bằng Zod để đảm bảo đúng cấu trúc.
+ * 
+ * @param input Chứa photoDataUri (Base64 của ảnh).
+ * @returns RecognizeFoodResponse (danh sách món ăn và tổng calo).
+ */
 export async function recognizeFood(
   input: RecognizeFoodRequest
 ): Promise<RecognizeFoodResponse> {

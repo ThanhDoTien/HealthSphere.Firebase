@@ -22,6 +22,15 @@ import { User, LogOut, Globe, Check } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from 'next/link';
 
+/**
+ * Component UserDropdown
+ * Hiển thị menu thả xuống (Dropdown Menu) ở góc phải Header.
+ * Các tính năng bao gồm:
+ * - Hiển thị ảnh đại diện (hoặc chữ cái đầu của tên) từ Firebase Auth.
+ * - Link chuyển hướng đến trang Hồ sơ (/dashboard/profile).
+ * - Chuyển đổi ngôn ngữ ứng dụng (Tiếng Việt / Tiếng Anh) qua LanguageContext.
+ * - Đăng xuất khỏi hệ thống.
+ */
 export default function UserDropdown() {
   const { user, userProfile } = useUser();
   const { t, locale, setLocale } = useTranslation();

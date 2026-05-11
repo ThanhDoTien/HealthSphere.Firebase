@@ -49,6 +49,14 @@ type WeightLog = {
   date: string;
 };
 
+/**
+ * Component WeightPage (Trang Theo dõi Cân nặng)
+ * Nhiệm vụ chính:
+ * - Hiển thị biểu đồ lịch sử cân nặng.
+ * - Trình bày kết quả phân tích của AI (Todaysuggestions) bao gồm TDEE, gợi ý món ăn/hoạt động.
+ * - Cung cấp biểu mẫu (AddWeightForm) để nhập cân nặng mới.
+ * - Trực quan hóa chỉ số BMI qua component BmiMeter.
+ */
 export default function WeightPage() {
   const { user, userProfile } = useUser();
   const firestore = useFirestore();
@@ -90,12 +98,20 @@ export default function WeightPage() {
   const currentWeight = weightData?.[0]?.weight || userProfile?.weight;
   const targetWeight = userProfile ? Math.round(22 * Math.pow(userProfile.height / 100, 2) * 10) / 10 : 0;
 
+  /**
+   * Tính toán lượng calo đốt cháy mỗi ngày (TDEE - Total Daily Energy Expenditure).
+   * Dựa trên cân nặng hiện tại, chiều cao, tuổi, giới tính và mức độ vận động.
+   */
   const tdee = useMemo(() => {
     if (!userProfile || !currentWeight) return 0;
     const bmr = calculateBMR(currentWeight, userProfile.height, userProfile.age, userProfile.gender);
     return Math.round(calculateTDEE(bmr, userProfile.activityLevel || 'moderate'));
   }, [userProfile, currentWeight]);
 
+  /**
+   * Phân tích xu hướng cân nặng trong 7 ngày gần nhất.
+   * So sánh lần nhập mới nhất với lần nhập của 7 ngày trước để xem tăng, giảm hay giữ cân.
+   */
   const trendAnalysis = useMemo(() => {
     if (!weightData || weightData.length < 2) return null;
     const recent7 = weightData.slice(0, 7);
@@ -129,6 +145,9 @@ export default function WeightPage() {
     return currentWeight / (heightM * heightM);
   }, [currentWeight, userProfile?.height]);
 
+  /**
+   * Trả về thông tin phân loại BMI và lời khuyên sức khỏe tương ứng dựa trên chỉ số BMI.
+   */
   const getBmiInfo = (bmiValue: number) => {
     if (bmiValue === 0) return { label: 'N/A', color: 'text-muted-foreground', bg: 'bg-muted/50', icon: Minus, advice: '' };
     if (bmiValue < 18.5) return { label: t('dashboard.bmi.underweight'), color: 'text-blue-600', bg: 'bg-blue-50', icon: AlertCircle, advice: t('dashboard.bmi.advice.underweight') };

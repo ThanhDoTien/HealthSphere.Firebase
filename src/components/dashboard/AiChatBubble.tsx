@@ -13,6 +13,12 @@ import { Button } from '@/components/ui/button';
 import AiChatInterface from './AiChatInterface';
 import { useToast } from '@/components/ui/toast';
 
+/**
+ * Component AiChatBubble
+ * Nút bong bóng chat (Floating Action Button) trôi nổi ở góc dưới bên phải màn hình.
+ * - Quản lý trạng thái mở/đóng (isOpen) và thu nhỏ (isMinimized).
+ * - Khi mở, hiển thị giao diện AiChatInterface để trò chuyện với Trợ lý AI.
+ */
 export default function AiChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
