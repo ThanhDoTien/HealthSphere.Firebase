@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,17 +35,20 @@ type FormValues = z.infer<typeof FormSchema>;
 
 interface AddWeightFormProps {
   userId: string;
+  currentWeight?: number;
 }
 
-export default function AddWeightForm({ userId }: AddWeightFormProps) {
+export default function AddWeightForm({ userId, currentWeight }: AddWeightFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { t } = useTranslation();
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
@@ -54,7 +58,25 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
     }
   });
 
+  const watchedWeight = watch('weight');
+
+  // Reset trạng thái xác nhận nếu người dùng đổi số cân khác
+  useEffect(() => {
+    if (needsConfirmation) setNeedsConfirmation(false);
+  }, [watchedWeight]);
+
   const onSubmit = async (data: FormValues) => {
+    // Kiểm tra chênh lệch cân nặng nếu có currentWeight
+    if (currentWeight && Math.abs(data.weight - currentWeight) > 5 && !needsConfirmation) {
+      toast({
+        title: "Xác nhận cân nặng",
+        description: `Mức cân ${data.weight}kg chênh lệch quá lớn so với hiện tại (${currentWeight}kg). Vui lòng bấm Lưu lần nữa để xác nhận đây không phải là lỗi nhập liệu.`,
+        variant: "destructive",
+      });
+      setNeedsConfirmation(true);
+      return;
+    }
+
     const weightLogRef = collection(firestore, `users/${userId}/weights`);
     const weightLogData = {
       userId: userId,
@@ -64,8 +86,8 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
 
     try {
       // Sử dụng Ngày làm ID để tự động ghi đè nếu đã tồn tại (một ngày một bản ghi)
-      const weightLogRef = doc(firestore, `users/${userId}/weights`, data.date);
-      await setDoc(weightLogRef, weightLogData, { merge: true });
+      const weightLogDocRef = doc(firestore, `users/${userId}/weights`, data.date);
+      await setDoc(weightLogDocRef, weightLogData, { merge: true });
 
       // Tự động cập nhật vào Hồ sơ chính (Profile)
       const userRef = doc(firestore, 'users', userId);
@@ -76,6 +98,7 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
         description: t('form.add_weight.success', { date: data.date }),
       });
       reset();
+      setNeedsConfirmation(false);
     } catch (error: any) {
       errorEmitter.emit(
         'permission-error',
@@ -116,13 +139,18 @@ export default function AddWeightForm({ userId }: AddWeightFormProps) {
           max="500"
           placeholder={t('form.add_weight.placeholder')}
           {...register('weight')}
+          className={needsConfirmation ? "border-red-500 focus-visible:ring-red-500" : ""}
         />
         {errors.weight && (
           <p className="mt-1 text-sm text-destructive">{errors.weight.message}</p>
         )}
       </div>
-      <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
-        {isSubmitting ? t('form.add_weight.saving') : t('form.add_weight.save')}
+      <Button 
+        type="submit" 
+        disabled={isSubmitting} 
+        className={`w-full sm:w-auto ${needsConfirmation ? 'bg-red-600 hover:bg-red-700' : ''}`}
+      >
+        {isSubmitting ? t('form.add_weight.saving') : (needsConfirmation ? "Xác nhận Lưu" : t('form.add_weight.save'))}
       </Button>
     </form>
   );

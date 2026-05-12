@@ -313,7 +313,7 @@ export default function WeightPage() {
                 <Scale className="h-4 w-4" />
                 {t('dashboard.currentWeight')}: {currentWeight ? `${currentWeight} kg` : 'N/A'}
               </div>
-              {user && <AddWeightForm userId={user.uid} />}
+              {user && <AddWeightForm userId={user.uid} currentWeight={currentWeight} />}
             </div>
           </CardContent>
         </Card>
