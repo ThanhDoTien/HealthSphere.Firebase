@@ -35,7 +35,7 @@ export type AnalyzeActivityOutput = z.infer<typeof AnalyzeActivityOutputSchema>;
 
 const analyzeActivityPrompt = ai.definePrompt({
   name: 'analyzeActivityPrompt',
-  model: 'googleai/gemini-3.1-pro-preview',
+  model: process.env.GENKIT_MODEL as string,
   input: { schema: AnalyzeActivityInputSchema },
   output: { schema: AnalyzeActivityOutputSchema },
   prompt: `
@@ -64,6 +64,17 @@ export async function analyzeActivityText(input: AnalyzeActivityInput): Promise<
     if (!output) throw new Error('AI failed to provide analysis.');
     return output;
   } catch (error: any) {
+    if (error?.status === 'UNAVAILABLE' || error?.code === 503) {
+      console.log('🔄 [Fallback] Model 3.1 Pro is unavailable, switching to 3 Flash...');
+      try {
+        const { output } = await analyzeActivityPrompt(input, { model: 'googleai/gemini-3-flash-preview' });
+        if (!output) throw new Error('AI failed to provide analysis.');
+        return output;
+      } catch (fallbackError) {
+        console.error('Fallback Analyze Activity Flow Error:', fallbackError);
+        throw new Error('Could not analyze your activity.');
+      }
+    }
     console.error('Analyze Activity Flow Error:', error);
     throw new Error(error.message || 'Could not analyze your activity.');
   }

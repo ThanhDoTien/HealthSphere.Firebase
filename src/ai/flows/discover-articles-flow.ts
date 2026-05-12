@@ -35,7 +35,7 @@ export type DiscoverArticlesOutput = z.infer<typeof DiscoverArticlesOutputSchema
 
 const discoverArticlesPrompt = ai.definePrompt({
   name: 'discoverArticlesPrompt',
-  model: 'googleai/gemini-3.1-pro-preview',
+  model: process.env.GENKIT_MODEL as string,
   input: { schema: DiscoverArticlesInputSchema },
   output: { schema: DiscoverArticlesOutputSchema },
   prompt: `
@@ -58,6 +58,17 @@ export async function discoverArticles(input: DiscoverArticlesInput): Promise<Di
     if (!output) throw new Error('AI failed to find articles.');
     return output;
   } catch (error: any) {
+    if (error?.status === 'UNAVAILABLE' || error?.code === 503) {
+      console.log('🔄 [Fallback] Model 3.1 Pro is unavailable, switching to 3 Flash...');
+      try {
+        const { output } = await discoverArticlesPrompt(input, { model: 'googleai/gemini-3-flash-preview' });
+        if (!output) throw new Error('AI failed to find articles.');
+        return output;
+      } catch (fallbackError) {
+        console.error('Fallback Discover Articles Flow Error:', fallbackError);
+        throw new Error('Could not discover health articles.');
+      }
+    }
     console.error('Discover Articles Flow Error:', error);
     throw new Error(error.message || 'Could not discover health articles.');
   }

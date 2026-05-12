@@ -32,7 +32,7 @@ export type AnalyzeNutritionOutput = z.infer<typeof AnalyzeNutritionOutputSchema
 
 const analyzeNutritionPrompt = ai.definePrompt({
   name: 'analyzeNutritionPrompt',
-  model: 'googleai/gemini-3.1-pro-preview',
+  model: process.env.GENKIT_MODEL as string,
   input: { schema: AnalyzeNutritionInputSchema },
   output: { schema: AnalyzeNutritionOutputSchema },
   prompt: `
@@ -68,6 +68,17 @@ export async function analyzeNutritionBalance(input: AnalyzeNutritionInput): Pro
     if (!output) throw new Error('AI failed to provide nutrition analysis.');
     return output;
   } catch (error: any) {
+    if (error?.status === 'UNAVAILABLE' || error?.code === 503) {
+      console.log('🔄 [Fallback] Model 3.1 Pro is unavailable, switching to 3 Flash...');
+      try {
+        const { output } = await analyzeNutritionPrompt(input, { model: 'googleai/gemini-3-flash-preview' });
+        if (!output) throw new Error('AI failed to provide nutrition analysis.');
+        return output;
+      } catch (fallbackError) {
+        console.error('Fallback Analyze Nutrition Flow Error:', fallbackError);
+        throw new Error('Could not analyze your nutrition.');
+      }
+    }
     console.error('Analyze Nutrition Flow Error:', error);
     throw new Error(error.message || 'Could not analyze your nutrition.');
   }

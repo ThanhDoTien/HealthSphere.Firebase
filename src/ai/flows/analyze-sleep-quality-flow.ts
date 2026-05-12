@@ -29,7 +29,7 @@ export type AnalyzeSleepOutput = z.infer<typeof AnalyzeSleepOutputSchema>;
 
 const analyzeSleepPrompt = ai.definePrompt({
   name: 'analyzeSleepPrompt',
-  model: 'googleai/gemini-3.1-pro-preview',
+  model: process.env.GENKIT_MODEL as string,
   input: { schema: AnalyzeSleepInputSchema },
   output: { schema: AnalyzeSleepOutputSchema },
   prompt: `
@@ -61,6 +61,17 @@ export async function analyzeSleepQuality(input: AnalyzeSleepInput): Promise<Ana
     if (!output) throw new Error('AI failed to provide sleep analysis.');
     return output;
   } catch (error: any) {
+    if (error?.status === 'UNAVAILABLE' || error?.code === 503) {
+      console.log('🔄 [Fallback] Model 3.1 Pro is unavailable, switching to 3 Flash...');
+      try {
+        const { output } = await analyzeSleepPrompt(input, { model: 'googleai/gemini-3-flash-preview' });
+        if (!output) throw new Error('AI failed to provide sleep analysis.');
+        return output;
+      } catch (fallbackError) {
+        console.error('Fallback Analyze Sleep Flow Error:', fallbackError);
+        throw new Error('Could not analyze your sleep.');
+      }
+    }
     console.error('Analyze Sleep Flow Error:', error);
     throw new Error(error.message || 'Could not analyze your sleep.');
   }

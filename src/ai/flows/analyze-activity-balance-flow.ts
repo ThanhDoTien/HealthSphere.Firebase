@@ -30,7 +30,7 @@ export type AnalyzeActivityBalanceOutput = z.infer<typeof AnalyzeActivityBalance
 
 const analyzeActivityBalancePrompt = ai.definePrompt({
   name: 'analyzeActivityBalancePrompt',
-  model: 'googleai/gemini-3.1-pro-preview',
+  model: process.env.GENKIT_MODEL as string,
   input: { schema: AnalyzeActivityBalanceInputSchema },
   output: { schema: AnalyzeActivityBalanceOutputSchema },
   prompt: `
@@ -63,6 +63,17 @@ export async function analyzeActivityBalance(input: AnalyzeActivityBalanceInput)
     if (!output) throw new Error('AI failed to provide activity analysis.');
     return output;
   } catch (error: any) {
+    if (error?.status === 'UNAVAILABLE' || error?.code === 503) {
+      console.log('🔄 [Fallback] Model 3.1 Pro is unavailable, switching to 3 Flash...');
+      try {
+        const { output } = await analyzeActivityBalancePrompt(input, { model: 'googleai/gemini-3-flash-preview' });
+        if (!output) throw new Error('AI failed to provide activity analysis.');
+        return output;
+      } catch (fallbackError) {
+        console.error('Fallback Analyze Activity Balance Flow Error:', fallbackError);
+        throw new Error('Could not analyze your activity balance.');
+      }
+    }
     console.error('Analyze Activity Balance Flow Error:', error);
     throw new Error(error.message || 'Could not analyze your activity balance.');
   }

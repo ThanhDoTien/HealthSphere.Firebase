@@ -13,13 +13,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
     }
 
+    const aiModel = process.env.GEMINI_IMAGE_MODEL as string;
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       console.error('❌ [Gemini 3.1 Error]: GEMINI_API_KEY is missing in .env');
       return NextResponse.json({ error: 'Missing API Key' }, { status: 500 });
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${aiModel}:generateContent?key=${apiKey}`;
 
     let aiResponse;
     let attempts = 0;
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
     while (attempts < maxAttempts) {
       attempts++;
       console.log(`🎨 [Gemini 3.1] Attempt ${attempts}/${maxAttempts} for: ${hash}`);
-      
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // Giới hạn 60s cho mỗi lần gọi
 
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
             continue;
           }
         }
-        
+
         if (!aiResponse.ok) {
           const errorData = await aiResponse.json().catch(() => ({}));
           console.error(`❌ [Gemini 3.1 API Error] Attempt ${attempts}:`, JSON.stringify(errorData, null, 2));
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
       } catch (err: any) {
         clearTimeout(timeoutId);
         console.error(`⚠️ [Gemini 3.1 Network Error] Attempt ${attempts}:`, err.name === 'AbortError' ? 'Timeout 60s' : err.message);
-        
+
         if (attempts < maxAttempts) {
           await new Promise(resolve => setTimeout(resolve, 2000));
           continue;
@@ -80,13 +81,13 @@ export async function POST(req: NextRequest) {
     }
 
     if (!aiResponse || !aiResponse.ok) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'AI Model is currently overloaded or unresponsive. Please try again later.',
       }, { status: aiResponse?.status || 500 });
     }
 
     const data = await aiResponse.json();
-    
+
     // Tìm phần dữ liệu ảnh trong response
     const imagePart = data.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
     if (!imagePart) {
@@ -99,6 +100,13 @@ export async function POST(req: NextRequest) {
     console.log(`✨ [Gemini 3.1] Success! Generated ${buffer.length} bytes`);
 
     // 2. Khởi tạo Admin SDK và lưu vào Storage
+    // ==========================================
+    // ĐÂY LÀ NƠI ẢNH AI GEN RA ĐƯỢC ĐƯA VÀO STORAGE CHUNG CỦA FIREBASE
+    // lưu ảnh lên Firebase Cloud Storage tại thư mục `images/ai/cache/...`.
+    // Khi nhiều user khác nhau xem cùng gọi một món ăn, 
+    // Hệ thống chỉ cần tải URL ảnh từ Storage chung thay vì phải gọi lại 
+    // Gemini API để render lại, giúp giảm chi phí gọi AI và tăng tốc độ tải trang.
+    // ==========================================
     const { adminStorage } = initializeAdmin();
     const bucket = adminStorage.bucket();
     const file = bucket.file(`images/ai/cache/${hash}.png`);

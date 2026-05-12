@@ -66,8 +66,8 @@ const RecognizeFoodResponseSchema = z.object({
 export type RecognizeFoodResponse = z.infer<typeof RecognizeFoodResponseSchema>;
 
 // Initialize Google AI
-const genAI = new GoogleGenerativeAI('AIzaSyBKqU7wBv58ZGE501N8ydSTbLXGNolOdC4');
-const model = genAI.getGenerativeModel({ model: 'gemini-3.1-pro-preview' });
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY as string);
+const model = genAI.getGenerativeModel({ model: process.env.NEXT_PUBLIC_GEMINI_MODEL as string });
 
 const prompt = `You are an expert nutritionist. Your task is to analyze the image of a meal provided by the user and identify all the food items present.
 
@@ -106,11 +106,23 @@ export async function recognizeFood(
     const parsed = JSON.parse(textResponse);
     return RecognizeFoodResponseSchema.parse(parsed);
 
-  } catch (e) {
-    console.error(
-      'Failed to parse or validate JSON response from AI:',
-      e
-    );
+  } catch (e: any) {
+    if (e?.status === 503 || e?.message?.includes('503')) {
+      console.log('🔄 [Fallback] Model 3.1 Pro is unavailable, switching to 3 Flash...');
+      try {
+        const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+        const result = await fallbackModel.generateContent([prompt, imagePart]);
+        const response = await result.response;
+        const textResponse = response.text();
+        if (!textResponse) throw new Error('Failed to get a response from the AI model.');
+        const parsed = JSON.parse(textResponse);
+        return RecognizeFoodResponseSchema.parse(parsed);
+      } catch (fallbackError) {
+        console.error('Fallback Recognize Food Flow Error:', fallbackError);
+        throw new Error('The AI returned an invalid response format.');
+      }
+    }
+    console.error('Failed to parse or validate JSON response from AI:', e);
     throw new Error('The AI returned an invalid response format.');
   }
 }

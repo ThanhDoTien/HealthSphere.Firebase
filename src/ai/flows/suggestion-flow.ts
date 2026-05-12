@@ -118,6 +118,22 @@ export async function getHealthSuggestions(
     const suggestions = await response.json();
     return HealthSuggestionResponseSchema.parse(suggestions);
   } catch (error: any) {
+    if (error?.message?.includes('503') || error?.message?.includes('UNAVAILABLE') || error?.message?.includes('500')) {
+      console.log('🔄 [Fallback] Backend AI is unavailable, switching to local 3 Flash...');
+      try {
+        const { GoogleGenerativeAI } = await import('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
+        const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+        const result = await fallbackModel.generateContent(prompt);
+        const text = result.response.text();
+        const jsonStr = text.replace(/```json\n?|```/g, '').trim();
+        const parsed = JSON.parse(jsonStr);
+        return HealthSuggestionResponseSchema.parse(parsed);
+      } catch (fallbackError) {
+        console.error('Fallback Suggestion Flow Error:', fallbackError);
+        throw new Error("Không thể kết nối với AI. Vui lòng kiểm tra lại máy chủ hoặc kết nối mạng.");
+      }
+    }
     console.error("Lỗi khi kết nối với Backend AI:", error);
     throw new Error("Không thể kết nối với AI. Vui lòng kiểm tra lại máy chủ hoặc kết nối mạng.");
   }

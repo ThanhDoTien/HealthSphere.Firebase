@@ -66,7 +66,7 @@ export type ChatOutput = z.infer<typeof ChatOutputSchema>;
 
 const healthChatPrompt = ai.definePrompt({
   name: 'healthChatPrompt',
-  model: 'googleai/gemini-3.1-pro-preview',
+  model: process.env.GENKIT_MODEL as string,
   input: { schema: ChatInputSchema },
   output: { schema: ChatOutputSchema },
 
@@ -125,8 +125,19 @@ export async function healthChat(input: ChatInput): Promise<ChatOutput> {
     const { output } = await healthChatPrompt(input);
     if (!output) return { content: 'AI hiện không phản hồi.', extractedData: null };
     return output;
-  } catch (error) {
-    console.error('Genkit Chat Error:', error);
+  } catch (error: any) {
+    if (error?.status === 'UNAVAILABLE' || error?.code === 503) {
+      console.log('🔄 [Fallback] Model 3.1 Pro is unavailable, switching to 3 Flash...');
+      try {
+        const { output } = await healthChatPrompt(input, { model: 'googleai/gemini-3-flash-preview' });
+        if (!output) return { content: 'AI hiện không phản hồi.', extractedData: null };
+        return output;
+      } catch (fallbackError) {
+        console.error('Fallback Genkit Chat Error:', fallbackError);
+        throw new Error('Could not connect to AI services.');
+      }
+    }
+    console.error('Genkit Chat Error Details:', error);
     throw new Error('Could not connect to AI services.');
   }
 }
