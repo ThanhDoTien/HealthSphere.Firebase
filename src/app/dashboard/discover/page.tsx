@@ -109,7 +109,7 @@ export default function DiscoverPage() {
             <Card key={idx} className="group flex flex-col h-full hover:shadow-xl transition-all duration-300 border-primary/5 rounded-2xl overflow-hidden bg-card/50 backdrop-blur-sm">
               <div className="relative h-56 w-full overflow-hidden">
                 <Image 
-                  src={article.imageUrl || `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ', cover image, professional photography')}?width=800&height=600&nologo=true&model=gemini-3.1-flash-image-preview`} 
+                  src={article.imageUrl || `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ', cover image, professional photography')}?width=800&height=600&nologo=true&model=flux`} 
                   alt={article.title}
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-110"

@@ -49,7 +49,16 @@ const ChatOutputSchema = z.object({
   content: z.string().describe('The textual response from the AI.'),
   extractedData: z.object({
     type: z.enum(['meal', 'activity']).optional(),
-    data: z.any().optional(),
+    data: z.object({
+      name: z.string().optional(),
+      calories: z.number().optional(),
+      protein: z.number().optional(),
+      carbs: z.number().optional(),
+      fat: z.number().optional(),
+      fiber: z.number().optional(),
+      duration: z.number().optional(),
+      caloriesBurned: z.number().optional(),
+    }).optional(),
   }).nullable().optional().describe('Structured data for logging if an action is detected.'),
 });
 
@@ -57,7 +66,7 @@ export type ChatOutput = z.infer<typeof ChatOutputSchema>;
 
 const healthChatPrompt = ai.definePrompt({
   name: 'healthChatPrompt',
-  model: 'googleai/gemini-3-flash-preview',
+  model: 'googleai/gemini-3.1-pro-preview',
   input: { schema: ChatInputSchema },
   output: { schema: ChatOutputSchema },
 

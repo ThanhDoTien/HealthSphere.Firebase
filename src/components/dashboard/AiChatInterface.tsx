@@ -201,26 +201,26 @@ export default function AiChatInterface({ className, isFullHeight = false }: AiC
         const mealLogRef = collection(firestore, `users/${user.uid}/meals`);
         await addDoc(mealLogRef, {
           userId: user.uid,
-          name: `AI: ${extracted.data.name}`,
-          calories: extracted.data.calories,
-          protein: extracted.data.protein,
-          carbs: extracted.data.carbs,
-          fat: extracted.data.fat,
-          fiber: extracted.data.fiber,
+          name: `AI: ${extracted.data?.name || 'Món ăn'}`,
+          calories: extracted.data?.calories || 0,
+          protein: extracted.data?.protein || 0,
+          carbs: extracted.data?.carbs || 0,
+          fat: extracted.data?.fat || 0,
+          fiber: extracted.data?.fiber || 0,
           mealType,
           date: todayStr,
         });
-        toast({ title: t('form.common.success'), description: t('form.add_meal.success', { name: extracted.data.name }) });
+        toast({ title: t('form.common.success'), description: t('form.add_meal.success', { name: extracted.data?.name || 'Món ăn' }) });
       } else if (extracted.type === 'activity') {
         const activityLogRef = collection(firestore, `users/${user.uid}/activities`);
         await addDoc(activityLogRef, {
           userId: user.uid,
-          name: `AI: ${extracted.data.name}`,
-          duration: extracted.data.duration,
-          caloriesBurned: extracted.data.caloriesBurned,
+          name: `AI: ${extracted.data?.name || 'Hoạt động'}`,
+          duration: extracted.data?.duration || 0,
+          caloriesBurned: extracted.data?.caloriesBurned || 0,
           date: todayStr,
         });
-        toast({ title: t('form.common.success'), description: t('form.add_activity.success', { name: extracted.data.name }) });
+        toast({ title: t('form.common.success'), description: t('form.add_activity.success', { name: extracted.data?.name || 'Hoạt động' }) });
       }
 
       // Cập nhật trạng thái đã lưu vào chính tin nhắn đó trong Firestore
@@ -289,7 +289,7 @@ export default function AiChatInterface({ className, isFullHeight = false }: AiC
                 <div className="mt-3 p-3 bg-card rounded-2xl border border-primary/20 shadow-sm space-y-3 animate-in zoom-in-95 duration-300">
                   <div className="flex items-center gap-2 font-bold text-primary text-[11px] uppercase tracking-wider">
                     {msg.extractedData.type === 'meal' ? <Utensils className="h-3 w-3" /> : <Dumbbell className="h-3 w-3" />}
-                    <span>{msg.extractedData.data.name}</span>
+                    <span>{msg.extractedData.data?.name || ''}</span>
                   </div>
 
                   <div className="grid grid-cols-3 gap-1.5">
@@ -297,26 +297,26 @@ export default function AiChatInterface({ className, isFullHeight = false }: AiC
                       <>
                         <div className="rounded-xl bg-muted/50 p-1.5 text-center border border-border/50">
                           <p className="text-[8px] text-muted-foreground uppercase">Calo</p>
-                          <p className="text-[10px] font-bold">{msg.extractedData.data.calories}</p>
+                          <p className="text-[10px] font-bold">{msg.extractedData.data?.calories || 0}</p>
                         </div>
                         <div className="rounded-xl bg-muted/50 p-1.5 text-center border border-border/50">
                           <p className="text-[8px] text-muted-foreground uppercase">Pro</p>
-                          <p className="text-[10px] font-bold">{msg.extractedData.data.protein}g</p>
+                          <p className="text-[10px] font-bold">{msg.extractedData.data?.protein || 0}g</p>
                         </div>
                         <div className="rounded-xl bg-muted/50 p-1.5 text-center border border-border/50">
                           <p className="text-[8px] text-muted-foreground uppercase">Carb</p>
-                          <p className="text-[10px] font-bold">{msg.extractedData.data.carbs}g</p>
+                          <p className="text-[10px] font-bold">{msg.extractedData.data?.carbs || 0}g</p>
                         </div>
                       </>
                     ) : (
                       <>
                         <div className="rounded-xl bg-muted/50 p-1.5 text-center border border-border/50 col-span-2">
                           <p className="text-[8px] text-muted-foreground uppercase">Thời lượng</p>
-                          <p className="text-[10px] font-bold">{msg.extractedData.data.duration} phút</p>
+                          <p className="text-[10px] font-bold">{msg.extractedData.data?.duration || 0} phút</p>
                         </div>
                         <div className="rounded-xl bg-muted/50 p-1.5 text-center border border-border/50">
                           <p className="text-[8px] text-muted-foreground uppercase">Đốt cháy</p>
-                          <p className="text-[10px] font-bold">{msg.extractedData.data.caloriesBurned}</p>
+                          <p className="text-[10px] font-bold">{msg.extractedData.data?.caloriesBurned || 0}</p>
                         </div>
                       </>
                     )}

@@ -30,7 +30,7 @@ export type AnalyzeActivityBalanceOutput = z.infer<typeof AnalyzeActivityBalance
 
 const analyzeActivityBalancePrompt = ai.definePrompt({
   name: 'analyzeActivityBalancePrompt',
-  model: 'googleai/gemini-3-flash-preview',
+  model: 'googleai/gemini-3.1-pro-preview',
   input: { schema: AnalyzeActivityBalanceInputSchema },
   output: { schema: AnalyzeActivityBalanceOutputSchema },
   prompt: `

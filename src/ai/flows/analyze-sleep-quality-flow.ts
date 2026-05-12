@@ -29,7 +29,7 @@ export type AnalyzeSleepOutput = z.infer<typeof AnalyzeSleepOutputSchema>;
 
 const analyzeSleepPrompt = ai.definePrompt({
   name: 'analyzeSleepPrompt',
-  model: 'googleai/gemini-3-flash-preview',
+  model: 'googleai/gemini-3.1-pro-preview',
   input: { schema: AnalyzeSleepInputSchema },
   output: { schema: AnalyzeSleepOutputSchema },
   prompt: `
