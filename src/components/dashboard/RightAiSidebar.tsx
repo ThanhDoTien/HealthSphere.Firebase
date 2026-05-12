@@ -254,11 +254,13 @@ export default function RightAiSidebar({ isOpen, onClose }: RightAiSidebarProps)
                         {meal.recipe.replaceAll('\\n', ' ')}
                       </p>
                       <div className="flex items-center justify-between">
-                        <div className="flex gap-2">
-                          <span className="text-[10px] font-bold px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full">Carbs: {meal.carbs || '?'}g</span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Prot: {meal.protein || '?'}g</span>
+                        <div className="flex flex-wrap gap-1.5 max-w-[70%]">
+                          <span className="text-[10px] font-bold px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full whitespace-nowrap">C: {meal.carbs || '?'}g</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 bg-green-100 text-green-700 rounded-full whitespace-nowrap">P: {meal.protein || '?'}g</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full whitespace-nowrap">F: {meal.fat || '?'}g</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full whitespace-nowrap">Fi: {meal.fiber || '?'}g</span>
                         </div>
-                        <Button variant="link" className="h-auto p-0 text-primary font-black text-xs group/btn">
+                        <Button variant="link" className="h-auto p-0 text-primary font-black text-xs group/btn shrink-0">
                           Xem thêm <ChevronRight className="h-3 w-3 ml-1 group-hover/btn:translate-x-1 transition-transform" />
                         </Button>
                       </div>
